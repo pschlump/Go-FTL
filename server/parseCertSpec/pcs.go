@@ -1,0 +1,33 @@
+package parseCertSpec
+
+import (
+	"crypto/tls"
+	"fmt"
+	"strings"
+)
+
+/*
+Ciphersuite: ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+*/
+
+var cert map[string]uint16 = map[string]uint16{
+	"ECDHE-RSA-AES128-GCM-SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,   // 1
+	"ECDHE-ECDSA-AES128-GCM-SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, // 2
+}
+
+func Pcs(s string) (rv []uint16) {
+	sa := strings.Split(s, ":")
+	rv = make([]uint16, 0, len(sa))
+	for ii, saa := range sa {
+		if uu, ok := cert[saa]; ok {
+			rv = append(rv, uu)
+		} else if saa[0] == '!' {
+			// Eliminate from list anything containing item
+			fmt.Printf("Eliminate [%d]: %s\n", ii, saa[1:])
+			// xyzzy
+		} else {
+			fmt.Printf("Did not find [%d]: %s\n", ii, saa)
+		}
+	}
+	return
+}

@@ -1,0 +1,24 @@
+/*
+
+Addr: ::1/128
+Addr: 127.0.0.1/8
+Addr: fe80::1/64
+Addr: fe80::6a5b:35ff:fe91:644f/64
+Addr: 192.168.0.158/16
+Addr: 192.168.0.157/24
+
+*/
+
+
+var ignore map[string]bool = {
+	"::1" => true,
+};
+
+var localhost map[string]bool = {
+	"127.0.0.1" => true,
+	"fe80::1" => true,
+	"" => true,
+	"localhost" => true,
+};
+
+

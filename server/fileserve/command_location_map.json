@@ -1,0 +1,11 @@
+ {
+	"cp": "/bin/cp",
+	"css-pack": "/Users/corwin/bin/pack-css",
+	"lessc": "/usr/bin/lessc",
+	"make": "/usr/bin/make",
+	"markdown-cli": "/Users/corwin/bin/markdown-cli",
+	"sass": "/usr/local/bin/sass",
+	"scss": "/usr/local/bin/sass",
+	"tsc": "/usr/local/lib/node_modules/typescript/bin/tsc",
+	"uglifyjs": "/usr/local/bin/uglifyjs"
+}

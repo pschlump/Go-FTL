@@ -1,0 +1,10 @@
+--2016-06-19 17:49:37--  http://192.168.0.150:12000/api/run-cmd?cli=%7B%22Cmd%22:[%22ls%22,%22-ltro%22]%7D&ApiKey=bob-bob-bob&_x_=112
+Connecting to 192.168.0.150:12000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 728 [text/html]
+Saving to: 'out/t2.out'
+
+     0K                                                       100% 77.1M=0s
+
+2016-06-19 17:49:37 (77.1 MB/s) - 'out/t2.out' saved [728/728]
+

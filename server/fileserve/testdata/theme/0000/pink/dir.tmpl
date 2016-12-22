@@ -1,0 +1,10 @@
+{{define "page"}}
+<html><body>
+<h1>Template for Directories at top level ; 0000 ; pink </h1>
+<ul>
+{{range $ii, $ee := .files}}
+	<li><a href="{{$ee.name}}">{{$ee.name}}</a></li>
+{{end}}
+</ul>
+</body></html>
+{{end}}

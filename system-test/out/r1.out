@@ -1,0 +1,10 @@
+--2016-06-19 17:49:37--  http://192.168.0.150:12000/index.html
+Connecting to 192.168.0.150:12000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 4 [text/html]
+Saving to: 'out/t1.out'
+
+     0K                                                       100%  488K=0s
+
+2016-06-19 17:49:37 (488 KB/s) - 'out/t1.out' saved [4/4]
+

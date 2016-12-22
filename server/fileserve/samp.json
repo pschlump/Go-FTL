@@ -1,0 +1,94 @@
+CommandLocationMap = {
+	"cp": "/bin/cp",
+	"css-pack": "/Users/corwin/bin/pack-css",
+	"lessc": "/usr/bin/lessc",
+	"make": "/usr/bin/make",
+	"markdown-cli": "/Users/corwin/bin/markdown-cli",
+	"sass": "/usr/bin/sass",
+	"scss": "/usr/bin/sass",
+	"tsc": "/usr/local/lib/node_modules/typescript/bin/tsc",
+	"uglifyjs": "/usr/local/bin/uglifyjs"
+},
+ExtProcessTable = [
+	{
+		"ToExt": [
+			".html"
+		],
+		"FromExt": ".md",
+		"CommandToRun": "{ \"Cmd\":\"markdown-cli\", \"Params\":[ \"-i\", \"{{.inputFile}}\", \"-o\", \"{{.outputFile}}\", \"-c\", \"../markdown-cfg.json\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".js"
+		],
+		"FromExt": ".ts",
+		"CommandToRun": "{ \"Cmd\":\"tsc\", \"Params\":[ \"{{.inputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".min.js",
+			".min.map"
+		],
+		"FromExt": ".js",
+		"CommandToRun": "{ \"Cmd\":\"uglifyjs\", \"Params\":[ \"--input\", \"{{.inputFile}}\", \"--output\", \"{{.outputFile}}\", \"--source-map\", \"{{.base_file_name}}.min.map\", \"--comments\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".min.css"
+		],
+		"FromExt": ".css",
+		"CommandToRun": "{ \"Cmd\":\"css-pack\", \"Params\":[ \"-i\", \"{{.inputFile}}\", \"-o\", \"{{.outputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".out"
+		],
+		"FromExt": ".in",
+		"CommandToRun": "{ \"Cmd\":\"cp\", \"Params\":[ \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".brotilli"
+		],
+		"FromExt": ".jpg",
+		"CommandToRun": "{ \"Cmd\":\"make\", \"Params\":[ \"{{.outputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".css"
+		],
+		"FromExt": ".sass",
+		"CommandToRun": "{ \"Cmd\":\"sass\", \"Params\":[ \"--sourcemap=file\", \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".css"
+		],
+		"FromExt": ".scss",
+		"CommandToRun": "{ \"Cmd\":\"scss\", \"Params\":[ \"--scss\", \"--sourcemap=file\", \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".min.css"
+		],
+		"FromExt": ".less",
+		"CommandToRun": "{ \"Cmd\":\"lessc\", \"Params\":[ \"--clean-css\", \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false
+	},
+	{
+		"ToExt": [
+			".html"
+		],
+		"FromExt": ".markdown",
+		"CommandToRun": "",
+		"ReRun": false
+	}
+]
