@@ -53,10 +53,10 @@ import (
 	_ "github.com/pschlump/Go-FTL/server/midlib/RewriteProxy"
 	_ "github.com/pschlump/Go-FTL/server/midlib/SocketIO"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Status"
+	_ "github.com/pschlump/Go-FTL/server/midlib/TabServer2"
 
 	// _ "github.com/pschlump/m6"
 
-	_ "github.com/pschlump/TabServer2"
 	_ "github.com/pschlump/mon-alive/middleware"
 
 	// Modules that are not in the midlib deirectory
