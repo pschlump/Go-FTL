@@ -1,0 +1,17 @@
+{
+	"run":[
+			{ 	"ifexists": "select checkForTableData('tst_tab1',3)",
+				"create": "create table \"tst_tab1\" ( \"n\" number )",
+				"drop": "drop table \"tst_tab1\"",
+				"insert": [
+					"insert into \"tst_tab1\" values ( 1 )",
+					"insert into \"tst_tab1\" values ( 2 )",
+					"insert into \"tst_tab1\" values ( 3 )"
+				]
+			},
+			{ 	"ifexists": "checkFor('tst_tab1',3)",
+				"create": "...",
+				"drop": "...",
+			},
+	]
+}

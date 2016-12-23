@@ -1,0 +1,598 @@
+//
+// Go-FTL / TabServer2
+//
+// Copyright (C) Philip Schlump, 2012-2016. All rights reserved.
+//
+// Do not remove the following lines - used in auto-update.
+// Version: 0.5.9
+// BuildNo: 1811
+// FileId: 1011
+//
+
+package TabServer2
+
+import (
+	"errors"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/pschlump/Go-FTL/server/cfg"
+	"github.com/pschlump/Go-FTL/server/goftlmux"
+	"github.com/pschlump/Go-FTL/server/lib"
+	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/sizlib"
+	"github.com/pschlump/MiscLib"
+	"github.com/pschlump/godebug"
+)
+
+// --------------------------------------------------------------------------------------------------------------------------
+
+func init() {
+
+	// normally identical - but not this time.
+	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+		pCfg, ok := ppCfg.(*TabServer2Type)
+		if ok {
+			pCfg.SetNext(next)
+			rv = pCfg
+		} else {
+			err = mid.FtlConfigError
+		}
+		gCfg.ConnectToRedis()
+		gCfg.ConnectToPostgreSQL()
+		pCfg.gCfg = gCfg
+		return
+	}
+
+	// normally identical
+	createEmptyType := func() interface{} { return &TabServer2Type{} }
+
+	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+		// var err error
+
+		hh, ok := h.(*TabServer2Type)
+		if !ok {
+			fmt.Printf("Error: Wrong data type passed to FileServeType - postInit\n")
+			return mid.ErrInternalError
+		} else {
+
+			hh.MuxAuto = make(map[string]int)
+			hh.MuxAutoPass = 1
+
+			// xyzzy setup watchers for changes in files?
+
+			hh.db_func = make(map[string]bool, maxI(len(hh.DbFunctions), 1))
+			for _, vv := range hh.DbFunctions {
+				// db_func["PickInsertUpdateColumns"] = false
+				hh.db_func[vv] = true
+			}
+
+			t, err := os.Getwd()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%sTabServer2: Error (14022):  Unable to get current working directory. LineNo:%d.%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+				fmt.Printf("TabServer2: Error (14022):  Unable to get current working directory. LineNo:%d.\n", hh.LineNo)
+				return mid.ErrInternalError
+			}
+			hh.pwd = t
+
+			fmt.Printf("\nTabServer2: --- start of TabServer2 config --- Running in [%s] LineNo:%d.\n", t, hh.LineNo)
+
+			// Convert from String LoginSystem -> Internal Type LoginSystemType
+			switch hh.LoginSystem {
+			case "LstNone":
+				hh.loginSystem = LstNone
+			case "LstAesSrp":
+				hh.loginSystem = LstAesSrp
+			case "LstUnPw":
+				hh.loginSystem = LstUnPw
+			case "LstBasic":
+				hh.loginSystem = LstBasic
+			default:
+				hh.loginSystem = LstAesSrp
+				// hh.loginSystem = LstNone
+				fmt.Fprintf(os.Stderr, "%sTabServer2: Info (15122):  Unable to convert LoginSystem [%s]. Should be one of 'LstNone', 'LstAesSrp', 'LstUnPw', 'LstBasic'.   AesSrp assumed.  LineNo:%d.%s\n", MiscLib.ColorYellow, hh.LoginSystem, hh.LineNo, MiscLib.ColorReset)
+				fmt.Printf("TabServer2: Info (15122):  Unable to convert LoginSystem [%s]. Should be one of 'LstNone', 'LstAesSrp', 'LstUnPw', 'LstBasic'.   AesSrp assumed.  LineNo:%d.\n", hh.LoginSystem, hh.LineNo)
+			}
+
+			if db3 {
+				sqlCfgFN, ok := sizlib.SearchPathApp(hh.SQLCfgFN, hh.AppName, hh.SearchPath)
+				fmt.Printf("sqlCfgFN = %s ok = %v, %s\n", sqlCfgFN, ok, godebug.LF())
+			}
+
+			n_config := 0
+			n_files_loaded := 0
+
+			if sqlCfgFN, ok := sizlib.SearchPathApp(hh.SQLCfgFN, hh.AppName, hh.SearchPath); ok {
+				fmt.Printf("TabServer2: sql config: %s, %s\n", sqlCfgFN, godebug.LF())
+				SQLCfg, err := readInSQLConfig(sqlCfgFN)
+				hh.SQLCfg = SQLCfg
+				if err != nil {
+					fmt.Printf("TabServer2: Error: %s\n", err)
+					SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + sqlCfgFN[1:], ErrorMsg: fmt.Sprintf("%s", err)})
+				} else {
+					n_config++
+					n_files_loaded = 1
+					SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + sqlCfgFN[1:], ErrorMsg: ""})
+				}
+			}
+
+			// ----------------------------------------------------------------------------------------------------------------------------------------------------
+			// Read in module based end-points
+			// ----------------------------------------------------------------------------------------------------------------------------------------------------
+			// Called from ~/Projects/w-watch/w-watch.go
+			// 		s := doGet(&client, "http://localhost:8090/api/reloadTableConfig")
+			// in: base.go -- respHandlerReloadTableConfig(res http.ResponseWriter, req *http.Request, ps goftlmux.Params) {
+			// ----------------------------------------------------------------------------------------------------------------------------------------------------
+			for _, TopPath := range hh.AppRoot {
+				var ignoreList []string
+				fmt.Printf("TabServer2: At Search for additional sql-cfg.json files, TopPath=%s from AppRoot=%s, %s\n", TopPath, godebug.SVar(hh.AppRoot), godebug.LF())
+				// fmt.Printf("At Search for additional sql-cfg.json files , %s\n", godebug.LF())
+				// opts__TopPath := sizlib.SubstitueUserInFilePathImmediate("/Users/corwin/Projects/who-cares/app") // xyzzy from CLI -W option //xyzzy - replace ~ with home dir.
+				opts__TopPath := sizlib.SubstitueUserInFilePathImmediate(TopPath)
+				// fmt.Printf("TabServer2: Path ->%s<- At, %s\n", opts__TopPath, godebug.LF())
+				// ignoreList = append(ignoreList, "/Users/corwin/Projects/who-cares/who-cares-server") // xyzzy from globa-cfg.json file
+				dirs := sizlib.FindDirsWithSQLCfg(opts__TopPath, ignoreList)
+				// fmt.Printf("TabServer2: dirs ->%s<- At, %s\n", sizlib.SVar(dirs), godebug.LF())
+				fList, ok := sizlib.SearchPathAppModule(hh.SQLCfgFN, hh.AppName, dirs)
+				// fmt.Printf("TabServer2: fList ->%s<- At, %s\n", sizlib.SVar(fList), godebug.LF())
+				if ok {
+					fmt.Fprintf(os.Stderr, "%sTabServer2: List of additional sql-cfg*.josn files found: %s server config line:%d AT, %s%s\n",
+						MiscLib.ColorGreen, sizlib.SVar(fList), hh.LineNo, godebug.LF(), MiscLib.ColorReset)
+					for _, v := range fList {
+						n_files_loaded++
+						fmt.Printf("TabServer2: Reading in additional SQLCfg: %s\n", v)
+						fmt.Fprintf(os.Stderr, "%sTabServer2: Reading in additional SQLCfg: %s%s\n", MiscLib.ColorGreen, v, MiscLib.ColorReset)
+						tSQLCfg, err := readInSQLConfig(v) // func readInSQLConfig(path string) map[string]SQLOne {
+						if err != nil {
+							fmt.Printf("TabServer2: Error: %s\n", err)
+							SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + v[1:], ErrorMsg: fmt.Sprintf("%s", err)})
+						} else {
+							// 1. combine note: 'f' values - concatenate for each key - instead of overwrite -- xyzzyConcatNoteKey
+							//		Collect all the note: 'f's into a set of strings - then post-process them
+							preNote := make(map[string]string)
+							for ii, vv := range hh.SQLCfg {
+								if strings.HasPrefix(ii, "note:") {
+									preNote[ii] = vv.F
+								}
+							}
+							fmt.Printf("PreNote = %s\n", preNote)
+							if hh.SQLCfg == nil {
+								hh.SQLCfg = make(map[string]SQLOne)
+							}
+							for j, w := range tSQLCfg {
+								hh.SQLCfg[j] = w
+							}
+							for ii, vv := range hh.SQLCfg {
+								if strings.HasPrefix(ii, "note:") {
+									if old, ok := preNote[ii]; ok {
+										// preNote[ii] = vv.F
+										vv.F = old + "\n" + vv.F
+										hh.SQLCfg[ii] = vv
+									}
+								}
+							}
+							SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + v[1:], ErrorMsg: ""})
+							n_config++
+						}
+					}
+				}
+			}
+
+			if n_files_loaded == 0 {
+				fmt.Fprintf(os.Stderr, "%sTabServer2: Error (14122):  Unable to find the %s file using %s path. AppName=%s LineNo:%d in server config file.%s\n", MiscLib.ColorRed, hh.SQLCfgFN, hh.SearchPath, hh.AppName, hh.LineNo, MiscLib.ColorReset)
+				fmt.Printf("TabServer2: Error (14122):  Unable to find the %s file using %s path. LineNo:%d in server config file.\n", hh.SQLCfgFN, hh.SearchPath, hh.LineNo)
+			}
+
+			// xyzzy - valid that the sql_cfg.json data is correct - check table/column info
+			if !hh.CheckSqlCfgValid() {
+				fmt.Printf("Early exit - sql_cfg.json is not valid\n")
+				n_config = -1
+			}
+
+			// xyzzy - put this back in -- loadAllCsrfTokens(hh)
+
+			hh.theMux = goftlmux.NewRouter()
+
+			initEndPoints(hh.theMux, hh)
+
+			hh.final, err = lib.ParseBool(hh.Final)
+
+			if n_config == 0 {
+				fmt.Printf("\n************************************************\n* Warning - no TabServer2 config files loaded\n ************************************************\n\n")
+				return mid.ErrInternalError
+			}
+		}
+
+		return nil
+	}
+
+	/*
+	   var opts struct {
+	   	GlobalCfgFN string `short:"g" long:"globaCfgFile"    description:"Full path to global config"          default:"global-cfg.json"`
+	   	SQLCfgFN    string `short:"s" long:"sqlCfgFile"      description:"Full path to SQL config"             default:"sql-cfg.json"`
+	   	Port        string `short:"p" long:"port"            description:"Port to listen on"                   default:"8090"` // Used from global-cfg.json
+	   	Search      string `short:"S" long:"searchPath"      description:"SearchPath to use for config files"  default:"./cfg:.:~/cfg"`
+	   	AppName     string `short:"A" long:"application"     description:"Application to run"                  default:""`
+	   	TopPath     string `short:"T" long:"topPath"         description:"search for sql-cfg.json files"       default:""`
+	   }
+	*/
+
+	cfg.RegInitItem2("TabServer2", initNext, createEmptyType, postInit, `{
+		"Paths":                         { "type":[ "string", "filepath" ], "isarray":true, "required":true },
+		"AppRoot":                       { "type":[ "string", "filepath" ], "isarray":true },
+		"DbFunctions":                   { "type":[ "string", "filepath" ], "isarray":true },
+		"WatchForConfigChanges":         { "type":[ "bool" ] },
+		"SQLCfgFN":                      { "type":[ "string" ], "default":"sql-cfg.json" },
+		"AppName":                       { "type":[ "string" ] },
+		"SearchPath":                    { "type":[ "string" ], "default":"./cfg:.:~/cfg" },
+		"Final":                         { "type":[ "string" ], "default":"no" },
+		"DevAuthToken":                  { "type":[ "string" ], "default":"9abb4f75-f336-46d2-a3af-1115c3d49f14" },
+		"DebugFlags":                    { "type":[ "string" ], "isarray":true },
+		"AuthorizeNetLogin":             { "type":[ "string" ] },
+		"AuthorizeNetKey":               { "type":[ "string" ] },
+		"StatusMessage":                 { "type":[ "string" ] },
+		"ApiTableKey":                   { "type":[ "string" ] },
+		"LogToFile":                     { "type":[ "string" ] },
+		"LoginSystem":                   { "type":[ "string" ], "default":"LstAesSrp" },
+		"ApiTable":                      { "type":[ "string" ], "default":"/api/table/" },
+		"ApiList":                       { "type":[ "string" ], "default":"/api/list/" },
+		"LimitPostJoinRows":             { "type":[ "int" ], "default":"-1" },
+		"SendStatusOnError":             { "type":[ "bool" ], "default":"false" },
+		"LineNo":                        { "type":[ "int" ], "default":"1" }
+		}`)
+}
+
+// normally identical
+func (hdlr *TabServer2Type) SetNext(next http.Handler) {
+	hdlr.Next = next
+}
+
+var _ mid.GoFTLMiddleWare = (*TabServer2Type)(nil) // compile time validation that this matches with the GoFTLMiddleWare interface
+
+// --------------------------------------------------------------------------------------------------------------------------
+
+type TabServer2Type struct {
+	Next                  http.Handler                // No Next, this is the bottom of the stack.
+	Paths                 []string                    //
+	AppRoot               []string                    // The patth where to start searhing for sql-cfg-<name>.json files -- Formerly TopPath
+	DbFunctions           []string                    // Functions to turn on debugging output in.
+	WatchForConfigChanges bool                        // If true then a 2nd process will be started to watch for changes in config files.
+	SQLCfgFN              string                      // xyzzy
+	AppName               string                      // xyzzy
+	SearchPath            string                      // a search path like "~/cfg:./cfg" -- defaults to ./cfg:.:~/cfg
+	Final                 string                      // If a path is matched with Paths, but not with the final routing, say /api/table/BADNAME, then if Final => 404 error
+	DevAuthToken          string                      // Password for accessing ListSqlConfigFilesLoaded
+	DebugFlags            []string                    // Debuging Flags for example, "credit_card_test_mode"
+	AuthorizeNetLogin     string                      //
+	AuthorizeNetKey       string                      //
+	StatusMessage         string                      // Message printed out as a part of status - can be version number for the config file
+	LogToFile             string                      // if "" then logging is off, else the path to log directory
+	LoginSystem           string                      // "AesSrp" or "Basic" or "Un/Pw"
+	ApiTable              string                      //
+	ApiList               string                      //
+	ApiTableKey           string                      // If true (!= "") then this password will be requried to access /api/table calls.
+	LimitPostJoinRows     int                         // -1 indicates unlimited, default, 0 - is do not allow, N is maximum number of rows to post-join on get
+	SendStatusOnError     bool                        // if true will send back errors as a status_code, else will send "status"=="error" in JSON, code 200
+	LineNo                int                         //
+	gCfg                  *cfg.ServerGlobalConfigType //
+	MuxAuto               map[string]int              // formerly global		-- make private xyzzy --		// Config for automaic reload  - to delete routes removed
+	MuxAutoPass           int                         // formerly global		-- make private xyzzy --		// Config for automaic reload  - to delete routes removed
+	db_func               map[string]bool             //
+	pwd                   string                      // Running path of the server
+	theMux                *goftlmux.MuxRouter         //
+	final                 bool                        // t/f converted version of .Final
+	loginSystem           LoginSystemType             //
+	SQLCfg                map[string]SQLOne
+}
+
+func NewTabServer2Server(n http.Handler, Path []string, AppRoot []string, gCfg *cfg.ServerGlobalConfigType) (rv *TabServer2Type) {
+
+	tt, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%sTabServer2: Error (14022):  Unable to get current working directory. LineNo:%s.%s\n", MiscLib.ColorRed, godebug.LF(2), MiscLib.ColorReset)
+		fmt.Printf("TabServer2: Error (14022):  Unable to get current working directory. LineNo:%s.\n", godebug.LF(2))
+		os.Exit(1)
+	}
+
+	rv = &TabServer2Type{
+		Next:         n, // may be NIL!
+		Paths:        Path,
+		AppRoot:      AppRoot,
+		MuxAuto:      make(map[string]int),
+		MuxAutoPass:  1,
+		loginSystem:  LstAesSrp,
+		ApiTable:     "/api/table",
+		ApiList:      "/api/list",
+		LoginSystem:  "LstAesSrp",
+		DevAuthToken: "9abb4f75-f336-46d2-a3af-1115c3d49f14",
+		db_func:      make(map[string]bool),
+		pwd:          tt,
+		gCfg:         gCfg,
+	}
+
+	return
+}
+
+/*
+
+-- Redis ------------------------------------------------------------------------------------------------------------------------------
+
+	conn, err := hdlr.gCfg.RedisPool.Get()
+	if err != nil {
+		rw.Log.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+		return
+	}
+
+	// ... do stuff ..
+	data, err := conn.Cmd("GET", aKey).Str() // Get the value
+
+	hdlr.gCfg.RedisPool.Put(conn)
+
+-- PostgreSQL -------------------------------------------------------------------------------------------------------------------------
+
+	Rows, err := hdlr.gCfg.Pg_client.Query(Query, data...)
+
+*/
+
+func initEndPoints(theMux *goftlmux.MuxRouter, hdlr *TabServer2Type) {
+	// pull all of these from the sql-*.json file - and then track changes to file. -- Will set up end points for all the one starting with '/'
+	hdlr.MuxAuto = make(map[string]int, len(hdlr.SQLCfg))
+	hdlr.MuxAutoPass = 1
+
+	//api_table := "/api/table/"
+	//api_list := "/api/list/"
+	AddSlash := func(s string) string {
+		if len(s) == 0 {
+			return ""
+		} else if s[len(s)-1] == '/' {
+			return s
+		}
+		return s + "/"
+	}
+	api_table := AddSlash(hdlr.ApiTable)
+	api_list := AddSlash(hdlr.ApiList)
+
+	for key, val := range hdlr.SQLCfg {
+		if len(key) > 0 && key[0:1] == "/" && (!strings.HasPrefix(key, api_table) || len(val.Crud) == 0) && !val.Redis {
+			hdlr.MuxAuto[key] = hdlr.MuxAutoPass
+			if debugCrud01 {
+				fmt.Printf("Creating %s for %v\n", key, val.Method)
+			}
+			if len(val.Method) == 0 {
+				theMux.HandleFunc(key, GetSqlCfgHandler2(key, hdlr)).Methods("GET").AppendFileName(":FromData(" + val.LineNo + ")")
+			} else {
+				theMux.HandleFunc(key, GetSqlCfgHandler2(key, hdlr)).Methods(val.Method...).AppendFileName(":FromData(" + val.LineNo + ")")
+			}
+		} else if len(key) > 0 && key[0:1] == "/" && val.Redis {
+			hdlr.MuxAuto[key] = hdlr.MuxAutoPass
+			if len(val.Method) == 0 {
+				theMux.HandleFunc(key, GetRedisCfgHandler2(key, hdlr)).Methods("GET").AppendFileName(":FromData(" + val.LineNo + ")")
+			} else {
+				theMux.HandleFunc(key, GetRedisCfgHandler2(key, hdlr)).Methods(val.Method...).AppendFileName(":FromData(" + val.LineNo + ")")
+			}
+		}
+	}
+
+	theMux.DebugMatch(true)
+	// -------------------------- CRUD Handlers -------------------------------------------------------------------
+	theMux.HandleFunc(api_table+"{name}/count", closure_respHandlerTableGetCount(hdlr)).Methods("GET")                     // Select count(*)
+	theMux.HandleFunc(api_table+"{name}/desc", closure_respHandlerTableDesc(hdlr)).Methods("GET")                          // Describe
+	theMux.HandleFunc(api_table+"{name}/{id}", closure_respHandlerTableGetPk1(hdlr)).Methods("GET").Comment("TableGetPk1") // Select - with single unique PK id - Not fond of positional param
+	theMux.HandleFunc(api_table+"{name}/{id}", closure_respHandlerTableDelPk1(hdlr)).Methods("DELETE")                     // Delete - with single unique PK id - Not fond of positional param
+	theMux.HandleFunc(api_table+"{name}/{id}", closure_respHandlerTablePutPk1(hdlr)).Methods("PUT")                        // Update
+	theMux.HandleFunc(api_table+"{name}/{id}", closure_respHandlerTablePostPk1(hdlr)).Methods("POST")                      // Insert
+	theMux.HandleFunc(api_table+"{name}", closure_respHandlerTableGet(hdlr)).Methods("GET").Comment("TableGet")            // Select
+	theMux.HandleFunc(api_table+"{name}", closure_respHandlerTablePut(hdlr)).Methods("PUT")                                // Update
+	theMux.HandleFunc(api_table+"{name}", closure_respHandlerTablePost(hdlr)).Methods("POST")                              // Insert
+	theMux.HandleFunc(api_table+"{name}", closure_respHandlerTableDel(hdlr)).Methods("DELETE")                             // Delete
+	theMux.HandleFunc(api_list+"sql-cfg-files-loaded", closure_respHandlerListSQLCfgFilesLoaded(hdlr)).Methods("GET")      //
+	theMux.HandleFunc(api_list+"cfg-for", closure_respHandlerListCfgFor(hdlr)).Methods("GET")                              //
+	theMux.HandleFunc(api_list+"end-points", closure_respHandlerListEndPoints(hdlr)).Methods("GET")                        //
+
+	// -------------------------- From base.go --------------------------------------------------------------------
+	theMux.HandleFunc(api_list+"tab-server2/status", closure_respHandlerStatus(hdlr)).Methods("GET", "POST", "HEAD", "PATCH", "PUT", "DELETE", "OPTIONS")
+	theMux.HandleFunc(api_list+"swapLogFile/{seq}", closure_respHandlerSwapLogFile(hdlr)).Methods("GET", "POST")       // !!depricated!! -- goging to loggin component -- irrilevant
+	theMux.HandleFunc(api_list+"reloadTableConfig", closure_respHandlerReloadTableConfig(hdlr)).Methods("GET", "POST") // research-and load sql-cfg*.* files
+	theMux.HandleFunc(api_list+"builtin-routes", closure_respHandlerListBuiltinRoutes(hdlr)).Methods("GET")            // List back all the routes
+	theMux.HandleFunc(api_list+"grabFeedback", respHandlerGrabFeedback).Methods("GET")                                 // !!depricated!! /api/grabFeeddback instead -DB! Feedback palced in log
+	theMux.HandleFunc(api_list+"logit", respHandlerLogIt).Methods("GET", "POST")                                       // !!depricated!! /api/loggit instead - DB! Log information log files
+	theMux.HandleFunc(api_list+"installed-themes", closure_respHandlerListInstalledThemes(hdlr)).Methods("GET")        // DB! Find the set of installed themes
+	theMux.HandleFunc(api_list+"current-theme", closure_respHandlerListCurrentTheme(hdlr)).Methods("GET")              // DB! Find the currently set theme
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+func (hdlr *TabServer2Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
+		if rw, ok := www.(*goftlmux.MidBuffer); ok {
+
+			trx := mid.GetTrx(rw)
+			trx.PathMatched(1, "TabServer2", hdlr.Paths, pn, req.URL.Path)
+
+			fmt.Printf("In TabServer2, %s\n", godebug.LF())
+
+			if hdlr.ApiTableKey != "" {
+				ps := &rw.Ps
+				pwSupplied := ps.ByNameDflt("api_table_key", "")
+				if hdlr.ApiTableKey != pwSupplied {
+					if !hdlr.final || hdlr.Next == nil {
+						trx.AddNote(1, "TabServer2: final - return - 406")
+						logrus.Errorf("406 api_table_key did not match required key: %s", godebug.LF())
+						www.WriteHeader(http.StatusNotAcceptable) // 406
+					} else {
+						fmt.Printf("In TabServer2 - ApiTableKey used and passed - not final, %s\n", godebug.LF())
+						hdlr.Next.ServeHTTP(www, req)
+					}
+					return
+				}
+				fmt.Printf("In TabServer2 - ApiTableKey used and matched, %s\n", godebug.LF())
+			}
+
+			found, err := hdlr.theMux.MatchAndServeHTTP(www, req)
+			if found {
+				fmt.Printf("In TabServer2 - matched and served, %s\n", godebug.LF())
+			}
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorRed, mid.ErrMuxError, MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorRed, err, MiscLib.ColorReset)
+				logrus.Errorf("Error: %s - %s, %s", mid.ErrMuxError, err, godebug.LF())
+				trx.ErrorReturn(1, err)
+				www.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			if !found {
+				if !hdlr.final {
+					trx.AddNote(1, "TabServer2: not final - so calling next")
+					fmt.Printf("In TabServer2 - not final - so calling next, %s\n", godebug.LF())
+					hdlr.Next.ServeHTTP(rw, req)
+				} else {
+					// fmt.Fprintf(rw, "%s\n", lib.SVarI(req))	// print out entire request to take a look at it
+					trx.AddNote(1, "TabServer2: final - return - 404")
+					fmt.Printf("In TabServer2 - final - so 404 , %s\n", godebug.LF())
+					logrus.Errorf("404 att: %s", godebug.LF())
+					www.WriteHeader(http.StatusNotFound) // 404
+				}
+			}
+			return
+
+		} else {
+			fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorRed, mid.ErrNonMidBufferWriter, MiscLib.ColorReset)
+			fmt.Printf("%s\n", mid.ErrNonMidBufferWriter)
+			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+			www.WriteHeader(http.StatusInternalServerError)
+		}
+	} else {
+		if hdlr.Next != nil {
+			hdlr.Next.ServeHTTP(www, req)
+		} else {
+			logrus.Errorf("404 att: %s", godebug.LF())
+			www.WriteHeader(http.StatusNotFound)
+		}
+	}
+
+}
+
+type DbColumnsType struct {
+	ColumnName string
+	DBType     string
+	TypeCode   string
+	MinLen     int
+	MaxLen     int
+}
+
+type DbTableType struct {
+	TableName string
+	DbColumns []DbColumnsType
+}
+
+func (hdlr *TabServer2Type) CheckSqlCfgValid() (isOk bool) {
+	for endPointName, vv := range hdlr.SQLCfg {
+		if vv.TableName != "" {
+			fmt.Printf("\n-----------------------------------------------------------------------\n")
+			fmt.Printf("Checking Table [%s] for endpoint: %s\n", vv.TableName, endPointName)
+			// 1. Read in table - if err then table did not exist - check for spelling errors on table name
+			// 	if error on (1) then return
+			// 2. Check each column - that it exists - if not then err
+			// xyzzyPostDb Checks -- xyzzy - at this point --
+			//if false { // xyzzy - database connection is not setup at this point -- check has to be deferred to later
+			//	TableInfo := hdlr.GetTableInformationSchema(vv.TableName)
+			//	_ = TableInfo
+			//}
+			var TableName = vv.TableName
+			var EndPoint = endPointName
+			var TheCols = vv.Cols
+			cfg.PostDbConnectChecks = append(cfg.PostDbConnectChecks, cfg.PostDbType{RunCheck: func(conn *sizlib.MyDb) bool {
+				TableInfo, err := hdlr.GetTableInformationSchema(conn, TableName)
+				if err != nil {
+					return false
+				}
+				fmt.Printf("Doing Check for %s : %s\n", TableName, EndPoint)
+				if !ValidateTableCols(TheCols, TableInfo) {
+					return false
+				}
+				return true
+			}})
+
+		}
+	}
+	isOk = true
+	return
+}
+
+var g_schema string = "public"
+
+func (hdlr *TabServer2Type) GetTableInformationSchema(conn *sizlib.MyDb, TableName string) (rv DbTableType, err error) {
+	// qry := `SELECT * FROM information_schema.tables WHERE table_schema = $1 ORDER BY table_name`
+	fmt.Printf("Validateing [%s]\n", TableName)
+	qry := `SELECT * FROM information_schema.tables WHERE table_schema = $1 and table_name = $2`
+	data := sizlib.SelData(conn.Db, qry, g_schema, TableName)
+	if data == nil || len(data) == 0 {
+		fmt.Fprintf(os.Stderr, "%sMissing table%s%s\n", MiscLib.ColorRed, TableName, MiscLib.ColorReset)
+		fmt.Printf("Missing table%s\n", TableName)
+		err = errors.New("Missing Table")
+		return
+	}
+	fmt.Fprintf(os.Stderr, "%sFound table: %s%s\n", MiscLib.ColorGreen, TableName, MiscLib.ColorReset)
+	fmt.Printf("Table [%s] found in schema [%s]\n", data[0]["table_name"], data[0]["table_schema"])
+	rv.TableName = TableName
+
+	// xyzzy - get columns now
+	qry = `SELECT * FROM information_schema.columns WHERE table_schema = $1 and table_name = $2`
+	cols := sizlib.SelData(conn.Db, qry, g_schema, TableName)
+
+	fmt.Printf("data=%s\n", lib.SVarI(data))
+	fmt.Printf("cols=%s\n", lib.SVarI(cols))
+	for _, vv := range cols {
+		rv.DbColumns = append(rv.DbColumns, DbColumnsType{
+			ColumnName: vv["column_name"].(string),
+			DBType:     vv["data_type"].(string),
+			TypeCode:   GetTypeCode(vv["data_type"].(string)),
+		})
+	}
+	fmt.Printf("rv=%s\n", lib.SVarI(rv))
+	return
+}
+
+func GetTypeCode(ty string) (rv string) {
+	rv = "?"
+	switch ty {
+	case "character varying", "text":
+		return "s"
+	case "number":
+		return "i"
+	}
+	if strings.HasPrefix(ty, "timestamp") {
+		return "d"
+	}
+	return
+}
+
+func ValidateTableCols(TheCols []ColSpec, TableInfo DbTableType) (rv bool) {
+	rv = true
+	for _, vv := range TheCols {
+		if pp := HaveColumn(vv.ColName, TableInfo); pp == -1 {
+			fmt.Fprintf(os.Stderr, "%sMissing Column [%s] in table [%s]%s\n", MiscLib.ColorRed, vv.ColName, TableInfo.TableName, MiscLib.ColorReset)
+			fmt.Printf("Missing Column [%s] in table [%s]\n", vv.ColName, TableInfo.TableName)
+			rv = false
+		}
+	}
+	return
+}
+
+func HaveColumn(ColumnName string, TableInfo DbTableType) (rv int) {
+	rv = -1
+	for ii, vv := range TableInfo.DbColumns {
+		if ColumnName == vv.ColumnName {
+			rv = ii
+			return
+		}
+	}
+	return
+}
+
+// const db1 = true
+const db3 = true
+
+/* vim: set noai ts=4 sw=4: */

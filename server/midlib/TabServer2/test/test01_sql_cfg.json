@@ -1,0 +1,99 @@
+{  //// This is a comment that should just irritate the world
+	"note:GET": { "f": "Version 0.0.1 of file" },
+	"note:comment": { "f": "Copyright (C) Philip Schlump, 2009-2016." }
+	,"/api/status_db": { "g": "status_db", "p": [ "$ip$" ]
+		, "Comment": "test (1) ability to call stored procedure via 'g' parameter (2) ability to pass in injected parameter (3) ability to connect to TabServer2 and database"
+		, "LineNo":"LineNo: __LINE__ File: __FILE__"
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/status_db2": { "g": "status_db", "p": [ "$ip$" ]
+		, "Comment": "test (1) ability to call stored procedure via 'g' parameter (2) ability to pass in injected parameter"
+		, "LineNo":"LineNo: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 				{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"user": 				{ "required":true, "type":"string" }
+			,"auth_token": 			{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			}
+		}
+	,"/api/table/test7": { "LineNo":"__LINE__"
+		, "Comment": "test (1) ability to have a 'fixed' query (2) ability to call stored procedure from query that returns set of rows"
+		, "query": "select * from prep_info5 ( )"
+		, "p": [ ]
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "callback": 		{ "optional":true }
+			}
+		}
+	,"/api/table/test7a": { "LineNo":"__LINE__"
+		, "Comment": "test (1) ability to have a 'fixed' query (2) ability to call stored procedure from query that returns set of rows"
+		, "query": "select * from prep_info5 ( )"
+		, "ReturnAsHash":true
+		, "p": [ ]
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "callback": 		{ "optional":true }
+			}
+		}
+	,"/api/table/get_monitor_data": { "LineNo":"430"
+		, "Comment": "test (1) ability to have a 'fixed' LineNo (2) ability to call stored procedure from query that returns set of rows"
+		, "query": "select * from prep_info5 ( )"
+		, "p": [ ]
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "auth_token": 		{ "required":true, "type":"uuid" }
+			,"callback": 		{ "optional":true }
+			}
+		}
+	,"/api/bobbob": { "g": "status_db", "p": [ "$ip$" ]
+		, "LineNo":"LineNo: __LINE__ File: __FILE__"
+		, "TableList":["t_user","e_user"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/table/log": { "crud": [ "select", "insert", "update", "delete", "info" ]
+		, "Comment": "test (1) ability to query all data (2) ability to get back a single row via PK query"
+		, "TableName": "log"
+		, "LineNo":"__LINE__"
+		, "Method":["GET","POST","PUT","DELETE","HEAD"]
+		, "cols": [
+				  { "colName": "id" 				, "colType": "i",				   "insert":true, "autoGen": true, "isPk": true }
+				, { "colName": "log_timestamp"		, "colType": "d",	"update":true, "insert":true		}
+				, { "colName": "error_level"		, "colType": "i",	"update":true, "insert":true		}
+				, { "colName": "message"			, "colType": "s",	"update":true, "insert":true		}
+				, { "colName": "source"				, "colType": "s",	"update":true, "insert":true		}
+			]
+		}
+	,"/api/table/log_test_0001": { "crud": [ "select", "insert", "update", "delete" ]
+		, "Comment": "test (1) ability to change table name (2) rename of parameters to column names (3) 'Comment' field (4) __LINE__ (4) more than one end point to a single table"
+		, "TableName": "log"
+		, "LineNo":"__LINE__"
+		, "Method":["GET","POST","PUT","DELETE","HEAD"]
+		, "ReMapParameter": [
+				{ "FromName": "other_id", "ToName": "id" }
+			]
+		, "cols": [
+				  { "colName": "id" 				, "colType": "i",				   "insert":true, "autoGen": true , "isPk": true }
+				, { "colName": "log_timestamp"		, "colType": "d",	"update":true, "insert":true		}
+				, { "colName": "error_level"		, "colType": "i",	"update":true, "insert":true		}
+				, { "colName": "message"			, "colType": "s",	"update":true, "insert":true		}
+				, { "colName": "source"				, "colType": "s",	"update":true, "insert":true		}
+			]
+		}
+	,"/api/table/log_test_0002": { "crud": [ "select", "insert", "update", "delete", "info" ]
+		, "Comment": "test (1) ability to query all data (2) ability to get back a single row via PK query"
+		, "TableName": "log"
+		, "LineNo":"__LINE__"
+		, "Method":["GET","POST","PUT","DELETE","HEAD"]
+		, "cols": [
+				  { "colName": "id" 				, "colType": "i",				   "insert":false, "autoGen": true, "isPk": true }
+				, { "colName": "log_timestamp"		, "colType": "d",	"update":true, "insert":true		}
+				, { "colName": "error_level"		, "colType": "i",	"update":true, "insert":true		}
+				, { "colName": "message"			, "colType": "s",	"update":true, "insert":true		}
+				, { "colName": "source"				, "colType": "s",	"update":true, "insert":true		}
+			]
+		}
+}

@@ -1,0 +1,7 @@
+{
+	"PGConn": "user=pschlump password=f1ref0x2 sslmode=disable dbname=pschlump port=5433 host=127.0.0.1",
+	"DBType": "postgres",
+	"DBName": "pschlump",
+	"RedisConnectHost":"192.168.0.133",
+	"RedisConnectAuth":"lLJSmkccYJiVEwskr1RM4MWIaBM"
+}
