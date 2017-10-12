@@ -20,74 +20,90 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RejectHotlinkType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// convert from "yes"/"no" to bool data
+//	// 	AlloweEmpty    string       //
+//	//	ReturnError    string       // if false, "no" - then return a file - usually empty.
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//
+//		var err error
+//
+//		hh, ok := h.(*RejectHotlinkType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed to FileServeType - postInit\n")
+//			return mid.ErrInternalError
+//		} else {
+//
+//			hh.alloweEmpty, err = lib.ParseBool(hh.AlloweEmpty)
+//			if err != nil {
+//				fmt.Fprintf(os.Stderr, "%sError: Invalid boolean data, %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+//				fmt.Printf("Error: Invalid boolean data, %d\n", hh.LineNo)
+//				return mid.ErrInternalError
+//			}
+//			hh.returnError, err = lib.ParseBool(hh.ReturnError)
+//			if err != nil {
+//				fmt.Fprintf(os.Stderr, "%sError: Invalid boolean data, %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+//				fmt.Printf("Error: Invalid boolean data, %d\n", hh.LineNo)
+//				return mid.ErrInternalError
+//			}
+//
+//			for ii, vv := range hh.FileExtensions {
+//				if len(vv) > 0 && vv[0] != '.' {
+//					fmt.Fprintf(os.Stderr, "%sError: Invalid file extenstion (%s) must start with '.' at, %d, LineNo:%d%s\n", MiscLib.ColorRed, vv, ii, hh.LineNo, MiscLib.ColorReset)
+//					fmt.Fprintf(os.Stderr, "Error: Invalid file extenstion (%s) must start with '.' at, %d, LineNo:%d\n", vv, ii, hh.LineNo)
+//					return mid.ErrInternalError
+//				}
+//			}
+//
+//		}
+//		return nil
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RejectHotlinkType{} }
+//
+//	cfg.RegInitItem2("RejectHotlink", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *RejectHotlinkType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RejectHotlinkType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RejectHotlinkType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// convert from "yes"/"no" to bool data
-	// 	AlloweEmpty    string       //
-	//	ReturnError    string       // if false, "no" - then return a file - usually empty.
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-
-		var err error
-
-		hh, ok := h.(*RejectHotlinkType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed to FileServeType - postInit\n")
-			return mid.ErrInternalError
-		} else {
-
-			hh.alloweEmpty, err = lib.ParseBool(hh.AlloweEmpty)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%sError: Invalid boolean data, %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-				fmt.Printf("Error: Invalid boolean data, %d\n", hh.LineNo)
-				return mid.ErrInternalError
-			}
-			hh.returnError, err = lib.ParseBool(hh.ReturnError)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%sError: Invalid boolean data, %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-				fmt.Printf("Error: Invalid boolean data, %d\n", hh.LineNo)
-				return mid.ErrInternalError
-			}
-
-			for ii, vv := range hh.FileExtensions {
-				if len(vv) > 0 && vv[0] != '.' {
-					fmt.Fprintf(os.Stderr, "%sError: Invalid file extenstion (%s) must start with '.' at, %d, LineNo:%d%s\n", MiscLib.ColorRed, vv, ii, hh.LineNo, MiscLib.ColorReset)
-					fmt.Fprintf(os.Stderr, "Error: Invalid file extenstion (%s) must start with '.' at, %d, LineNo:%d\n", vv, ii, hh.LineNo)
-					return mid.ErrInternalError
-				}
-			}
-
-		}
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &RejectHotlinkType{} }
-
-	cfg.RegInitItem2("RejectHotlink", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("RejectHotlink", CreateEmpty, `{
 		"Paths":           { "type":["string","filepath"], "isarray":true, "required":true },
 		"AllowedReferer":  { "type":["string"], "isarray":true, "required":true },
 		"FileExtensions":  { "type":["string"], "isarray":true, "required":true },
@@ -98,9 +114,34 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *RejectHotlinkType) SetNext(next http.Handler) {
+func (hdlr *RejectHotlinkType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *RejectHotlinkType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	hdlr.alloweEmpty, err = lib.ParseBool(hdlr.AlloweEmpty)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%sError: Invalid boolean data, %d%s\n", MiscLib.ColorRed, hdlr.LineNo, MiscLib.ColorReset)
+		fmt.Printf("Error: Invalid boolean data, %d\n", hdlr.LineNo)
+		return mid.ErrInternalError
+	}
+	hdlr.returnError, err = lib.ParseBool(hdlr.ReturnError)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%sError: Invalid boolean data, %d%s\n", MiscLib.ColorRed, hdlr.LineNo, MiscLib.ColorReset)
+		fmt.Printf("Error: Invalid boolean data, %d\n", hdlr.LineNo)
+		return mid.ErrInternalError
+	}
+
+	for ii, vv := range hdlr.FileExtensions {
+		if len(vv) > 0 && vv[0] != '.' {
+			fmt.Fprintf(os.Stderr, "%sError: Invalid file extenstion (%s) must start with '.' at, %d, LineNo:%d%s\n", MiscLib.ColorRed, vv, ii, hdlr.LineNo, MiscLib.ColorReset)
+			fmt.Fprintf(os.Stderr, "Error: Invalid file extenstion (%s) must start with '.' at, %d, LineNo:%d\n", vv, ii, hdlr.LineNo)
+			return mid.ErrInternalError
+		}
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RejectHotlinkType)(nil)

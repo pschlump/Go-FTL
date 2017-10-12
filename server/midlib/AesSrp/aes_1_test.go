@@ -32,6 +32,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 // rr "github.com/pschlump/rediswrap" //
@@ -234,6 +235,13 @@ func Test_BasicAuthServer(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			wr := goftlmux.NewMidBuffer(rec, nil)
+
+			id := "test-01-BasicAuthServer"
+			trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+			trx.TrxIdSeen(id, test.url, "GET")
+			wr.RequestTrxId = id
+
+			wr.G_Trx = trx
 
 			var req *http.Request
 

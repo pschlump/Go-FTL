@@ -19,45 +19,71 @@ import (
 	"fmt"
 	"net/http"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*DirectoryBrowseType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &DirectoryBrowseType{} }
+//
+//	cfg.RegInitItem2("DirectoryBrowse", initNext, createEmptyType, nil, `{
+//        "Paths":            { "type":[ "string", "filepath" ], "isarray":true, "required":true },
+//        "TemplateName":     { "type":[ "string" ], "default":"" },
+//        "TemplateRoot":     { "type":[ "[]string","filepath" ], "default":"" },
+//        "LineNo":           { "type":[ "int" ], "default":"1" }
+//        }`)
+//}
+//
+//// normally identical
+//func (hdlr *DirectoryBrowseType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*DirectoryBrowseType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &DirectoryBrowseType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &DirectoryBrowseType{} }
-
-	cfg.RegInitItem2("DirectoryBrowse", initNext, createEmptyType, nil, `{
-		"Paths":         { "type":[ "string", "filepath" ], "isarray":true, "required":true },
-		"TemplateName":  { "type":[ "string" ], "default":"" },
-		"TemplateRoot":          { "type":[ "[]string","filepath" ], "default":"" },
-		"LineNo":        { "type":[ "int" ], "default":"1" }
+	mid.RegInitItem3("DirectoryBrowse", CreateEmpty, `{
+        "Paths":            { "type":[ "string", "filepath" ], "isarray":true, "required":true },
+        "TemplateName":     { "type":[ "string" ], "default":"" },
+        "TemplateRoot":     { "type":[ "[]string","filepath" ], "default":"" },
+        "LineNo":           { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *DirectoryBrowseType) SetNext(next http.Handler) {
+func (hdlr *DirectoryBrowseType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *DirectoryBrowseType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*DirectoryBrowseType)(nil)
@@ -97,9 +123,6 @@ Directory Browse:		1 day
 	5. Process it - inside ../../fileserver/fs - Line:220 - func dirList(w http.ResponseWriter, f File) {
 	6. Have default - for templates
 	7. Have config to turn off directory browsing
-
-
-
 
 1. Verify that data gets set
 2. Wite the direcotry-no-middleware and test the same

@@ -19,30 +19,49 @@ import (
 	"net/http"
 	"time"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/lib"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*CacheHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = FtlConfigError
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &CacheHandlerType{} }
+//
+//	cfg.RegInitItem2("cache", initNext, createEmptyType, nil, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"CacheDir":      { "type":[ "string","filepath" ], "default":"" },
+//		"CacheSize":     { "type":[ "int" ], "default":"50000000" },
+//		"LimitTooBig":   { "type":[ "int" ], "default":"2000000" },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*CacheHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = FtlConfigError
-		}
-		return
+	// type CreateEmptyFx3 func(name string) *GoFTLMiddleWare
+	CreateEmpty := func(name string) GoFTLMiddleWare {
+		x := &CacheHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &CacheHandlerType{} }
-
-	cfg.RegInitItem2("cache", initNext, createEmptyType, nil, `{
+	RegInitItem3("Gzip", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"CacheDir":      { "type":[ "string","filepath" ], "default":"" },
 		"CacheSize":     { "type":[ "int" ], "default":"50000000" },
@@ -51,10 +70,20 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *CacheHandlerType) SetNext(next http.Handler) {
+func (hdlr *CacheHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
 }
+
+func (hdlr *CacheHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
+}
+
+// normally identical
+//func (hdlr *CacheHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
 
 var _ GoFTLMiddleWare = (*CacheHandlerType)(nil)
 
@@ -85,18 +114,19 @@ func NewCacheServer(n http.Handler, p []string, d string, siz int64, lim int64) 
 	return &CacheHandlerType{Next: n, Paths: p, CacheDir: d, CacheSize: siz, LimitTooBig: lim}
 }
 
-func (cacheHandler CacheHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
-	if lib.PathsMatch(cacheHandler.Paths, req.URL.Path) {
+//	                                  ServeHTTP(www http.ResponseWriter, req *http.Request)
+func (hdlr *CacheHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+	if lib.PathsMatch(hdlr.Paths, req.URL.Path) {
 
 		if LookupInLRU(req.URL.Path, www, req) {
 			//		if ModDateTime is different on disk then ReRead
 			// 		if on disk read, else return Data
 		} else {
-			cacheHandler.Next.ServeHTTP(www, req)
+			hdlr.Next.ServeHTTP(www, req)
 		}
 
 	} else {
-		cacheHandler.Next.ServeHTTP(www, req)
+		hdlr.Next.ServeHTTP(www, req)
 	}
 }
 

@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"os"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -29,48 +31,69 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*DumpRequestType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &DumpRequestType{} }
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//
+//		hh, ok := h.(*DumpRequestType)
+//		if !ok {
+//			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			hh.outputFile = os.Stdout
+//			if hh.FileName != "" {
+//				var err error
+//				hh.outputFile, err = lib.Fopen(hh.FileName, "a")
+//				if err != nil {
+//					fmt.Printf("Error: Unable to open %s for append, Error: %s Line No:%d\n", hh.FileName, err, hh.LineNo)
+//					return mid.ErrInternalError
+//				}
+//			}
+//			hh.final, _ = lib.ParseBool(hh.Final)
+//		}
+//
+//		return nil
+//	}
+//
+//	cfg.RegInitItem2("DumpRequest", initNext, createEmptyType, postInit, `{
+//		"Paths":        { "type":["string","filepath"], "isarray":true, "default":"/" },
+//		"Msg":          { "type":[ "string" ], "default":"" },
+//		"Final":        { "type":[ "string" ], "default":"no" },
+//		"FileName":     { "type":[ "string","filepath" ], "default":"" },
+//		"LineNo":       { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+
+// normally identical
+func (hdlr *DumpRequestType) SetNext(next http.Handler) {
+	hdlr.Next = next
+}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*DumpRequestType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &DumpRequestType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &DumpRequestType{} }
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-
-		hh, ok := h.(*DumpRequestType)
-		if !ok {
-			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			hh.outputFile = os.Stdout
-			if hh.FileName != "" {
-				var err error
-				hh.outputFile, err = lib.Fopen(hh.FileName, "a")
-				if err != nil {
-					fmt.Printf("Error: Unable to open %s for append, Error: %s Line No:%d\n", hh.FileName, err, hh.LineNo)
-					return mid.ErrInternalError
-				}
-			}
-			hh.final, _ = lib.ParseBool(hh.Final)
-		}
-
-		return nil
-	}
-
-	cfg.RegInitItem2("DumpRequest", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("DumpRequest", CreateEmpty, `{
 		"Paths":        { "type":["string","filepath"], "isarray":true, "default":"/" },
 		"Msg":          { "type":[ "string" ], "default":"" },
 		"Final":        { "type":[ "string" ], "default":"no" },
@@ -79,9 +102,24 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *DumpRequestType) SetNext(next http.Handler) {
+func (hdlr *DumpRequestType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *DumpRequestType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	hdlr.outputFile = os.Stdout
+	if hdlr.FileName != "" {
+		var err error
+		hdlr.outputFile, err = lib.Fopen(hdlr.FileName, "a")
+		if err != nil {
+			fmt.Printf("Error: Unable to open %s for append, Error: %s Line No:%d\n", hdlr.FileName, err, hdlr.LineNo)
+			return mid.ErrInternalError
+		}
+	}
+	hdlr.final, _ = lib.ParseBool(hdlr.Final)
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*DumpRequestType)(nil)

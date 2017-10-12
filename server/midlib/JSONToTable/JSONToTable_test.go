@@ -17,9 +17,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -27,6 +29,10 @@ import (
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 
 func Test_JSONToTable_01_Server(t *testing.T) {
+
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
 
 	tests := []struct {
 		runTest            bool
@@ -103,6 +109,14 @@ func Test_JSONToTable_01_Server(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		wr := goftlmux.NewMidBuffer(rec, nil) // var wr http.ResponseWriter
+
+		id := "test-01-StatusHandler"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
+		wr.G_Trx = trx
+
 		// lib.SetupTestCreateHeaders(wr, test.hdr)
 
 		var req *http.Request

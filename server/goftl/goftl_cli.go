@@ -85,13 +85,13 @@ func main() {
 	//fmt.Printf("At: %s\n", lib.LF())
 	haveConfig := false
 	if lib.Exists(*CfgFN) {
-		cfg.ReadConfigFile2(*CfgFN)
+		mid.ReadConfigFile2(*CfgFN)
 		haveConfig = true
 	}
 
 	fns := flag.Args()
 	for _, s := range fns {
-		cfg.ReadConfigFile2(s)
+		mid.ReadConfigFile2(s)
 		haveConfig = true
 	}
 
@@ -117,7 +117,7 @@ func main() {
 	for serverName, s_item := range cfg.ServerGlobal.Config { // Config map[string]PerServerConfigType // Anything that did not match the abobve JSON names //
 		// PerServerConfigType.ConfigData -> s_item.ConfigData
 
-		p1 := mid.NewBotHandler() // "bot" handler - for 404 routes
+		p1 := mid.NewBotHandler() // "bot" handler - for 404 routes // var p1 mid.GoFTLMiddleWare
 		configArray, ok := s_item.Plugins.([]interface{})
 		if !ok {
 			fmt.Fprintf(os.Stderr, "%sError Plugins is not array - nothing will be confiured for %s, %s%s\n", MiscLib.ColorRed, serverName, godebug.LF(), MiscLib.ColorReset)
@@ -125,6 +125,7 @@ func main() {
 
 			n_err := 0
 			err_pos := -1
+			missingPluginError := false
 			for ii := len(configArray) - 1; ii >= 0; ii-- {
 				vv, ok := configArray[ii].(map[string]interface{})
 				fmt.Printf("configArray %s, %s\n", godebug.SVarI(vv), godebug.LF())
@@ -133,10 +134,11 @@ func main() {
 				} else {
 					pluginName := lib.FirstName(vv)                 // extract pluginName of plugin
 					data := vv[pluginName].(map[string]interface{}) // xyzzy - should check if ok to do this
-					jj := cfg.LookupInitByName(pluginName)
+					jj := mid.LookupInitByName3(pluginName)
 					if jj >= 0 {
-						dataOfType := (cfg.NewInit[jj].CreateEmpty)()
-						valiationStringJson := cfg.NewInit[jj].ValidJSON
+						// dataOfType := (cfg.NewInit[jj].CreateEmpty)()
+						dataOfType := (mid.NewInit3[jj].CreateEmpty)(pluginName) // var dataOfType mid.GoFTLMiddleWare
+						valiationStringJson := mid.NewInit3[jj].ValidJSON
 						// Validate data into fd - vv - data source
 						ok, dflt, msg := cfg.IsInputValid(pluginName, valiationStringJson, data)
 						if !ok {
@@ -146,29 +148,49 @@ func main() {
 							fmt.Printf("Unable to initialize module '%s' in server '%s', Error:%s\n", pluginName, serverName, msg)
 						} else {
 							fmt.Printf("At: %s ----------- it is valid at this point ----------- \n", lib.LF())
-							err := cfg.MapJsonToStruct(data, dflt, dataOfType)
+							err := cfg.MapJsonToStruct(data, dflt, dataOfType) // xyzzy7
 							if err != nil {
 								fmt.Fprintf(os.Stderr, "%sUnable to initialize module %s in server %s, %s%s\n", MiscLib.ColorRed, pluginName, serverName, err, MiscLib.ColorReset)
 								fmt.Fprintf(os.Stdout, "Unable to initialize module %s in server %s, %s\n", pluginName, serverName, err)
 							} else {
-								fmt.Printf("At: %s ---------------- struct set up at this point -----------\n", lib.LF())
-								finit := cfg.NewInit[jj].OneTimeInit
-								if finit != nil {
-									// cfg.PerServerConfigType
-									finit(dataOfType, s_item.ConfigData, cfg.NewInit[jj].CallNo) // xyzzy xyzzy
-									cfg.NewInit[jj].CallNo++
-								}
-								p1, err = (cfg.NewInit[jj].FinalizeHandler)(p1, cfg.ServerGlobal, dataOfType, pluginName, ii)
+								fmt.Printf("%sAt: %s ---------------- struct set up at this point -----------%s\n", MiscLib.ColorCyan, lib.LF(), MiscLib.ColorReset)
+
+								// -----------------------------------------------------------------------------------------------------------------------
+								//finit := cfg.NewInit[jj].OneTimeInit	//xyzzy7
+								//if finit != nil {
+								//	// cfg.PerServerConfigType
+								//	finit(dataOfType, s_item.ConfigData, cfg.NewInit[jj].CallNo) // xyzzy xyzzy
+								//	cfg.NewInit[jj].CallNo++
+								//}
+								// p1, err = (cfg.NewInit[jj].FinalizeHandler)(p1, cfg.ServerGlobal, dataOfType, pluginName, ii)
+								// dataOfType.OntTimeInit(dataOfType, s_item.ConfigData, mid.NewInit3[jj].CallNo)
+								// -----------------------------------------------------------------------------------------------------------------------
+
+								err = dataOfType.PreValidate(cfg.ServerGlobal, s_item.ConfigData, pluginName, ii, mid.NewInit3[jj].CallNo)
 								if err != nil {
 									fmt.Fprintf(os.Stderr, "%sError: %s%s\n", MiscLib.ColorRed, err, MiscLib.ColorReset)
 								}
+
+								err = dataOfType.InitializeWithConfigData(p1, cfg.ServerGlobal, pluginName, ii, mid.NewInit3[jj].CallNo)
+								if err != nil {
+									fmt.Fprintf(os.Stderr, "%sError: %s%s\n", MiscLib.ColorRed, err, MiscLib.ColorReset)
+								}
+
+								mid.NewInit3[jj].CallNo++
+								p1 = dataOfType // Walk Forward
 							}
 						}
 					} else {
 						fmt.Fprintf(os.Stderr, "%sError: Unable to find middleware/plugin pluginName [%s]%s\n", MiscLib.ColorRed, pluginName, MiscLib.ColorReset)
 						fmt.Fprintf(os.Stdout, "Error: Unable to find middleware/plugin pluginName [%s]\n", pluginName)
+						missingPluginError = true
 					}
 				}
+			}
+			if missingPluginError {
+				pluginList := mid.LookupPluginList()
+				fmt.Fprintf(os.Stderr, "%sAvailable Plugins Are:\n%s%s\n", MiscLib.ColorRed, pluginList, MiscLib.ColorReset)
+				fmt.Fprintf(os.Stdout, "Available Plugins Are:\n%s\n", pluginList)
 			}
 			if n_err > 0 {
 				fmt.Fprintf(os.Stderr, "%sModules did not initialize properly - fatal error, serverName=%s, last error pos=%d\nSyntax error in JSON validation specification\nFatal error reported from: %s%s\n", MiscLib.ColorRed, serverName, err_pos, godebug.LF(), MiscLib.ColorReset)
@@ -190,6 +212,11 @@ func main() {
 			fmt.Printf("Early exit after config -test config-\n")
 			os.Exit(1)
 		}
+
+		// Just a debug - looking at trailing '/' but turned out to not be a defect.
+		//for _, listen := range s_item.ListenTo {
+		//	fmt.Printf("%s -- ListenTo: [%s] - may need to clean up!\n, %s, %s", MiscLib.ColorBlue, listen, godebug.LF(), MiscLib.ColorReset)
+		//}
 
 		// ----------------------------------------------------------------------------------------------------------
 		// Set up the maping from IP addressses of local system to names that are to be name resolved.

@@ -642,6 +642,8 @@ func HasKeys(v map[string]interface{}) bool {
 // This will search for [path] / file  . ext, then...
 // ====================================================================================================================================================================================
 
+// May want to look at https://github.com/mitchellh/go-homedir.git -- for cross compile home dir
+
 var hasUserPat *regexp.Regexp
 var replUserPat *regexp.Regexp
 var homeDir string
@@ -719,7 +721,7 @@ func SearchPath(rawFileName string, searchPath string) (fullFileName string, ok 
 	mdata["HostName"] = hostname
 	mdata["IS_WINDOWS"] = ""
 	ps := string(os.PathSeparator)
-	if ps != "/" {
+	if ps == "/" {
 		mdata["IS_WINDOWS"] = ""
 	} else {
 		mdata["IS_WINDOWS"] = "ms"
@@ -873,14 +875,23 @@ func FindFiles(pth string, ignoreDirs []string) (rv []string) {
 	return
 }
 
+// FindDirsWithSQLCfg searches a possibly recursive set of directories looking for
+// directories containing sql-cfg*.json file.
 func FindDirsWithSQLCfg(pth string, ignoreDirs []string) (rv []string) {
+	recursive := false
+	if strings.HasSuffix(pth, "/...") {
+		pth = pth[0 : len(pth)-4]
+		recursive = true
+	}
+
 	fns, dirs := GetFilenames(pth)
-	_ = dirs
-	fns = FilterArray("^sql-cfg.*\\.json$", fns)
+
+	// fns = FilterArray("^sql-cfg.*\\.json$", fns)
+
 	for i, v := range fns {
 		fns[i] = pth + "/" + v
 	}
-	fmt.Printf("fns=%s\n", fns)
+	// fmt.Printf("fns=%s, %s\n", fns, godebug.LF())
 	for _, vv := range fns {
 		ww := Dirname(vv)
 		if InArray(ww, ignoreDirs) {
@@ -888,20 +899,23 @@ func FindDirsWithSQLCfg(pth string, ignoreDirs []string) (rv []string) {
 			rv = append(rv, ww)
 		}
 	}
+
+	// fmt.Printf("dirs=%s, %s\n", dirs, godebug.LF())
+
+	if recursive {
+		// fmt.Printf("Recursive true\n")
+		for _, dd := range dirs {
+			tpth := pth + "/" + dd
+			rv1 := FindDirsWithSQLCfg(tpth, ignoreDirs)
+			for _, aa := range rv1 {
+				if !InArray(aa, rv) {
+					rv = append(rv, aa)
+				}
+			}
+		}
+	}
+
 	return
-
-	//	rv = append(rv, fns...)
-	//	for _, v := range dirs {
-	//		trv := FindFiles(pth+"/"+v, ignoreDirs)
-	//		for _, w := range trv {
-	//			ww := Dirname(w)
-	//			if !InArray(ww, rv) {
-	//				rv = append(rv, ww)
-	//			}
-	//		}
-	//	}
-	//	return
-
 }
 
 // Return the directory part of a file name
@@ -913,7 +927,7 @@ func Dirname(fn string) (bn string) {
 	if i > 0 {
 		bn = fn[0:i]
 	}
-	fmt.Printf("Dirname Input[%s] Output[%s], %s\n", fn, bn, godebug.LF())
+	// fmt.Printf("Dirname Input[%s] Output[%s], %s\n", fn, bn, godebug.LF())
 	return
 }
 
@@ -1071,8 +1085,8 @@ func ReadJSONDataWithComments(path string) (file []byte, err error) {
 		aLine = ln.ReplaceAllString(aLine, fmt.Sprintf("%d", lineNo+1))
 		aLine = fi.ReplaceAllString(aLine, path)
 		aLine = cm.ReplaceAllString(aLine, "")
-		if en.MatchString(aLine) { // pick up and replace environment variables - put passwords in env not in config files
-			fmt.Printf("matched __ENV__:Name, %s\n", godebug.LF())
+		for en.MatchString(aLine) { // pick up and replace environment variables - put passwords in env not in config files
+			// fmt.Printf("matched __ENV__:Name, %s\n", godebug.LF())
 			ss := en.FindAllString(aLine, 1)
 			// fmt.Printf("ss = %s\n", ss)
 			s := ss[0] // the matched, no need to check array because inside MatchString already
@@ -1086,13 +1100,15 @@ func ReadJSONDataWithComments(path string) (file []byte, err error) {
 				os.Exit(1)
 			}
 			aLine = en.ReplaceAllString(aLine, v)
-			fmt.Printf("final line = [%s]\n", aLine)
+			// fmt.Printf("final line = [%s]\n", aLine)
 		}
 		lines[lineNo] = aLine
 	}
 	file = []byte(strings.Join(lines, "\n"))
 
-	// fmt.Printf("Results >%s<\n", file)
+	if db1099 {
+		fmt.Printf("Results >%s<\n", file)
+	}
 
 	return file, nil
 }
@@ -1106,14 +1122,18 @@ func JSONStringToData(s string) (theJSON map[string]interface{}, err error) {
 	return
 }
 
-/*
-Renamed Functions:
-	dir.go|244 col 6| func FnToCssClass should be FnToCSSClass
-	dir.go|314 col 6| func ReadJsonPath should be ReadJSONPath
-	dir.go|361 col 6| func readJsonFile should be readJSONFile
-	dir.go|386 col 6| func UriToStringMap should be URIToStringMap
-	dir.go|1020 col 6| func GetIpFromRemoteAddr should be GetIPFromRemoteAddr
-	dir.go|1069 col 6| func JsonStringToData should be JSONStringToData
-*/
+func DbPrint(db bool, format string, arg ...interface{}) {
+	if db {
+		fmt.Printf(format, arg...)
+	}
+}
+
+func DbFprint(db bool, fp io.Writer, format string, arg ...interface{}) {
+	if db {
+		fmt.Fprintf(fp, format, arg...)
+	}
+}
+
+const db1099 = true
 
 /* vim: set noai ts=4 sw=4: */

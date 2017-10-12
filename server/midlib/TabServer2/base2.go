@@ -1,7 +1,7 @@
 //
 // Go-FTL / TabServer2
 //
-// Copyright (C) Philip Schlump, 2012-2016. All rights reserved.
+// Copyright (C) Philip Schlump, 2012-2017. All rights reserved.
 //
 // Do not remove the following lines - used in auto-update.
 // Version: 0.5.9
@@ -53,10 +53,10 @@ import (
 // func Hello(w http.ResponseWriter, r *http.Request, ps goftlmux.Params) {
 func GetSqlCfgHandler2(name string, hdlr *TabServer2Type) func(www http.ResponseWriter, req *http.Request) {
 	return func(www http.ResponseWriter, req *http.Request) {
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of GetSqlCfgHandler2, %s\n", godebug.LF())
 		}
-		if db_closure2 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-2") {
 			fmt.Fprintf(os.Stderr, "%sAT top of GetSqlCfgHandler2, %s%s\n", MiscLib.ColorRed, godebug.LF(), MiscLib.ColorReset)
 		}
 		rw, _ /*hdlr*/, psP, err := GetRwPs(www, req)

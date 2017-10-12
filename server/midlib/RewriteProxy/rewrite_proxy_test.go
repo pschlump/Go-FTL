@@ -17,24 +17,32 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/testsup"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 
 func Test_TopServer(t *testing.T) {
+
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
+
 	tests := []struct {
 		url          string
-		hdr          []lib.NameValue
+		hdr          []testsup.NameValue
 		expectedCode int
 		expectedBody string
 	}{
 		{
 			url:          "http://example.com/foo?abc=def",
-			hdr:          []lib.NameValue{lib.NameValue{Name: "X-Test", Value: "A-Value"}},
-			expectedCoce: http.StatusOK,
+			hdr:          []testsup.NameValue{testsup.NameValue{Name: "X-Test", Value: "A-Value"}},
+			expectedCode: http.StatusOK,
 			expectedBody: "",
 		},
 	}
@@ -48,7 +56,15 @@ func Test_TopServer(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		wr := goftlmux.NewMidBuffer(rec, nil) // var wr http.ResponseWriter
-		lib.SetupTestCreateHeaders(wr, test.hdr)
+
+		id := "test-01-StatusHandler"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
+		wr.G_Trx = trx
+
+		testsup.SetupTestCreateHeaders(wr, test.hdr)
 
 		var req *http.Request
 

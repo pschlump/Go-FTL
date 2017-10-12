@@ -61,6 +61,13 @@ func Test_LimitExtServer(t *testing.T) {
 
 		wr := goftlmux.NewMidBuffer(rec,nil)
 
+			id := "test-01-BasicAuthServer"
+			trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+			trx.TrxIdSeen(id, test.url, "GET")
+			wr.RequestTrxId = id
+
+			wr.G_Trx = trx
+
 		var req *http.Request
 
 		req, err = http.NewRequest("GET", test.url, nil)

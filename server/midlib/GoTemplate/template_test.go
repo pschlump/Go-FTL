@@ -18,9 +18,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,6 +32,10 @@ import (
 // 2. req.RequestURI - modified
 
 func Test_RewriteServer(t *testing.T) {
+
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
 
 	var dd []map[string]interface{}
 	dd = make([]map[string]interface{}, 2, 2)
@@ -89,6 +95,13 @@ func Test_RewriteServer(t *testing.T) {
 
 		wr := goftlmux.NewMidBuffer(rec, nil) // var wr http.ResponseWriter
 		// lib.SetupTestCreateHeaders(wr, test.hdr)
+
+		id := "test-01-StatusHandler"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
+		wr.G_Trx = trx
 
 		var req *http.Request
 

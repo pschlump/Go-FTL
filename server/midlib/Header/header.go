@@ -20,37 +20,53 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/tmplp"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*HeaderType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &HeaderType{} }
+//
+//	cfg.RegInitItem2("Header", initNext, createEmptyType, nil, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *HeaderType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*HeaderHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &HeaderType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &HeaderHandlerType{} }
-
-	cfg.RegInitItem2("Header", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("Header", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"Name":          { "type":[ "string" ], "required":true },
 		"Value":         { "type":[ "string" ], "required":true },
@@ -58,19 +74,24 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *HeaderHandlerType) SetNext(next http.Handler) {
+func (hdlr *HeaderType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
 }
 
-var _ mid.GoFTLMiddleWare = (*HeaderHandlerType)(nil)
+func (hdlr *HeaderType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
+}
+
+var _ mid.GoFTLMiddleWare = (*HeaderType)(nil)
 
 // --------------------------------------------------------------------------------------------------------------------------
 
 // xyzzy - need to template translate value/name before use!
 // xyzzy - need to be able to delete headers from lower level!
 
-type HeaderHandlerType struct {
+type HeaderType struct {
 	Next   http.Handler
 	Paths  []string
 	Name   string // if Name starts with "-" then delete existing header before creating new one.
@@ -78,11 +99,11 @@ type HeaderHandlerType struct {
 	LineNo int
 }
 
-func NewHeaderServer(n http.Handler, p []string, h, v string) *HeaderHandlerType {
-	return &HeaderHandlerType{Next: n, Paths: p, Name: h, Value: v}
+func NewHeaderServer(n http.Handler, p []string, h, v string) *HeaderType {
+	return &HeaderType{Next: n, Paths: p, Name: h, Value: v}
 }
 
-func (hdlr *HeaderHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+func (hdlr *HeaderType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
 		if rw, ok := www.(*goftlmux.MidBuffer); ok {
 

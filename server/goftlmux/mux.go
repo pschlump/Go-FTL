@@ -3,8 +3,8 @@ package goftlmux
 //
 // Go Go Mux - Go Fast Mux / Router for HTTP requests
 //
-// (C) Philip Schlump, 2013-2016.  All rights reserved.
-// Version: 0.4.3
+// (C) Philip Schlump, 2013-2017.  All rights reserved.
+// Version: 0.4.4
 // BuildNo: 804
 //
 
@@ -51,6 +51,7 @@ func NewRouter() *MuxRouter {
 	r.LookupResults = append(r.LookupResults, Collision2{cType: Dummy, FileName: fn, LineNo: ln})
 	r.NotFound = http.NotFound // Set to default, http.NotFound handler.
 	r.Hash2Test = make([]int, bitMask+1, bitMask+1)
+	r.nMatch = make([]UrlPat, MaxSlashInUrl, MaxSlashInUrl)
 	return r
 }
 
@@ -144,6 +145,7 @@ type MuxRouter struct {
 	nLookupResults int
 
 	DebugMatchOn bool
+	nMatch       []UrlPat // Index by Length ( NSl )
 }
 
 // Handle is a function that can be registered to a route to handle HTTP
@@ -367,6 +369,7 @@ func (r *MuxRouter) HostPort_AllRoutes(hp ...string) *MuxRouter {
 		if hasReInString(v) {
 			fmt.Printf("Warning(20018): regular expressions are not supported in host/port.  This will be fixed in a week or two.\n")
 		}
+		fmt.Fprintf(os.Stderr, "\n\nWarning(40018): hpn - bad code!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.\n\n\n")
 		r.AllHostPortFlag = true
 		r.AllHostPort[v] = hpn
 		hpn += 3
@@ -374,7 +377,7 @@ func (r *MuxRouter) HostPort_AllRoutes(hp ...string) *MuxRouter {
 	return r
 }
 
-var hpn = 5
+var hpn = 5 // xyzzy - what the hell! - Just increments by 3, why 3 - why global static - what about multiple uses of same?
 
 // Host registers a new route with a matcher for the URL host.
 func (r *MuxRouter) Host(h string) *ARoute {
@@ -742,7 +745,7 @@ func (r *MuxRouter) setProtocal(k int) {
 
 // ----------------------------------------------------------------------------
 
-var disableOutput bool = false
+const disableOutput bool = false
 
 //type MyResponseWriter struct {
 //	StartTime     time.Time
@@ -988,11 +991,11 @@ func (r *MuxRouter) sortPat(trr *MuxRouterProcessing) {
 		return c1.Pat < c2.Pat
 	}
 	for i := 0; i < minInt(MaxSlashInUrl, r.MaxSlash+1); i++ {
-		if nMatch[i].PatList != nil && len(nMatch[i].PatList) > 1 {
-			CurPatOcc = nMatch[i].PatOcc
-			// fmt.Printf("sortPat: (before) nMatch[%d]=%s\n", i, debug.SVarI(nMatch[i]))
-			OrderedByPat(sp_Length_Desc, sp_DF, sp_Frequency, sp_Text).Sort(nMatch[i].PatList)
-			// fmt.Printf("sortPat: (after) nMatch[%d]=%s\n", i, debug.SVarI(nMatch[i]))
+		if r.nMatch[i].PatList != nil && len(r.nMatch[i].PatList) > 1 {
+			CurPatOcc = r.nMatch[i].PatOcc
+			// fmt.Printf("sortPat: (before) r.nMatch[%d]=%s\n", i, debug.SVarI(r.nMatch[i]))
+			OrderedByPat(sp_Length_Desc, sp_DF, sp_Frequency, sp_Text).Sort(r.nMatch[i].PatList)
+			// fmt.Printf("sortPat: (after) r.nMatch[%d]=%s\n", i, debug.SVarI(r.nMatch[i]))
 		}
 	}
 }
@@ -1061,30 +1064,30 @@ func (r *MuxRouter) GetArgs4(trr *MuxRouterProcessing, Url string, _ string, nam
 	}
 }
 
-// Post process nMatch adding all of the "*" patterns where they need to be during LookupUrlViaHash2.
+// Post process r.nMatch adding all of the "*" patterns where they need to be during LookupUrlViaHash2.
 //
 // for the longest pattern with a star
 //    for each pattern that is longer than that up to min(MaxSlashInUrl,r.MasSlash+1)
 //		Add that pattern (the * one) to the set of the others.
 //
 func (r *MuxRouter) addStarPat(trr *MuxRouterProcessing) {
-	// fmt.Printf("nMatch=%s\n", debug.SVarI(nMatch))
+	// fmt.Printf("r.nMatch=%s\n", debug.SVarI(r.nMatch))
 	for i := minInt(MaxSlashInUrl-1, r.MaxSlash+1); i > 0; i-- { // nothing at 0 so skip it.
 		// fmt.Printf("i=%d\n", i)
-		if nMatch[i].PatList != nil {
+		if r.nMatch[i].PatList != nil {
 			// fmt.Printf("Star is not nil\n")
-			for ii := 0; ii < len(nMatch[i].PatList); ii++ {
+			for ii := 0; ii < len(r.nMatch[i].PatList); ii++ {
 				// fmt.Printf("ii=%d\n", ii)
-				if nMatch[i].PatList[ii].Star {
+				if r.nMatch[i].PatList[ii].Star {
 					mm := minInt(MaxSlashInUrl, r.MaxSlash+1)
 					for j := i + 1; j < mm; j++ {
 						// do add
-						p := nMatch[i].PatList[ii]
-						nMatch[j].PatList = append(nMatch[j].PatList, p)
-						if nMatch[j].PatOcc == nil {
-							nMatch[j].PatOcc = make(map[string]int)
+						p := r.nMatch[i].PatList[ii]
+						r.nMatch[j].PatList = append(r.nMatch[j].PatList, p)
+						if r.nMatch[j].PatOcc == nil {
+							r.nMatch[j].PatOcc = make(map[string]int)
 						}
-						nMatch[j].PatOcc[p.Pat] = 1
+						r.nMatch[j].PatOcc[p.Pat] = 1
 					}
 				}
 			}
@@ -1103,24 +1106,24 @@ func hasStar(p string) bool {
 	return false
 }
 
-// Add a pattern to nMatch - check to see if it is already there.
+// Add a pattern to r.nMatch - check to see if it is already there.
 // Possible Improvement - inefficient/slow but it works.
-func addPat2(NSl int, p string, FileName string, LineNo int) {
+func (r *MuxRouter) addPat2(NSl int, p string, FileName string, LineNo int) {
 	f := false
 	// fmt.Printf("NSl=%d ->%s<- %s\n", NSl, p, debug.LF())
-	for _, v := range nMatch[NSl].PatList {
+	for _, v := range r.nMatch[NSl].PatList {
 		if v.Pat == p {
 			f = true
 			break
 		}
 	}
 	if !f {
-		nMatch[NSl].PatList = append(nMatch[NSl].PatList, UrlAPat{Pat: p, Star: hasStar(p)})
+		r.nMatch[NSl].PatList = append(r.nMatch[NSl].PatList, UrlAPat{Pat: p, Star: hasStar(p)})
 	}
-	if nMatch[NSl].PatOcc == nil {
-		nMatch[NSl].PatOcc = make(map[string]int)
+	if r.nMatch[NSl].PatOcc == nil {
+		r.nMatch[NSl].PatOcc = make(map[string]int)
 	}
-	nMatch[NSl].PatOcc[p]++
+	r.nMatch[NSl].PatOcc[p]++
 }
 
 // Count the number of characters 'c' in the string 's', return that value.
@@ -1274,7 +1277,7 @@ func (r *MuxRouter) addPatT__T(trr *MuxRouterProcessing, Route string, hdlr int,
 			}
 		}
 	}
-	addPat2(trr.NSl, pp, FileName, LineNo)
+	r.addPat2(trr.NSl, pp, FileName, LineNo)
 	trr.UsePat = pp
 	// ss = pp
 
@@ -1406,9 +1409,15 @@ func (r *MuxRouter) addHash2Map(trr *MuxRouterProcessing, Method string, Route s
 		}
 	}
 	ss = ((ss & bitMask) ^ ((ss >> nBits) & bitMask) ^ ((ss >> (nBits * 2)) & bitMask))
-	if dbHash2 || dbMatch2 {
-		fmt.Printf("After, ss=%-5d m=%4d/%s Url=%s, %s %d, %s\n", ss, m, Method, Route, FileName, LineNo, debug.LF())
-		//	fmt.Printf("************Error has occured, if ss=0000, ss=%d, %s\n", ss, debug.LF())
+	if dbDumpHashTable {
+		if dbX1 {
+			fmt.Printf("At, FileName=%s LineNo=%d, %s\n", FileName, LineNo, debug.LF())
+			fmt.Printf("%-40s %-8s %-13s %-40s %s\n", "Route", "ss", "m,Method", "FileName", "LineNo")
+			fmt.Printf("%-40s %-8s %-13s %-40s %s\n", "---------------------------", "--------", "----------", "------------------------------", "-----")
+			dbX1 = false
+		}
+		// fmt.Printf("After, ss=%-5d m=%4d/%s Url=%s, %s %d, %s\n", ss, m, Method, Route, FileName, LineNo, debug.LF())
+		fmt.Printf("%-40s %8d %4d/%-8s %40s %d\n", Route, ss, m, Method, FileName, LineNo)
 	}
 	// -----------------------------------------------------------------------------------------------------------------
 	// xyzzy - if AddToM - then we have RE via extra functions
@@ -1548,12 +1557,12 @@ type UrlPat struct {
 	PatOcc map[string]int
 }
 
-var nMatch []UrlPat // Index by Length ( NSl )
+//var nMatch []UrlPat // Index by Length ( NSl )
 // var starPat []string // Longer than max NSl => only match to * items
 
-func init() {
-	nMatch = make([]UrlPat, MaxSlashInUrl, MaxSlashInUrl)
-}
+//func init() {
+//	nMatch = make([]UrlPat, MaxSlashInUrl, MaxSlashInUrl)
+//}
 
 // -------------------------------------------------------------------------------------------------
 /*
@@ -1891,7 +1900,7 @@ func (r *MuxRouter) MatchAndServeHTTP(www http.ResponseWriter, req *http.Request
 	if !r.HasBeenCompiled { // 2ns
 		r.CompileRoutes()
 	}
-	// fmt.Printf("AT: %s\n", debug.LF())
+	fmt.Printf("AT: %s\n", debug.LF())
 
 	if rw, ok := www.(*MidBuffer); ok {
 
@@ -1904,10 +1913,10 @@ func (r *MuxRouter) MatchAndServeHTTP(www http.ResponseWriter, req *http.Request
 		r.SplitOnSlash3(&procData, m, path, true)
 		found, ln, item := r.LookupUrlViaHash2(&procData, www, req, &m)
 		Found = found
-		// if dbLookup4 {
-		// fmt.Printf("found=%v, %s\n", found, debug.LF())
-		// }
-		// fmt.Printf("AT: ln=%v item=%v %s\n", ln, debug.SVar(item), debug.LF())
+		if dbLookup4 {
+			fmt.Printf("found=%v, %s\n", found, debug.LF())
+		}
+		fmt.Printf("AT: ln=%v item=%v %s\n", ln, debug.SVar(item), debug.LF())
 		if found {
 			// fmt.Printf("AT: %s\n", debug.LF())
 			// fmt.Printf("Was Found!  Getting args now\n")
@@ -1918,7 +1927,7 @@ func (r *MuxRouter) MatchAndServeHTTP(www http.ResponseWriter, req *http.Request
 			// fmt.Printf("Found, parsing paras for route_i=%d\n", r.AllParam.route_i)
 			// fmt.Printf("AT: %s\n", debug.LF())
 			if r.DebugMatchOn {
-				fmt.Fprintf(os.Stderr, "%sMatched: %s [%s LineNo:%d] [%s] %s\n", MiscLib.ColorCyan, item.Url, item.FileName, item.LineNo, item.Comment, MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "%sMatched: %s%s%s [%s LineNo:%d] [%s], %s %s\n", MiscLib.ColorCyan, MiscLib.ColorReset, item.Url, MiscLib.ColorCyan, item.FileName, item.LineNo, item.Comment, debug.LF(), MiscLib.ColorReset)
 			}
 			item.Fx(rw, req)
 		}
@@ -1986,11 +1995,11 @@ func (r *MuxRouter) LookupUrlViaHash2(trr *MuxRouterProcessing, w http.ResponseW
 		trr.NSl = minInt(MaxSlashInUrl-1, r.MaxSlash+1)
 	}
 	//if dbLookupUrlMap2 {
-	//	fmt.Printf("LookupUrlViaHash2: %s, trr.NSl=%d, len(nMatch[%d].PatList)=%d\n", debug.LF(), trr.NSl, trr.NSl, len(nMatch[trr.NSl].PatList))
-	//	fmt.Printf("LookupUrlViaHash2: nMatch[%d]=%s\n", trr.NSl, debug.SVarI(nMatch[trr.NSl]))
-	//	fmt.Printf("nMatch=%s\n", debug.SVarI(nMatch))
+	//	fmt.Printf("LookupUrlViaHash2: %s, trr.NSl=%d, len(r.nMatch[%d].PatList)=%d\n", debug.LF(), trr.NSl, trr.NSl, len(r.nMatch[trr.NSl].PatList))
+	//	fmt.Printf("LookupUrlViaHash2: r.nMatch[%d]=%s\n", trr.NSl, debug.SVarI(r.nMatch[trr.NSl]))
+	//	fmt.Printf("r.nMatch=%s\n", debug.SVarI(r.nMatch))
 	//}
-	k2 := len(nMatch[trr.NSl].PatList)
+	k2 := len(r.nMatch[trr.NSl].PatList)
 	//if dbHash2 {
 	// fmt.Printf("k2 = %d, trr.NSl=%d, %s\n", k2, trr.NSl, debug.LF())
 	//}
@@ -1999,7 +2008,7 @@ func (r *MuxRouter) LookupUrlViaHash2(trr *MuxRouterProcessing, w http.ResponseW
 	}
 	for jj := 0; jj < k2; jj++ {
 		ss = 0
-		xPat := nMatch[trr.NSl].PatList[jj].Pat
+		xPat := r.nMatch[trr.NSl].PatList[jj].Pat
 		//if dbHash2 {
 		// fmt.Printf("Top of Pat Match Loop, jj=%d pat=%s, %s\n", jj, xPat, debug.LF())
 		//}
@@ -2539,6 +2548,12 @@ const dbLookup4 = false
 const dbHash2 = false
 const dbLookupUrlMap = false
 const dbMatch2 = false
+
+// If you can't find out why something is not matching in the hash - then turn this on and look in output
+// for the has table - printed out.  Usually it is obvious like not allowing "GET" for a endpoint.
+const dbDumpHashTable = false
+
+var dbX1 = true
 
 // if r.DebugMatchOn {
 

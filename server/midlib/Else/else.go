@@ -21,7 +21,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/mid"
@@ -31,45 +32,67 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical - not this time - pre-builds Body
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*ElseType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			//pCfg.Body = "<!DOCTYPE html><html><head></head><body>%s<ul>\n"
+//			//for _, vv := range gCfg.Config {
+//			//	for _, ww := range vv.ListenTo {
+//			//		pCfg.Body += fmt.Sprintf("\t<li><a href=\"%s\">%s: %s</a></li>\n", ww, vv.Name, ww)
+//			//	}
+//			//}
+//			//pCfg.Body += "</ul></body></html>"
+//			//if db1 {
+//			//	fmt.Printf(">>>>>%s<<<<<, %s\n", pCfg.Body, godebug.LF())
+//			//}
+//			genBody(pCfg, gCfg)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &ElseType{} }
+//
+//	cfg.RegInitItem2("Else", initNext, createEmptyType, nil, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true },
+//		"Msg":           { "type":["string"] },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *ElseType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical - not this time - pre-builds Body
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*ElseType)
-		if ok {
-			pCfg.SetNext(next)
-			//pCfg.Body = "<!DOCTYPE html><html><head></head><body>%s<ul>\n"
-			//for _, vv := range gCfg.Config {
-			//	for _, ww := range vv.ListenTo {
-			//		pCfg.Body += fmt.Sprintf("\t<li><a href=\"%s\">%s: %s</a></li>\n", ww, vv.Name, ww)
-			//	}
-			//}
-			//pCfg.Body += "</ul></body></html>"
-			//if db1 {
-			//	fmt.Printf(">>>>>%s<<<<<, %s\n", pCfg.Body, godebug.LF())
-			//}
-			genBody(pCfg, gCfg)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &ElseType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &ElseType{} }
-
-	cfg.RegInitItem2("Else", initNext, createEmptyType, nil, `{
-		"Paths":         { "type":["string","filepath"], "isarray":true },
-		"Msg":           { "type":["string"] },
-		"LineNo":        { "type":[ "int" ], "default":"1" }
+	mid.RegInitItem3("Else", CreateEmpty, `{
 		}`)
 }
 
-// normally identical
-func (hdlr *ElseType) SetNext(next http.Handler) {
+func (hdlr *ElseType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	genBody(hdlr, gCfg)
+	return
+}
+
+func (hdlr *ElseType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*ElseType)(nil)

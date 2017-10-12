@@ -22,6 +22,8 @@ import (
 	"regexp"
 	"strings"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -41,36 +43,57 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*MinifyType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &MinifyType{} }
+//
+//	// /api/tmpl/showRpt.tmpl -> fetch data inside template?
+//	// /api/tmpl/showRpt.tmpl?data=bob (data in row/table data)
+//	cfg.RegInitItem2("Minify", initNext, createEmptyType, nil, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *MinifyType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*MinifyType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &MinifyType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &MinifyType{} }
-
-	// /api/tmpl/showRpt.tmpl -> fetch data inside template?
-	// /api/tmpl/showRpt.tmpl?data=bob (data in row/table data)
-	cfg.RegInitItem2("Minify", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("Minify", CreateEmpty, `{
 		"Paths":              { "type":[ "string", "filepath" ], "isarray":true, "default":"/" },
 		"FileTypes":          { "type":[ "string" ], "isarray":true, "default":"*" },
 		"LineNo":             { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *MinifyType) SetNext(next http.Handler) {
+func (hdlr *MinifyType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *MinifyType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*MinifyType)(nil)

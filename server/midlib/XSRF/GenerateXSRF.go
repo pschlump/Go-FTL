@@ -40,6 +40,8 @@ import (
 	"strings"
 	"time"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -51,43 +53,59 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+//
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*GenerateXSRFHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		gCfg.ConnectToRedis()
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	postInit := func(h interface{}, callNo int) error {
+//
+//		hh, ok := h.(*GenerateXSRFHandlerType)
+//		if !ok {
+//			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		}
+//		hh.cleanCSS = regexp.MustCompile("[ \t\n\r\f]")
+//		tt := time.Now()
+//		tt = tt.Add(time.Duration(hh.MaxAge) * time.Second)
+//		hh.expires = tt.UTC()
+//		return nil
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &GenerateXSRFHandlerType{} }
+//
+//	cfg.RegInitItem2("GenerateXSRF", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// SetNext normally identical
+//func (hdlr *GenerateXSRFHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
 
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*GenerateXSRFHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		gCfg.ConnectToRedis()
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &GenerateXSRFHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	postInit := func(h interface{}, callNo int) error {
-
-		hh, ok := h.(*GenerateXSRFHandlerType)
-		if !ok {
-			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		}
-		hh.cleanCSS = regexp.MustCompile("[ \t\n\r\f]")
-		tt := time.Now()
-		tt = tt.Add(time.Duration(hh.MaxAge) * time.Second)
-		hh.expires = tt.UTC()
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &GenerateXSRFHandlerType{} }
-
-	cfg.RegInitItem2("GenerateXSRF", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("GenerateXSRF", CreateEmpty, `{
 		"Paths":               { "type":["string","filepath"], "isarray":true, "required":true },
 		"Base":                { "type":["string","filepath"], "isarray":true },
 		"ValidPaths":          { "type":["string","filepath"], "isarray":true, "required":true },
@@ -102,9 +120,20 @@ func init() {
 		}`)
 }
 
-// SetNext normally identical
-func (hdlr *GenerateXSRFHandlerType) SetNext(next http.Handler) {
+func (hdlr *GenerateXSRFHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	gCfg.ConnectToRedis()
+	hdlr.gCfg = gCfg
+	return
+}
+
+func (hdlr *GenerateXSRFHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	hdlr.cleanCSS = regexp.MustCompile("[ \t\n\r\f]")
+	tt := time.Now()
+	tt = tt.Add(time.Duration(hdlr.MaxAge) * time.Second)
+	hdlr.expires = tt.UTC()
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*GenerateXSRFHandlerType)(nil)
@@ -127,7 +156,7 @@ type GenerateXSRFHandlerType struct {
 	LineNo             int                         //
 	expires            time.Time                   //
 	cleanCSS           *regexp.Regexp              //
-	gCfg              *cfg.ServerGlobalConfigType //
+	gCfg               *cfg.ServerGlobalConfigType //
 	timeToLive         int                         // time to live in seconds -- same as MaxAge
 }
 

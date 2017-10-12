@@ -45,6 +45,8 @@ import (
 	"net/http"
 	"strings"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -59,27 +61,49 @@ import (
 
 const NIterations = 5000
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*BasicAuthRedis)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		gCfg.ConnectToRedis()
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &BasicAuthRedis{} }
+//
+//	cfg.RegInitItem2("BasicAuthRedis", initNext, createEmptyType, nil, `{
+//		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Realm":        	 { "type":[ "string" ], "required":true },
+//		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"BasicAuth" },
+//		"HashUsername":  	 { "type":[ "bool" ], "required":false, "default":"false" },
+//		"HashUsernameSalt":  { "type":[ "string" ], "required":false, "default":"8H3QhT9uHElh+c5NfowHx1gLeDw6qBMSTLvoL87GcB4FwflM8v2cTs" },
+//		"LineNo":       	 { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *BasicAuthRedis) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*BasicAuthRedis)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		gCfg.ConnectToRedis()
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &BasicAuthRedis{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &BasicAuthRedis{} }
-
-	cfg.RegInitItem2("BasicAuthRedis", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("BasicAuthRedis", CreateEmpty, `{
 		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
 		"Realm":        	 { "type":[ "string" ], "required":true },
 		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"BasicAuth" },
@@ -89,9 +113,16 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *BasicAuthRedis) SetNext(next http.Handler) {
+func (hdlr *BasicAuthRedis) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	gCfg.ConnectToRedis()
+	hdlr.gCfg = gCfg
+	return
+}
+
+func (hdlr *BasicAuthRedis) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*BasicAuthRedis)(nil)
@@ -106,7 +137,7 @@ type BasicAuthRedis struct {
 	HashUsername     bool                        // If true then the email address is hashed before retreval
 	HashUsernameSalt string                      // Optional - must be application wide salt - not the same as per-user salt that is generated.
 	LineNo           int                         //
-	gCfg            *cfg.ServerGlobalConfigType //
+	gCfg             *cfg.ServerGlobalConfigType //
 }
 
 var loaded bool = false

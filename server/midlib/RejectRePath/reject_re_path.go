@@ -20,44 +20,65 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RejectPathReType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RejectPathReType{} }
+//
+//	cfg.RegInitItem2("RejectRePath", initNext, createEmptyType, nil, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *RejectPathReType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RejectPathReType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RejectPathReType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &RejectPathReType{} }
-
-	cfg.RegInitItem2("RejectRePath", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("RejectRePath", CreateEmpty, `{
 		"Paths":         { "type":[ "string", "filepath" ], "isarray":true, "required":true },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *RejectPathReType) SetNext(next http.Handler) {
+func (hdlr *RejectPathReType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *RejectPathReType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RejectPathReType)(nil)

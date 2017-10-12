@@ -23,7 +23,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -34,45 +35,61 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RewriteProxyHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RewriteProxyHandlerType{} }
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		hh, ok := h.(*RewriteProxyHandlerType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			dest, err := url.Parse(hh.Dest)
+//			if err != nil {
+//				return err
+//			} else {
+//				hh.theProxy = httputil.NewSingleHostReverseProxy(dest)
+//			}
+//			hh.matchre, err = regexp.Compile(hh.MatchRE)
+//			if err != nil {
+//				return err
+//			}
+//		}
+//		return nil
+//	}
+//
+//	cfg.RegInitItem2("RewriteProxy", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *RewriteProxyHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RewriteProxyHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RewriteProxyHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &RewriteProxyHandlerType{} }
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		hh, ok := h.(*RewriteProxyHandlerType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			dest, err := url.Parse(hh.Dest)
-			if err != nil {
-				return err
-			} else {
-				hh.theProxy = httputil.NewSingleHostReverseProxy(dest)
-			}
-			hh.matchre, err = regexp.Compile(hh.MatchRE)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	cfg.RegInitItem2("RewriteProxy", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("RewriteProxy", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"MatchRE":       { "type":[ "string" ], "default":"" },
 		"ReplaceRE":     { "type":[ "string" ], "default":"" },
@@ -81,9 +98,25 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *RewriteProxyHandlerType) SetNext(next http.Handler) {
+func (hdlr *RewriteProxyHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *RewriteProxyHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	dest, err := url.Parse(hdlr.Dest)
+	if err != nil {
+		return err
+	} else {
+		// xyzzy - need to improve this section
+		hdlr.theProxy = httputil.NewSingleHostReverseProxy(dest)
+	}
+	hdlr.matchre, err = regexp.Compile(hdlr.MatchRE)
+	if err != nil {
+		return err
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RewriteProxyHandlerType)(nil)
@@ -124,13 +157,13 @@ func (hdlr RewriteProxyHandlerType) ServeHTTP(www http.ResponseWriter, req *http
 			// ------------------------- rewrite part ----------------------------------------------------------------------
 			u := lib.GenURLFromReq(req)
 			if rw_prox_db1 {
-				fmt.Printf("Just before >%s< %s\n", u, lib.SVarI(req))
+				fmt.Printf("RewriteProxyHandlerType: Just before >%s< %s, %s\n", u, lib.SVarI(req), godebug.LF())
 			}
 			w := hdlr.matchre.ReplaceAllString(u, hdlr.ReplaceRE)
 			req.URL, err = url.Parse(w)
 			// req.URL.Host = ""
 			if rw_prox_db1 {
-				fmt.Printf("Just after err >%s< >%s<\n", err, w)
+				fmt.Printf("RewriteProxyHandlerType: Just after err >%s< >%s<\n", err, w)
 			}
 			if err == nil {
 				a := ""
@@ -159,7 +192,13 @@ func (hdlr RewriteProxyHandlerType) ServeHTTP(www http.ResponseWriter, req *http
 			//	}
 			//}
 
+			if rw_prox_db1 {
+				fmt.Printf("RewriteProxyHandlerType: Before call to proxy\n")
+			}
 			hdlr.theProxy.ServeHTTP(www, req) // hdlr.Next.ServeHTTP(rw, req)
+			if rw_prox_db1 {
+				fmt.Printf("RewriteProxyHandlerType: After call to proxy\n")
+			}
 
 		} else {
 			fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorRed, mid.ErrNonMidBufferWriter, MiscLib.ColorReset)

@@ -24,31 +24,53 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/pschlump/Go-FTL/server/goftlmux"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
+	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*SimpleProxyHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = FtlConfigError
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &SimpleProxyHandlerType{} }
+//
+//	cfg.RegInitItem2("simple_proxy", initNext, createEmptyType, nil, `{
+//		"Paths":        { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Dest":         { "type":["string","url"], "required":true },
+//		"Extra":        { "allowed":false },
+//		"LineNo":       { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *SimpleProxyHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*SimpleProxyHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = FtlConfigError
-		}
-		return
+	CreateEmpty := func(name string) GoFTLMiddleWare {
+		x := &SimpleProxyHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &SimpleProxyHandlerType{} }
-
-	cfg.RegInitItem2("simple_proxy", initNext, createEmptyType, nil, `{
+	RegInitItem3("simple_proxy", CreateEmpty, `{
 		"Paths":        { "type":["string","filepath"], "isarray":true, "required":true },
 		"Dest":         { "type":["string","url"], "required":true },
 		"Extra":        { "allowed":false },
@@ -56,9 +78,14 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *SimpleProxyHandlerType) SetNext(next http.Handler) {
+func (hdlr *SimpleProxyHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *SimpleProxyHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ GoFTLMiddleWare = (*SimpleProxyHandlerType)(nil)

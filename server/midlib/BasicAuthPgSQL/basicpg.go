@@ -54,39 +54,60 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
-	"github.com/pschlump/godebug"
 	"github.com/pschlump/uuid"
 	"golang.org/x/crypto/pbkdf2" // https://github.com/golang/crypto/blob/master/pbkdf2/pbkdf2.go
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*BasicPgSQLHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		gCfg.ConnectToPostgreSQL()
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &BasicPgSQLHandlerType{} }
+//
+//	cfg.RegInitItem2("BasicAuthPgSQL", initNext, createEmptyType, nil, `{
+//		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Realm":        	 { "type":[ "string" ], "required":true },
+//		"HashUsername":  	 { "type":[ "bool" ], "required":false, "default":"false" },
+//		"HashUsernameSalt":  { "type":[ "string" ], "required":false, "default":"8H3QhT9uHElh+c5NfowHx1gLeDw6qBMSTLvoL87GcB4FwflM8v2cTs" },
+//		"LineNo":       	 { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// SetNext normally identical
+//func (hdlr *BasicPgSQLHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*BasicPgSQL)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		gCfg.ConnectToPostgreSQL()
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &BasicPgSQLHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &BasicPgSQL{} }
-
-	cfg.RegInitItem2("BasicAuthPgSQL", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("BasicPgSQLHandlerType", CreateEmpty, `{
 		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
 		"Realm":        	 { "type":[ "string" ], "required":true },
 		"HashUsername":  	 { "type":[ "bool" ], "required":false, "default":"false" },
@@ -95,20 +116,27 @@ func init() {
 		}`)
 }
 
-// SetNext normally identical
-func (hdlr *BasicPgSQL) SetNext(next http.Handler) {
+func (hdlr *BasicPgSQLHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	gCfg.ConnectToPostgreSQL()
+	hdlr.gCfg = gCfg
+	return
 }
 
-var _ mid.GoFTLMiddleWare = (*BasicPgSQL)(nil)
+func (hdlr *BasicPgSQLHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
+}
+
+var _ mid.GoFTLMiddleWare = (*BasicPgSQLHandlerType)(nil)
 
 // --------------------------------------------------------------------------------------------------------------------------
 
 // NIterations is the number of iterations that pbkdf2 hasing will use
 const NIterations = 5000
 
-// BasicPgSQL configuration for this middleare
-type BasicPgSQL struct {
+// BasicPgSQLHandlerType configuration for this middleare
+type BasicPgSQLHandlerType struct {
 	Next             http.Handler                //
 	Paths            []string                    //
 	Realm            string                      //
@@ -122,22 +150,26 @@ type BasicPgSQL struct {
 
 var loaded = false
 
-// NewBasicAuthPgSQLServer return a default initialized BasicPgSQL -- look in the test code to see if additional initialization was performed.
-func NewBasicAuthPgSQLServer(n http.Handler, p []string, realm string) *BasicPgSQL {
-	return &BasicPgSQL{
+// NewBasicAuthPgSQLServer return a default initialized BasicPgSQLHandlerType -- look in the test code to see if additional initialization was performed.
+func NewBasicAuthPgSQLServer(n http.Handler, p []string, realm string) *BasicPgSQLHandlerType {
+	return &BasicPgSQLHandlerType{
 		Next:  n,
 		Paths: p,
 		Realm: realm,
 	}
 }
 
-func (hdlr *BasicPgSQL) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+func (hdlr *BasicPgSQLHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 
 	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
 		if rw, ok := www.(*goftlmux.MidBuffer); ok {
 
+			// fmt.Printf("%sJust Before (2): %s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+
 			trx := mid.GetTrx(rw)
 			trx.PathMatched(1, "BasicAuthPgSQL", hdlr.Paths, pn, req.URL.Path)
+
+			// fmt.Printf("%sJust After (2): %s\n", MiscLib.ColorRed, MiscLib.ColorReset)
 
 			auth := req.Header.Get("Authorization")
 			if auth == "" {
@@ -175,7 +207,7 @@ func (hdlr *BasicPgSQL) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	hdlr.Next.ServeHTTP(www, req)
 }
 
-func (hdlr *BasicPgSQL) pgGetUser(un, pw string) (userID string, ok bool) {
+func (hdlr *BasicPgSQLHandlerType) pgGetUser(un, pw string) (userID string, ok bool) {
 	var salt string
 	var pwh string
 	key := hdlr.Realm + ":" + un

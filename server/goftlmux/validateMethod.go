@@ -3,8 +3,8 @@ package goftlmux
 //
 // Go Go Mux - Go Fast Mux / Router for HTTP requests
 //
-// (C) Philip Schlump, 2013-2014.
-// Version: 0.4.3
+// (C) Philip Schlump, 2013-2017.
+// Version: 0.4.9
 // BuildNo: 804
 //
 // /Users/corwin/Projects/gogo2

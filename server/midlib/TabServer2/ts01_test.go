@@ -176,6 +176,10 @@ func TeardownTabServer2TestEnvironment() {
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 func Test_0001_TabServer2(t *testing.T) {
 
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
+
 	cur_pwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%sTabServer2: Error (14022):  Unable to get current working directory. %s\n", MiscLib.ColorRed, MiscLib.ColorReset)
@@ -585,6 +589,13 @@ func Test_0001_TabServer2(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			wr := goftlmux.NewMidBuffer(rec, nil)
+
+			id := "test-01-StatusHandler"
+			trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+			trx.TrxIdSeen(id, test.url, "GET")
+			wr.RequestTrxId = id
+
+			wr.G_Trx = trx
 
 			var req *http.Request
 

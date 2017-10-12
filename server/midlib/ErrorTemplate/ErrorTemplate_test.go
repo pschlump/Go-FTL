@@ -17,13 +17,20 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 func Test_ErrorTemplateServer(t *testing.T) {
+
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
+
 	tests := []struct {
 		url          string
 		from_ip      string
@@ -65,7 +72,14 @@ The error has been logged and will be looked into.  To return to the application
 
 		rec := httptest.NewRecorder()
 
-		wr := goftlmux.NewMidBuffer(rec,nil)
+		wr := goftlmux.NewMidBuffer(rec, nil)
+
+		id := "test-01-StatusHandler"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
+		wr.G_Trx = trx
 
 		var req *http.Request
 

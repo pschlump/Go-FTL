@@ -17,7 +17,6 @@ import (
 	_ "github.com/lib/pq"
 
 	"fmt"
-	"net/http"
 	"os"
 	"sync"
 
@@ -29,6 +28,8 @@ import (
 	"github.com/pschlump/godebug"       //
 	"github.com/pschlump/json"          //	"encoding/json"
 	"github.com/pschlump/radix.v2/pool" // Modified pool to have NewAuth for authorized connections
+	//	meta, err := UnmarshalString(godebug.FILE(), In, &Out)
+	// JsonXScanner "www.2c-why.com/JsonX"
 )
 
 // "github.com/jackc/pgx" //
@@ -43,35 +44,26 @@ var ServersMutex sync.Mutex
 var Wg sync.WaitGroup
 
 // ----------------------------------------------------------------------------------------------------------------------------
-type InitNextFx func(next http.Handler, gCfg *ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error)
-type OneTimeInitFx func(h interface{}, cfgData map[string]interface{}, callNo int) error
-type CreateEmptyFx func() interface{}
+//type InitNextFx func(next http.Handler, gCfg *ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error)
+//type OneTimeInitFx func(h interface{}, cfgData map[string]interface{}, callNo int) error
+//type CreateEmptyFx func() interface{}
+//
+//type NewInitType struct {
+//	Name            string        // Name of this (the directive this is called by
+//	FinalizeHandler InitNextFx    // Take the data and finaialize the hnadler
+//	OneTimeInit     OneTimeInitFx // One time Init
+//	CreateEmpty     CreateEmptyFx // Creates an empty configuration structure of the correct type and returns it.
+//	ValidJSON       string        // JSONP validaiton string for config for this item
+//	CfgData         interface{}   //
+//	CallNo          int           //
+//}
 
-type NewInitType struct {
-	Name            string        // Name of this (the directive this is called by
-	FinalizeHandler InitNextFx    // Take the data and finaialize the hnadler
-	OneTimeInit     OneTimeInitFx // One time Init
-	CreateEmpty     CreateEmptyFx // Creates an empty configuration structure of the correct type and returns it.
-	ValidJSON       string        // JSONP validaiton string for config for this item
-	CfgData         interface{}   //
-	CallNo          int           //
-}
+// var NewInit []*NewInitType
 
-var NewInit []*NewInitType
-
-func RegInitItem2(name string, nx InitNextFx, ce CreateEmptyFx, ot OneTimeInitFx, valid string) {
-	NewInit = append(NewInit, &NewInitType{Name: name, FinalizeHandler: nx, ValidJSON: valid, OneTimeInit: ot, CreateEmpty: ce})
-}
-
-func LookupInitByName(name string) (p int) {
-	p = -1
-	for ii := range NewInit {
-		if NewInit[ii].Name == name {
-			return ii
-		}
-	}
-	return
-}
+// //	cfg.RegInitItem2("file_server", initNext, createEmptyType, postInit, `{
+//func RegInitItem2(name string, nx InitNextFx, ce CreateEmptyFx, ot OneTimeInitFx, valid string) {
+//	NewInit = append(NewInit, &NewInitType{Name: name, FinalizeHandler: nx, ValidJSON: valid, OneTimeInit: ot, CreateEmpty: ce})
+//}
 
 type LoggingConfigType struct {
 	FileOn  string
@@ -97,6 +89,7 @@ type ServerGlobalConfigType struct {
 	connected        string                         //                        // "ok" when connected to redis, "err" if connection failed.  - 2-state flag.  (TODO: convert to a const/int)
 	connected_rd     string                         //                        // "ok" when connected to relational database, "err" if connection failed.
 	Config           map[string]PerServerConfigType //                        //	                       // Anything that did not match the abobve JSON names //
+	pDebugFlags      map[string]bool
 }
 
 //Pg_client        *pgx.Conn                      `json:"-"`                // Client connection for PostgreSQL
@@ -186,152 +179,10 @@ type PerServerConfigType struct {
 	ConfigData     map[string]interface{} `json:"ConfigData"`  // Any other config info
 }
 
-func ReadConfigFile2(fn string) {
-	// Note: best test for this is in the TabServer2 - test 0001 - checks that this works.
-
-	file, err := sizlib.ReadJSONDataWithComments(fn)
-	lib.IsErrFatal(err)
-
-	////fmt.Printf("At: %s\n", lib.LF())
-	RawConfig := make(map[string]interface{})
-	err = json.Unmarshal(file, &RawConfig)
-	if err != nil {
-		es := jsonSyntaxErroLib.GenerateSyntaxError(string(file), err)
-		fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
-		logrus.Errorf("Error: Invlaid JSON for %s %s Error:\n%s\n", fn, file, es)
-		lib.IsErrFatal(err)
-	}
-
-	if ServerGlobal.Config == nil {
-		ServerGlobal.Config = make(map[string]PerServerConfigType)
-	}
-
-	for name, v := range RawConfig {
-		//fmt.Printf("At: %s\n", lib.LF())
-		vv := v.(map[string]interface{}) // vv is a map[string]interface{}
-		if db_g1 {
-			fmt.Printf("Configuration for >%s< typeof vv = %T\n", name, vv)
-		}
-		// perServerConfig := PerServerConfigType{IndexFileList: []string{"index.html", "index.tmpl"}}
-		perServerConfig := PerServerConfigType{}
-		perServerConfig.Name = name
-		LineNoF, ok := vv["LineNo"]
-		LineNo := int(LineNoF.(float64))
-		if !ok {
-			if db_g1 {
-				fmt.Printf("Missing LineNo from config\n")
-			}
-			LineNo = 1
-		}
-
-		// LineNo + FileName -----------------------------------------------------------------------------
-		//fmt.Printf("At: %s\n", lib.LF())
-		perServerConfig.LineNo = 1
-		if tt, ok := vv["LineNo"]; ok {
-			perServerConfig.LineNo = int(tt.(float64))
-			LineNo = perServerConfig.LineNo
-			delete(vv, "LineNo")
-		}
-		perServerConfig.FileName = fn
-		if tt, ok := vv["FileName"]; ok {
-			perServerConfig.FileName = tt.(string)
-			delete(vv, "FileName")
-		}
-
-		// ConfigData -----------------------------------------------------------------------------
-		if tt, ok := vv["ConfigData"]; ok {
-			x, ok := tt.(map[string]interface{})
-			if ok {
-				perServerConfig.ConfigData = x
-			} else {
-				fmt.Printf("LineNo:%d Invalid type for ConfigData, got %T, need 'map[string]interface{}', %s\n", LineNo, tt, godebug.LF())
-			}
-		}
-
-		// listen_to -----------------------------------------------------------------------------
-		//fmt.Printf("At: %s\n", lib.LF())
-		if tt, ok := vv["listen_to"]; ok {
-			if db_g1 {
-				fmt.Printf("\tlisten_to typeof = %T, %+v\n", tt, tt)
-			}
-			if ss, yep := tt.(string); yep {
-				perServerConfig.ListenTo = append(perServerConfig.ListenTo, ss)
-			} else {
-				// xyzzy - check type as array
-				for _, ww := range tt.([]interface{}) {
-					perServerConfig.ListenTo = append(perServerConfig.ListenTo, ww.(string))
-				}
-			}
-			if db_g1 {
-				fmt.Printf("\tperServerConfig.ListenTo = %v\n", perServerConfig.ListenTo)
-			}
-			delete(vv, "listen_to")
-		} else {
-			if lib.IsProtocal(name) {
-				perServerConfig.ListenTo = append(perServerConfig.ListenTo, name)
-			} else {
-				fmt.Printf("LineNo:%d A server must have a 'listen_to' value or it will not serve to anybody\n", LineNo)
-			}
-		}
-
-		//fmt.Printf("At: %s\n", lib.LF())
-		// certs -----------------------------------------------------------------------------
-		if tt, ok := vv["certs"]; ok {
-			if db_g1 {
-				fmt.Printf("\tcerts typeof = %T, %+v\n", tt, tt)
-			}
-			// xyzzy - check type as array
-			for _, ww := range tt.([]interface{}) {
-				perServerConfig.Certs = append(perServerConfig.Certs, ww.(string))
-			}
-			if db_g1 {
-				fmt.Printf("\tperServerConfig.Certs = %v\n", perServerConfig.Certs)
-			}
-			delete(vv, "certs")
-		}
-
-		// plugins -----------------------------------------------------------------------------
-		//fmt.Printf("At: %s\n", lib.LF())
-		if tt, ok := vv["plugins"]; ok {
-			// Iterate over the array of plugins
-			for ii, ww := range tt.([]interface{}) {
-				// Get the name of this plugin
-				//fmt.Printf("At: %s\n", lib.LF())
-				wwt, ok := ww.(map[string]interface{})
-				if !ok {
-					fmt.Printf("Syntax Error: Line:%d Invalid data for plugin configuration (on %d'th plugin)\n", LineNo, ii)
-				} else if lib.LenOfMap(wwt) != 1 {
-					fmt.Printf("Syntax Error: Line:%d Invalid specification of options for a plugin (on %d'th plugin)\n", LineNo, ii)
-				} else {
-					//fmt.Printf("At: %s, wwt=%s\n", lib.LF(), lib.SVarI(wwt))
-					nameOfPlugin := lib.FirstName(wwt)
-					//fmt.Printf("At: %s, nameOfPlugin=%s\n", lib.LF(), nameOfPlugin)
-					locInTab := LookupInitByName(nameOfPlugin)
-					if db_g1 {
-						fmt.Printf("nameOfPlugin: %s at %d in init table, %s\n", nameOfPlugin, locInTab, lib.LF())
-					}
-					if locInTab < 0 {
-						//fmt.Printf("At: %s\n", lib.LF())
-						fmt.Printf("Syntax Error: Line:%d Unknown plugin %s (on %d'th plugin)\n", LineNo, nameOfPlugin, ii)
-					} else {
-						//fmt.Printf("At: %s\n", lib.LF())
-					}
-				}
-			}
-		}
-		// perServerConfig.Plugins = vv["plugins"].([]map[string]interface{})
-		//fmt.Printf("At: %s\n", lib.LF())
-		perServerConfig.Plugins = vv["plugins"]
-		//fmt.Printf("At: %s\n", lib.LF())
-		ServerGlobal.Config[name] = perServerConfig
-		//fmt.Printf("At: %s\n", lib.LF())
-	}
-}
-
 // ----------------------------------------------------------------------------------------------------------------------------
-func (hdlr *ServerGlobalConfigType) GetKeys(theKey string) []string {
-	conn, err := hdlr.RedisPool.Get()
-	defer hdlr.RedisPool.Put(conn)
+func (sgct *ServerGlobalConfigType) GetKeys(theKey string) []string {
+	conn, err := sgct.RedisPool.Get()
+	defer sgct.RedisPool.Put(conn)
 	if err != nil {
 		// goftlmux.G_Log.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
 		logrus.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
@@ -346,14 +197,14 @@ func (hdlr *ServerGlobalConfigType) GetKeys(theKey string) []string {
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------
-func (hdlr *ServerGlobalConfigType) ConnectToRedis() bool {
+func (sgct *ServerGlobalConfigType) ConnectToRedis() bool {
 	// Note: best test for this is in the TabServer2 - test 0001 - checks that this works.
 	var err error
 
-	hdlr.mutex.Lock()
-	defer hdlr.mutex.Unlock()
+	sgct.mutex.Lock()
+	defer sgct.mutex.Unlock()
 
-	if hdlr.connected == "ok" {
+	if sgct.connected == "ok" {
 		return true
 	}
 
@@ -365,17 +216,17 @@ func (hdlr *ServerGlobalConfigType) ConnectToRedis() bool {
 		return
 	}
 
-	redis_host := dflt(hdlr.RedisConnectHost, "127.0.0.1")
-	redis_port := dflt(hdlr.RedisConnectPort, "6379")
-	redis_auth := hdlr.RedisConnectAuth
+	redis_host := dflt(sgct.RedisConnectHost, "127.0.0.1")
+	redis_port := dflt(sgct.RedisConnectPort, "6379")
+	redis_auth := sgct.RedisConnectAuth
 
 	if redis_auth == "" { // If Redis AUTH section
-		hdlr.RedisPool, err = pool.New("tcp", redis_host+":"+redis_port, 20)
+		sgct.RedisPool, err = pool.New("tcp", redis_host+":"+redis_port, 20)
 	} else {
-		hdlr.RedisPool, err = pool.NewAuth("tcp", redis_host+":"+redis_port, 20, redis_auth)
+		sgct.RedisPool, err = pool.NewAuth("tcp", redis_host+":"+redis_port, 20, redis_auth)
 	}
 	if err != nil {
-		hdlr.connected = "err"
+		sgct.connected = "err"
 		fmt.Fprintf(os.Stderr, "%sError: Failed to connect to redis-server.%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
 		fmt.Printf("Error: Failed to connect to redis-server.\n")
 		// goftlmux.G_Log.Info("Error: Failed to connect to redis-server.\n")
@@ -385,32 +236,32 @@ func (hdlr *ServerGlobalConfigType) ConnectToRedis() bool {
 		if db11 {
 			fmt.Fprintf(os.Stderr, "%sSuccess: Connected to redis-server.%s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
 		}
-		hdlr.connected = "ok"
+		sgct.connected = "ok"
 	}
 
 	return true
 }
 
-func (hdlr *ServerGlobalConfigType) ConnectToPostgreSQL() bool {
+func (sgct *ServerGlobalConfigType) ConnectToPostgreSQL() bool {
 	// Note: best test for this is in the TabServer2 - test 0001 - checks that this works.
 	var err error
 
-	hdlr.mutex.Lock()
-	defer hdlr.mutex.Unlock()
+	sgct.mutex.Lock()
+	defer sgct.mutex.Unlock()
 
-	if hdlr.connected_rd == "ok" {
+	if sgct.connected_rd == "ok" {
 		return true
 	}
 
 	// fmt.Printf("AT: %s\n", godebug.LF())
-	//:pgx:conn, err := pgx.Connect(hdlr.extractConfig())
+	//:pgx:conn, err := pgx.Connect(sgct.extractConfig())
 	//:pgx:if err != nil {
 	//:pgx: conn = "PGConn": "127.0.0.1:5433:pschlump:f1ref0x2:pschlump"
-	conn := sizlib.ConnectToAnyDb(hdlr.DBType, hdlr.PGConn, hdlr.DBName)
+	conn := sizlib.ConnectToAnyDb(sgct.DBType, sgct.PGConn, sgct.DBName)
 	if conn == nil {
 		fmt.Fprintf(os.Stdout, "Unable to connection to database: %v\n", err)
 		fmt.Fprintf(os.Stderr, "%sUnable to connection to database: %v%s\n", MiscLib.ColorRed, err, MiscLib.ColorReset)
-		hdlr.connected_rd = "err"
+		sgct.connected_rd = "err"
 		return false
 	}
 
@@ -418,8 +269,8 @@ func (hdlr *ServerGlobalConfigType) ConnectToPostgreSQL() bool {
 		fmt.Fprintf(os.Stderr, "%sSuccess: Connected to PostgreSQL-server.%s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
 	}
 
-	hdlr.Pg_client = conn
-	hdlr.connected_rd = "ok"
+	sgct.Pg_client = conn
+	sgct.connected_rd = "ok"
 
 	// xyzzyPostDb Checks -- xyzzy - at this point --
 	ok := true
@@ -441,7 +292,7 @@ func (hdlr *ServerGlobalConfigType) ConnectToPostgreSQL() bool {
 
 }
 
-//:pgx:func (hdlr *ServerGlobalConfigType) extractConfig() (config pgx.ConnConfig) {
+//:pgx:func (sgct *ServerGlobalConfigType) extractConfig() (config pgx.ConnConfig) {
 //:pgx:
 //:pgx:	dflt := func(s, t string) (r string) {
 //:pgx:		r = s
@@ -452,7 +303,7 @@ func (hdlr *ServerGlobalConfigType) ConnectToPostgreSQL() bool {
 //:pgx:	}
 //:pgx:
 //:pgx:	// host:user:pass:db
-//:pgx:	t := strings.Split(hdlr.PGConn, ":")
+//:pgx:	t := strings.Split(sgct.PGConn, ":")
 //:pgx:	if len(t) != 5 {
 //:pgx:		fmt.Printf("Invalid confuration should have Postgres Connect string of host:port:user:pass:db\n")
 //:pgx:		fmt.Printf("  Host default 127.0.0.1\n")
@@ -577,6 +428,7 @@ var ReservedItems = map[string]bool{
 	"$user_id$":                   true,
 	"$customer_id$":               true,
 	"$username$":                  true,
+	"$session$":                   true,
 }
 
 // trx, id := cfg.TrNewTrx()
@@ -588,5 +440,56 @@ var ReservedItems = map[string]bool{
 //	ptr = trx
 //	return
 //}
+
+//
+
+//
+
+//
+
+//
+
+//
+
+//------------------------------------------------------------------------------------------------------------------------
+
+// Return true if the debuging flag is enabled for this set of module/server/flag
+//
+// Example: pass "godebug.FILE()" for the module, "localhost" for the server and "db_CORS_login" for the flag.
+//   the enabled flag is "CORS/localhost:.*/db_CORS.*
+//	This should result in a "true" return.
+// 1. Get MiddlwareName form FileName
+// 2. Match of Flag
+//
+// ExampleFlag:
+// 		http://localhost:8088/SessionRedis/db1
+//		Server: http://localhost:8088
+//		Module: SessionRedis
+//		Flag: db1
+func (sgct *ServerGlobalConfigType) DbSetup() {
+	if len(sgct.DebugFlags) > 0 && (sgct.pDebugFlags == nil || len(sgct.pDebugFlags) == 0) {
+		fmt.Printf("\nCreateing the parsed debug flags\n======================================================\n")
+		sgct.pDebugFlags = make(map[string]bool)
+		for _, db := range sgct.DebugFlags {
+			sgct.pDebugFlags[db] = true
+		}
+	}
+}
+
+func (sgct *ServerGlobalConfigType) DbOn(server, module, flag string) bool {
+	var ServerGlobal *ServerGlobalConfigType
+	if sgct == nil {
+		sgct = ServerGlobal
+		if sgct == nil {
+			fmt.Printf("Call of DbOn before globals setup - assuming %v, CallAT: %s, change db_DbOn global constant to set in ./cfg/cfg.go\n", db_DbOn, godebug.LF(2))
+			// fmt.Fprintf(os.Stderr, "Call of DbOn before globals setup - assuming %v, CallAT: %s\n", db_DbOn, godebug.LF(2))
+			return db_DbOn
+		}
+	}
+	sgct.DbSetup()
+	return (sgct.pDebugFlags[server+"/"+module+"/"+flag])
+}
+
+const db_DbOn = false
 
 /* vim: set noai ts=4 sw=4: */

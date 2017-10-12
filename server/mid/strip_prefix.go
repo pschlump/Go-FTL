@@ -24,40 +24,66 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pschlump/Go-FTL/server/goftlmux"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
+	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*StripPrefixType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = FtlConfigError
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &StripPrefixType{} }
+//
+//	cfg.RegInitItem2("strip_prefix", initNext, createEmptyType, nil, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Prefix":        { "type":[ "string" ], "required":true },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *StripPrefixType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*StripPrefixType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = FtlConfigError
-		}
-		return
+	CreateEmpty := func(name string) GoFTLMiddleWare {
+		x := &StripPrefixType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &StripPrefixType{} }
-
-	cfg.RegInitItem2("strip_prefix", initNext, createEmptyType, nil, `{
+	RegInitItem3("strip_prefix", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"Prefix":        { "type":[ "string" ], "required":true },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *StripPrefixType) SetNext(next http.Handler) {
+func (hdlr *StripPrefixType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *StripPrefixType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ GoFTLMiddleWare = (*StripPrefixType)(nil)

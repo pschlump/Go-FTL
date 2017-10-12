@@ -20,57 +20,37 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
-	"github.com/pschlump/godebug"
 )
 
-// --------------------------------------------------------------------------------------------------------------------------
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*LatencyType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &LatencyType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &LatencyType{} }
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-
-		hh, ok := h.(*LatencyType)
-		if !ok {
-			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			hh.slowDown = time.Duration(int64(hh.SlowDown)) * time.Millisecond
-		}
-
-		return nil
-	}
-
-	cfg.RegInitItem2("Latency", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("Latency", CreateEmpty, `{
 		"Paths":        { "type":["string","filepath"], "isarray":true, "default":"/" },
 		"SlowDown":     { "type":[ "int" ], "default":"500" },
 		"LineNo":       { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *LatencyType) SetNext(next http.Handler) {
+func (hdlr *LatencyType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *LatencyType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	hdlr.slowDown = time.Duration(int64(hdlr.SlowDown)) * time.Millisecond
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*LatencyType)(nil)

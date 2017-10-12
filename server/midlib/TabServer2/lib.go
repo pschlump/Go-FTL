@@ -696,6 +696,7 @@ type SQLOne struct {
 	Pname                      []string                //
 	Exec                       []DbOperation           //
 	SetCookie                  map[string]bool         //
+	SetSession                 map[string]bool         //	// don't know if this is correct yet //
 	Query                      string                  //
 	Valid                      map[string]ValidationIn //
 	ValidGet                   map[string]ValidationIn //
@@ -1370,17 +1371,30 @@ func ValidateQueryParams(ps *goftlmux.Params, h SQLOne, req *http.Request) (err 
 		ok := ps.HasName(i)
 		d := ps.ByName(i)
 		if !ok {
-			ok = true
-			d = v.Default
-			goftlmux.AddValueToParams(i, d, 'i', goftlmux.FromDefault, ps)
+			if v.Required {
+				fmt.Printf("At: %s, checking [%s] -->>%s<<--\n", i, godebug.LF(), v.Default)
+				fmt.Fprintf(os.Stderr, "%sError (00000): Required field [%s] missing.%s\n", MiscLib.ColorRed, i, MiscLib.ColorReset)
+				fmt.Printf("Error (00000): Required field [%s] missing.\n", i)
+				d = v.Default
+				goftlmux.AddValueToParams(i, d, 'i', goftlmux.FromDefault, ps)
+				err = errors.New("Error(10000): Missing Parameter:" + i)
+				return
+			} else {
+				ok = true
+				d = v.Default
+				goftlmux.AddValueToParams(i, d, 'i', goftlmux.FromDefault, ps)
+				fmt.Printf("At: %s, checking [%s] -->>%s<<--\n", i, godebug.LF(), v.Default)
+			}
 		} else {
 
 			if v.Required {
 				if !ok {
+					fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 					err = errors.New("Error(10080): Missing Parameter:" + i)
 					return
 				}
 				if len(d) <= 0 {
+					fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 					err = errors.New("Error(10081): Missing Parameter:" + i)
 					return
 				}
@@ -1395,14 +1409,19 @@ func ValidateQueryParams(ps *goftlmux.Params, h SQLOne, req *http.Request) (err 
 			case "string":
 				fallthrough
 			case "s":
+				fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 				if v.eMin_len {
+					fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 					if len(d) < v.Min_len && v.Required {
+						fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 						err = errors.New(fmt.Sprintf("Error(10082): Parameter (%s) Too Short:%s Minimum Length %d", d, i, v.Min_len))
 						return
 					}
 				}
 				if v.eMax_len {
+					fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 					if len(d) > v.Max_len && v.Required {
+						fmt.Printf("At: %s, checking [%s]\n", i, godebug.LF())
 						err = errors.New(fmt.Sprintf("Error(10083): Parameter Too Long:%s Maximum Length %d", i, v.Max_len))
 						return
 					}

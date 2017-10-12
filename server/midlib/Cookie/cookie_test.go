@@ -17,14 +17,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 
 func Test_HeaderServer(t *testing.T) {
+
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
+
 	tests := []struct {
 		url               string
 		hdr               []lib.NameValue
@@ -65,6 +72,13 @@ func Test_HeaderServer(t *testing.T) {
 
 		wr := goftlmux.NewMidBuffer(rec, nil) // var wr http.ResponseWriter
 		// lib.SetupTestCreateHeaders(wr, test.hdr)
+
+		id := "test-01-HeaderServer"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
+		wr.G_Trx = trx
 
 		var req *http.Request
 

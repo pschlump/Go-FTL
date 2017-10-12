@@ -14,11 +14,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pschlump/Go-FTL/server/common"
+	"github.com/pschlump/Go-FTL/server/sizlib"
+	"github.com/pschlump/MiscLib"
 	debug "github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
 )
@@ -37,6 +40,7 @@ const (
 	FromOther
 	FromDefault
 	FromAuth
+	FromSession
 )
 
 const MaxParams = 200
@@ -92,6 +96,8 @@ func FromTypeToString(ff FromType) string {
 		return "FromDefault"
 	case FromAuth:
 		return "FromAuth"
+	case FromSession:
+		return "FromSession"
 	default:
 		return "Unk-FromType"
 	}
@@ -105,6 +111,8 @@ func (ff ParamType) String() string {
 	switch ff {
 	case 'i': // Injected Parameter
 		return "-inject-"
+	case 'I': // Injected Session Value Parameter
+		return "-session-"
 	case 's':
 		return "pt:s"
 	case 'J':
@@ -171,12 +179,56 @@ func (ps *Params) DumpParamTable() (rv string) {
 	return
 }
 
-func (ps *Params) DumpParamUsed() (rv string) {
+type UnusedParam struct {
+	Match string
+	IsRe  bool
+	re    *regexp.Regexp
+}
+
+func SetupUnsedParam(NormalUnused []UnusedParam) {
+	for ii, pp := range NormalUnused {
+		if pp.IsRe {
+			re, err := regexp.Compile(pp.Match)
+			pp.re = re
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%sError: invalid regular expression for unused paremeters at [%d] in set -->>%s<<--, %s, %s%s\n", MiscLib.ColorRed, ii, pp.Match, err, debug.LF(), MiscLib.ColorReset)
+			}
+			NormalUnused[ii] = pp
+		}
+	}
+}
+
+func (ps *Params) IsMatchUnused(NormalUnused []UnusedParam, aName string) bool {
+	for _, xx := range NormalUnused {
+		if xx.IsRe {
+			if xx.re.MatchString(aName) {
+				return true
+			}
+		} else {
+			if xx.Match == aName {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (ps *Params) ReportUnexpectedUnused(NormalUnused []UnusedParam) {
+	for _, vv := range ps.Data[0:ps.NParam] {
+		if vv.UsedAt == 0 {
+			if !ps.IsMatchUnused(NormalUnused, vv.Name) {
+				fmt.Fprintf(os.Stderr, "%sUnsued parameter %s%s\n", MiscLib.ColorRed, vv.Name, MiscLib.ColorReset)
+			}
+		}
+	}
+}
+
+func (ps *Params) DumpParamUsed(ign ...string) (rv string) {
 	rv = "\n"
 	rv += fmt.Sprintf(" %34s  %6s %s\n", "Name", "Line", "File Name")
 	rv += fmt.Sprintf(" %-35s %6s %s\n", "----------------------------------", "-------", "-----------------------------------------")
 	for _, vv := range ps.Data[0:ps.NParam] {
-		if vv.UsedAt == 0 {
+		if vv.UsedAt == 0 && !sizlib.InArray(vv.Name, ign) {
 			rv += fmt.Sprintf("%35s  ***not used***\n", vv.Name)
 		} else {
 			rv += fmt.Sprintf("%35s  %7d %s\n", vv.Name, vv.UsedAt, vv.UsedFile)
@@ -220,6 +272,9 @@ func (ps *Params) ByName(name string) (rv string) {
 	for i := 0; i < ps.NParam; i++ {
 		if ps.Data[i].Name == name {
 			nn, ff := debug.LINEnf(2)
+			if ps.Data[i].UsedAt != 0 {
+				fmt.Printf("ByName - overwrite: Line:%d File:%s\n", ps.Data[i].UsedAt, ps.Data[i].UsedFile)
+			}
 			ps.Data[i].UsedAt = nn
 			ps.Data[i].UsedFile = ff
 			rv = ps.Data[i].Value

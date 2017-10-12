@@ -18,44 +18,65 @@ package RejectDirectory
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*DirectoryLimitType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &DirectoryLimitType{} }
+//
+//	cfg.RegInitItem2("RejectDirectory", initNext, createEmptyType, nil, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *DirectoryLimitType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*DirectoryLimitType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &DirectoryLimitType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &DirectoryLimitType{} }
-
-	cfg.RegInitItem2("RejectDirectory", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("RejectDirectory", CreateEmpty, `{
 		"Paths":         { "type":[ "string", "filepath" ], "isarray":true, "required":true },
 		"Disalow":       { "type":[ "[]string", "filepath" ] },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *DirectoryLimitType) SetNext(next http.Handler) {
+func (hdlr *DirectoryLimitType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *DirectoryLimitType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*DirectoryLimitType)(nil)
@@ -74,13 +95,6 @@ type DirectoryLimitType struct {
 func NewDirectoryLimitServer(n http.Handler, p []string, dis []string) *DirectoryLimitType {
 	return &DirectoryLimitType{Next: n, Paths: p, Disalow: dis}
 }
-
-/*
-
-../../fileserve/fs.go Line:220 func dirList(w http.ResponseWriter, f File) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-*/
 
 func (hdlr DirectoryLimitType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {

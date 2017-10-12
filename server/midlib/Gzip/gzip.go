@@ -24,46 +24,66 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 	"github.com/pschlump/hash-file/lib"
+	"www.2c-why.com/JsonX"
 )
+
+// xyzzy - start mod to JsonX - "www.2c-why.com/JsonX"
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*GzipType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &GzipType{} }
+//
+//	cfg.RegInitItem2("Gzip", initNext, createEmptyType, nil, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"MinLength":     { "type":[ "int" ], "default":"500" },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*GzipType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &GzipType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &GzipType{} }
-
-	cfg.RegInitItem2("Gzip", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("Gzip", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"MinLength":     { "type":[ "int" ], "default":"500" },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *GzipType) SetNext(next http.Handler) {
+func (hdlr *GzipType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *GzipType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*GzipType)(nil)
@@ -72,9 +92,9 @@ var _ mid.GoFTLMiddleWare = (*GzipType)(nil)
 
 type GzipType struct {
 	Next      http.Handler
-	Paths     []string
-	MinLength int
-	LineNo    int
+	Paths     []string `gfType:"string,filepath" gfRequired:"true"`
+	MinLength int      `gfDefault:"500" gfMin:"100"`
+	LineNo    int      `gfDefault:"1"`
 }
 
 func NewGzipServer(n http.Handler, p []string, ml int) *GzipType {

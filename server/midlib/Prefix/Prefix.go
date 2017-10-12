@@ -20,55 +20,41 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*PrefixHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &PrefixHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		// "Prefix":             { "type":["string"], "default":")]}',`+"\n"+`" },
+		return x
 	}
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		// fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*PrefixHandlerType)
-		if !ok {
-			fmt.Fprintf(os.Stderr, "%sError: Wrong data type passed, Line No:%d\n%s", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-			return mid.ErrInternalError
-		}
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &PrefixHandlerType{} }
-
-	cfg.RegInitItem2("Prefix", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("Prefix", CreateEmpty, `{
 		"Paths":              { "type":["string","filepath"], "isarray":true, "required":true },
-		"Prefix":             { "type":["string"], "default":")]}',`+"\n"+`" },
+		"Prefix":             { "type":["string"], "default":"while(1);" },
+		"PrePend":            { "type":["string"], "default":"yes" },
 		"LineNo":             { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *PrefixHandlerType) SetNext(next http.Handler) {
+func (hdlr *PrefixHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *PrefixHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*PrefixHandlerType)(nil)
@@ -76,10 +62,11 @@ var _ mid.GoFTLMiddleWare = (*PrefixHandlerType)(nil)
 // --------------------------------------------------------------------------------------------------------------------------
 
 type PrefixHandlerType struct {
-	Next   http.Handler //
-	Paths  []string     // Paths that this will work for
-	Prefix string       // Prefix to put before JSON responses
-	LineNo int          //
+	Next    http.Handler //
+	Paths   []string     // Paths that this will work for
+	Prefix  string       // Prefix to put before JSON responses
+	PrePend string       //	"set", "yes"=="before"==PrePend, "after"
+	LineNo  int          //
 }
 
 func NewPrefixServer(n http.Handler, p []string, reMatch string) *PrefixHandlerType {
@@ -103,8 +90,14 @@ func (hdlr *PrefixHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 			trx.AddNote(1, fmt.Sprintf("Content-Type == %s StatusCode = %d", ct, rw.StatusCode))
 			if rw.StatusCode == http.StatusOK && strings.HasPrefix(ct, "application/json") {
 				trx.AddNote(1, "Is JSON - will add prefix")
-				rw.Prefix = hdlr.Prefix
-				rw.Postfix = ""
+				if hdlr.PrePend == "yes" || hdlr.PrePend == "before" {
+					rw.Prefix = hdlr.Prefix + rw.Prefix
+				} else if hdlr.PrePend == "after" {
+					rw.Prefix = rw.Prefix + hdlr.Prefix
+				} else {
+					rw.Prefix = hdlr.Prefix
+					rw.Postfix = ""
+				}
 			}
 		} else {
 			fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorRed, mid.ErrNonMidBufferWriter, MiscLib.ColorReset)

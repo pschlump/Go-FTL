@@ -24,6 +24,8 @@ import (
 	"os"
 	"regexp"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -35,55 +37,71 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RewriteHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RewriteHandlerType{} }
+//
+//	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*RewriteHandlerType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			if rewrite_db1 {
+//				fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hh))
+//			}
+//			// Validate internal "struct" data
+//			if len(hh.MatchReplace) == 0 {
+//				fmt.Printf("Error: MatchReplace can not be empty - must have atleast one pair\n")
+//				return mid.ErrInternalError
+//			}
+//			// build the parsed REs from input
+//			for ii, vv := range hh.MatchReplace {
+//				re, err := regexp.Compile(vv.Match)
+//				if err != nil {
+//					fmt.Printf("Invalid regular expression %s, #%d in set of match/replace pairs Error: %s\n", vv.Match, ii, err)
+//				}
+//				hh.matchre = append(hh.matchre, re)
+//			}
+//			//if rewrite_db1 {
+//			//	os.Exit(1) // Exit so can see results of change -
+//			//}
+//		}
+//		return nil
+//	}
+//
+//	cfg.RegInitItem2("Rewrite", initNext, createEmptyType, postInitValidation, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *RewriteHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RewriteHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RewriteHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &RewriteHandlerType{} }
-
-	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*RewriteHandlerType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			if rewrite_db1 {
-				fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hh))
-			}
-			// Validate internal "struct" data
-			if len(hh.MatchReplace) == 0 {
-				fmt.Printf("Error: MatchReplace can not be empty - must have atleast one pair\n")
-				return mid.ErrInternalError
-			}
-			// build the parsed REs from input
-			for ii, vv := range hh.MatchReplace {
-				re, err := regexp.Compile(vv.Match)
-				if err != nil {
-					fmt.Printf("Invalid regular expression %s, #%d in set of match/replace pairs Error: %s\n", vv.Match, ii, err)
-				}
-				hh.matchre = append(hh.matchre, re)
-			}
-			//if rewrite_db1 {
-			//	os.Exit(1) // Exit so can see results of change -
-			//}
-		}
-		return nil
-	}
-
-	cfg.RegInitItem2("Rewrite", initNext, createEmptyType, postInitValidation, `{
+	mid.RegInitItem3("Rewrite", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"MatchReplace":  { "type":[ "struct" ] },
 	    "LoopLimit":     { "type":[ "int" ], "default":"50" },
@@ -92,9 +110,33 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *RewriteHandlerType) SetNext(next http.Handler) {
+func (hdlr *RewriteHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *RewriteHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	if rewrite_db1 {
+		fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hdlr))
+	}
+	// Validate internal "struct" data
+	if len(hdlr.MatchReplace) == 0 {
+		fmt.Printf("Error: MatchReplace can not be empty - must have atleast one pair\n")
+		return mid.ErrInternalError
+	}
+	// build the parsed REs from input
+	for ii, vv := range hdlr.MatchReplace {
+		re, err := regexp.Compile(vv.Match)
+		if err != nil {
+			fmt.Printf("Invalid regular expression %s, #%d in set of match/replace pairs Error: %s\n", vv.Match, ii, err)
+		}
+		hdlr.matchre = append(hdlr.matchre, re)
+	}
+	//if rewrite_db1 {
+	//	os.Exit(1) // Exit so can see results of change -
+	//}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RewriteHandlerType)(nil)

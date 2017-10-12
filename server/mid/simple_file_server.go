@@ -24,6 +24,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -32,24 +34,44 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*SimpleFileServer)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = FtlConfigError
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &SimpleFileServer{} }
+//
+//	cfg.RegInitItem2("simple_file_server", initNext, createEmptyType, nil, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Root":          { "type":[ "string","filepath" ], "isarray":true },
+//		"IndexFileList": { "type":[ "string" ], "default":"index.html", "isarray":true },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *SimpleFileServer) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*SimpleFileServer)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = FtlConfigError
-		}
-		return
+	CreateEmpty := func(name string) GoFTLMiddleWare {
+		x := &SimpleFileServer{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &SimpleFileServer{} }
-
-	cfg.RegInitItem2("simple_file_server", initNext, createEmptyType, nil, `{
+	RegInitItem3("Gzip", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"Root":          { "type":[ "string","filepath" ], "isarray":true },
 		"IndexFileList": { "type":[ "string" ], "default":"index.html", "isarray":true },
@@ -57,9 +79,14 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *SimpleFileServer) SetNext(next http.Handler) {
+func (hdlr *SimpleFileServer) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *SimpleFileServer) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ GoFTLMiddleWare = (*SimpleFileServer)(nil)

@@ -27,70 +27,141 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/tmplp"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RedirectHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RedirectHandlerType{} }
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*RedirectHandlerType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			for ii, vv := range hh.To {
+//				if vv.Code == "" {
+//					vv.Code = "307"
+//				} else if code, ok := decodeCode[vv.Code]; ok {
+//					vv.Code = fmt.Sprintf("%d", code)
+//				} else {
+//					fmt.Printf("Error: Invalid response code %s at position %d - should be 301 or 307 - Redirect, Line No:%d\n", vv, ii, hh.LineNo)
+//					return mid.ErrInvalidConfiguration
+//				}
+//				hh.To[ii] = vv
+//			}
+//		}
+//		if hh.TemplateFileName != "" {
+//			hh.TemplateFileName = lib.FilepathAbs(filepath.Clean("./" + hh.TemplateFileName))
+//			if lib.Exists(hh.TemplateFileName) {
+//				b, err := ioutil.ReadFile(hh.TemplateFileName)
+//				if err != nil {
+//					fmt.Printf("Error: Specified redirect template file %s Error: %s, Line No:%d\n", hh.TemplateFileName, err, hh.LineNo)
+//					return mid.ErrInvalidConfiguration
+//				}
+//				hh.templateData = string(b)
+//			} else {
+//				fmt.Printf("Error: Specified redirect template file %s missing, Line No:%d\n", hh.TemplateFileName, hh.LineNo)
+//				return mid.ErrInvalidConfiguration
+//			}
+//		} else {
+//			hh.templateData = // use default template
+//				`<html>
+//<head>
+//<title>Moved</title>
+//</head>
+//<body>
+//<h1>Moved</h1>
+//<p>This page has moved to <a href="{{.RedirectTo}}">{{.RedirectTo}}</a>.</p>
+//</body>
+//</html>
+//`
+//		}
+//		return nil
+//	}
+//
+//	cfg.RegInitItem2("Redirect", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *RedirectHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RedirectHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RedirectHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
+	mid.RegInitItem3("Redirect", CreateEmpty, `{
+		"Paths":        	{ "type":[ "string","filepath"], "isarray":true, "required":true },
+		"To":               { "type":[ "struct" ] },
+        "TemplateFileName": { "type":[ "string" ] },
+		"LineNo":        	{ "type":[ "int" ], "default":"1" }
+		}`)
+}
 
-	// normally identical
-	createEmptyType := func() interface{} { return &RedirectHandlerType{} }
+func (hdlr *RedirectHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
+	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
 
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*RedirectHandlerType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
+func (hdlr *RedirectHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	for ii, vv := range hdlr.To {
+		if vv.Code == "" {
+			vv.Code = "307"
+		} else if code, ok := decodeCode[vv.Code]; ok {
+			vv.Code = fmt.Sprintf("%d", code)
 		} else {
-			for ii, vv := range hh.To {
-				if vv.Code == "" {
-					vv.Code = "307"
-				} else if code, ok := decodeCode[vv.Code]; ok {
-					vv.Code = fmt.Sprintf("%d", code)
-				} else {
-					fmt.Printf("Error: Invalid response code %s at position %d - should be 301 or 307 - Redirect, Line No:%d\n", vv, ii, hh.LineNo)
-					return mid.ErrInvalidConfiguration
-				}
-				hh.To[ii] = vv
-			}
+			fmt.Printf("Error: Invalid response code %s at position %d - should be 301 or 307 - Redirect, Line No:%d\n", vv, ii, hdlr.LineNo)
+			return mid.ErrInvalidConfiguration
 		}
-		if hh.TemplateFileName != "" {
-			hh.TemplateFileName = lib.FilepathAbs(filepath.Clean("./" + hh.TemplateFileName))
-			if lib.Exists(hh.TemplateFileName) {
-				b, err := ioutil.ReadFile(hh.TemplateFileName)
-				if err != nil {
-					fmt.Printf("Error: Specified redirect template file %s Error: %s, Line No:%d\n", hh.TemplateFileName, err, hh.LineNo)
-					return mid.ErrInvalidConfiguration
-				}
-				hh.templateData = string(b)
-			} else {
-				fmt.Printf("Error: Specified redirect template file %s missing, Line No:%d\n", hh.TemplateFileName, hh.LineNo)
+		hdlr.To[ii] = vv
+	}
+	if hdlr.TemplateFileName != "" {
+		hdlr.TemplateFileName = lib.FilepathAbs(filepath.Clean("./" + hdlr.TemplateFileName))
+		if lib.Exists(hdlr.TemplateFileName) {
+			b, err := ioutil.ReadFile(hdlr.TemplateFileName)
+			if err != nil {
+				fmt.Printf("Error: Specified redirect template file %s Error: %s, Line No:%d\n", hdlr.TemplateFileName, err, hdlr.LineNo)
 				return mid.ErrInvalidConfiguration
 			}
+			hdlr.templateData = string(b)
 		} else {
-			hh.templateData = // use default template
-				`<html>
+			fmt.Printf("Error: Specified redirect template file %s missing, Line No:%d\n", hdlr.TemplateFileName, hdlr.LineNo)
+			return mid.ErrInvalidConfiguration
+		}
+	} else {
+		hdlr.templateData = // use default template
+			`<html>
 <head>
 <title>Moved</title>
 </head>
@@ -100,21 +171,8 @@ func init() {
 </body>
 </html>
 `
-		}
-		return nil
 	}
-
-	cfg.RegInitItem2("Redirect", initNext, createEmptyType, postInit, `{
-		"Paths":        	{ "type":[ "string","filepath"], "isarray":true, "required":true },
-		"To":               { "type":[ "struct" ] },
-        "TemplateFileName": { "type":[ "string" ] },
-		"LineNo":        	{ "type":[ "int" ], "default":"1" }
-		}`)
-}
-
-// normally identical
-func (hdlr *RedirectHandlerType) SetNext(next http.Handler) {
-	hdlr.Next = next
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RedirectHandlerType)(nil)

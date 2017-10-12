@@ -51,7 +51,14 @@ func Test_DumpResponseServer(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		wr := goftlmux.NewMidBuffer(rec, nil)
-		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool) // Set to connect to redis // Per request ID that is used by Trx tracing package. and by Socket.IO for directing trafic
+		//		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool) // Set to connect to redis // Per request ID that is used by Trx tracing package. and by Socket.IO for directing trafic
+		//		wr.G_Trx = trx
+
+		id := "test-01-StatusHandler"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
 		wr.G_Trx = trx
 
 		var req *http.Request

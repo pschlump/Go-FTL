@@ -124,6 +124,8 @@ import (
 	"strings"
 	"time"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"                 //
 	"github.com/pschlump/AesCCM"                 //
 	"github.com/pschlump/AesCCM/base64data"      //
@@ -245,117 +247,140 @@ const LoginHashCookieLife = (1 * 24 * 60 * 60) // one day in seconds
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical -but- not in this case.
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*AesSrpType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//
+//		SetDebugFlagsFromGlobal(gCfg)
+//
+//		// EmailRelayIP = pCfg.EmailRelayIP
+//		// EmailAuthToken = pCfg.EmailAuthToken
+//		for _, xx := range pCfg.TestModeInject {
+//			TestModeInject[xx] = true
+//		}
+//		gCfg.ConnectToRedis()
+//		gCfg.ConnectToPostgreSQL()
+//		pCfg.gCfg = gCfg
+//
+//		if dbDumpConfig {
+//			fmt.Printf("[][][][][][][][][] Config: %s\n", lib.SVarI(pCfg))
+//		}
+//		return
+//	}
+//
+//	// normally identical - not this time
+//	createEmptyType := func() interface{} {
+//		rv := &AesSrpType{}
+//		rv.mux = initRegularMux()
+//		rv.muxEnc = initMuxEnc()
+//		return rv
+//	}
+//
+//	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		if init_db1 {
+//			fmt.Printf("In postInitValidation for AesSrp, %s\n", godebug.LF())
+//		}
+//		hh, ok := h.(*AesSrpType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			ConfigEmailAWS(hh, hh.EmailConfigFileName)
+//			if init_db1 {
+//				fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hh))
+//			}
+//			if len(hh.DbUserCols) == 0 {
+//				hh.DbUserCols = []string{"RealName", "Customer_id", "UserName", "FirstName", "MidName", "LastName ", "User_id", "Customer_id", "XAttrs", "PhoneNo"}
+//				hh.DbUserColsDb = []string{"RealName", "Customer_id", "UserName", "FirstName", "MidName", "LastName ", "User_id", "Customer_id", "XAttrs", "PhoneNo"}
+//			}
+//			hh.anonUserPaths = make(map[string]bool)
+//			for _, vv := range []string{"/api/1x1.gif", "/api/cipher", "/api/enc_version", "/api/send_support_message", "/api/srp_challenge", "/api/srp_getNg", "/api/srp_login", "/api/srp_logout", "/api/srp_register", "/api/srp_validate", "/api/version", "/api/resumeLogin"} {
+//				hh.anonUserPaths[vv] = true
+//			}
+//			for _, vv := range hh.AnonUserPaths {
+//				if vv[0:1] == "-" {
+//					hh.anonUserPaths[vv[1:]] = false
+//				} else {
+//					hh.anonUserPaths[vv] = true
+//				}
+//			}
+//			if len(hh.SecurityConfig.Roles) == 0 {
+//				var SecurityData SecurityConfigType
+//				err := json.Unmarshal([]byte(g_SecurityData_Default), &SecurityData)
+//				if err != nil {
+//					fmt.Printf("Unable to parse supplided security data\n")
+//					es := jsonSyntaxErroLib.GenerateSyntaxError(g_SecurityData_Default, err)
+//					fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
+//					logrus.Errorf("Error: Invlaid JSON Error:\n%s\n", es)
+//					return mid.ErrInternalError
+//				}
+//				// SecurityData := lib.SVar(g_SecurityData_Default)
+//				Rn, RnH, An := SetupRoles(SecurityData.Roles, SecurityData.AccessLevels)
+//				hh.SecurityConfig = SecurityData
+//				hh.secRn = Rn
+//				hh.secRnH = RnH
+//				hh.secAn = An
+//			} else {
+//				Rn, RnH, An := SetupRoles(hh.SecurityConfig.Roles, hh.SecurityConfig.AccessLevels)
+//				hh.secRn = Rn
+//				hh.secRnH = RnH
+//				hh.secAn = An
+//			}
+//			if len(hh.NGData.N) == 0 {
+//				ng_data := make(map[string]Ng_struct)
+//				err := json.Unmarshal([]byte(g_tVal), &ng_data)
+//				if err != nil {
+//					fmt.Printf("Unable to parse constant confiration data, Data: >>>%s<<<", g_tVal)
+//					es := jsonSyntaxErroLib.GenerateSyntaxError(g_tVal, err)
+//					fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
+//					logrus.Errorf("Error: Invlaid JSON Error:\n%s\n", es)
+//					return mid.ErrInternalError
+//				}
+//				if x, ok := ng_data[fmt.Sprintf("%d", hh.Bits)]; ok {
+//					hh.NGData = x
+//				} else {
+//					fmt.Printf("Invalid size for Bits, %v\n", hh.Bits)
+//					return mid.ErrInternalError
+//				}
+//			} // xyzzy - else -- N,G supplied - should check length / values
+//		}
+//		return nil
+//	}
+//
+//	// SRP and AES Config --------------------------------------------------------------------------------------------------
+//	cfg.RegInitItem2("SrpAesAuth", initNext, createEmptyType, postInitValidation, `{
+//		}`)
+//
+//	dataStore = NewRSaveToRedis("srp:U:")
+//	emailRe = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@.*[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+//	hexRe = regexp.MustCompile(`^[a-fA-F0-9]+$`)
+//	isUUIDRe = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`)
+//}
+//
+//// normally identical
+//func (hdlr *AesSrpType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical -but- not in this case.
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*AesSrpType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-
-		SetDebugFlagsFromGlobal(gCfg)
-
-		// EmailRelayIP = pCfg.EmailRelayIP
-		// EmailAuthToken = pCfg.EmailAuthToken
-		for _, xx := range pCfg.TestModeInject {
-			TestModeInject[xx] = true
-		}
-		gCfg.ConnectToRedis()
-		gCfg.ConnectToPostgreSQL()
-		pCfg.gCfg = gCfg
-
-		if dbDumpConfig {
-			fmt.Printf("[][][][][][][][][] Config: %s\n", lib.SVarI(pCfg))
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &AesSrpType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		x.mux = initRegularMux()
+		x.muxEnc = initMuxEnc()
+		return x
 	}
-
-	// normally identical - not this time
-	createEmptyType := func() interface{} {
-		rv := &AesSrpType{}
-		rv.mux = initRegularMux()
-		rv.muxEnc = initMuxEnc()
-		return rv
-	}
-
-	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		if init_db1 {
-			fmt.Printf("In postInitValidation for AesSrp, %s\n", godebug.LF())
-		}
-		hh, ok := h.(*AesSrpType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			ConfigEmailAWS(hh, hh.EmailConfigFileName)
-			if init_db1 {
-				fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hh))
-			}
-			if len(hh.DbUserCols) == 0 {
-				hh.DbUserCols = []string{"RealName", "Customer_id", "UserName", "FirstName", "MidName", "LastName ", "User_id", "Customer_id", "XAttrs", "PhoneNo"}
-				hh.DbUserColsDb = []string{"RealName", "Customer_id", "UserName", "FirstName", "MidName", "LastName ", "User_id", "Customer_id", "XAttrs", "PhoneNo"}
-			}
-			hh.anonUserPaths = make(map[string]bool)
-			for _, vv := range []string{"/api/1x1.gif", "/api/cipher", "/api/enc_version", "/api/send_support_message", "/api/srp_challenge", "/api/srp_getNg", "/api/srp_login", "/api/srp_logout", "/api/srp_register", "/api/srp_validate", "/api/version", "/api/resumeLogin"} {
-				hh.anonUserPaths[vv] = true
-			}
-			for _, vv := range hh.AnonUserPaths {
-				if vv[0:1] == "-" {
-					hh.anonUserPaths[vv[1:]] = false
-				} else {
-					hh.anonUserPaths[vv] = true
-				}
-			}
-			if len(hh.SecurityConfig.Roles) == 0 {
-				var SecurityData SecurityConfigType
-				err := json.Unmarshal([]byte(g_SecurityData_Default), &SecurityData)
-				if err != nil {
-					fmt.Printf("Unable to parse supplided security data\n")
-					es := jsonSyntaxErroLib.GenerateSyntaxError(g_SecurityData_Default, err)
-					fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
-					logrus.Errorf("Error: Invlaid JSON Error:\n%s\n", es)
-					return mid.ErrInternalError
-				}
-				// SecurityData := lib.SVar(g_SecurityData_Default)
-				Rn, RnH, An := SetupRoles(SecurityData.Roles, SecurityData.AccessLevels)
-				hh.SecurityConfig = SecurityData
-				hh.secRn = Rn
-				hh.secRnH = RnH
-				hh.secAn = An
-			} else {
-				Rn, RnH, An := SetupRoles(hh.SecurityConfig.Roles, hh.SecurityConfig.AccessLevels)
-				hh.secRn = Rn
-				hh.secRnH = RnH
-				hh.secAn = An
-			}
-			if len(hh.NGData.N) == 0 {
-				ng_data := make(map[string]Ng_struct)
-				err := json.Unmarshal([]byte(g_tVal), &ng_data)
-				if err != nil {
-					fmt.Printf("Unable to parse constant confiration data, Data: >>>%s<<<", g_tVal)
-					es := jsonSyntaxErroLib.GenerateSyntaxError(g_tVal, err)
-					fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
-					logrus.Errorf("Error: Invlaid JSON Error:\n%s\n", es)
-					return mid.ErrInternalError
-				}
-				if x, ok := ng_data[fmt.Sprintf("%d", hh.Bits)]; ok {
-					hh.NGData = x
-				} else {
-					fmt.Printf("Invalid size for Bits, %v\n", hh.Bits)
-					return mid.ErrInternalError
-				}
-			} // xyzzy - else -- N,G supplied - should check length / values
-		}
-		return nil
-	}
-
-	// SRP and AES Config --------------------------------------------------------------------------------------------------
-	cfg.RegInitItem2("SrpAesAuth", initNext, createEmptyType, postInitValidation, `{
+	mid.RegInitItem3("SrpAesAuth", CreateEmpty, `{
 		"Paths":                    { "type":[ "string","filepath" ], "isarray":true, "required":true },
 		"EncReqPaths":              { "type":[ "string","filepath" ], "isarray":true },
 		"MatchPaths":               { "type":[ "string","filepath" ], "isarray":true },
@@ -412,16 +437,94 @@ func init() {
 	    "NonEmailAccts":            { "type":[ "string" ], "isarray":true },
 		"LineNo":                   { "type":[ "int" ], "default":"1" }
 		}`)
-
 	dataStore = NewRSaveToRedis("srp:U:")
 	emailRe = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@.*[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	hexRe = regexp.MustCompile(`^[a-fA-F0-9]+$`)
 	isUUIDRe = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`)
 }
 
-// normally identical
-func (hdlr *AesSrpType) SetNext(next http.Handler) {
+func (hdlr *AesSrpType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+
+	SetDebugFlagsFromGlobal(gCfg)
+
+	// EmailRelayIP = pCfg.EmailRelayIP
+	// EmailAuthToken = pCfg.EmailAuthToken
+	for _, xx := range hdlr.TestModeInject {
+		TestModeInject[xx] = true
+	}
+	gCfg.ConnectToRedis()
+	gCfg.ConnectToPostgreSQL()
+	hdlr.gCfg = gCfg
+
+	if dbDumpConfig {
+		fmt.Printf("[][][][][][][][][] Config: %s\n", lib.SVarI(hdlr))
+	}
+
+	return
+}
+
+func (hdlr *AesSrpType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	ConfigEmailAWS(hdlr, hdlr.EmailConfigFileName)
+	if init_db1 {
+		fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hdlr))
+	}
+	if len(hdlr.DbUserCols) == 0 {
+		hdlr.DbUserCols = []string{"RealName", "Customer_id", "UserName", "FirstName", "MidName", "LastName ", "User_id", "Customer_id", "XAttrs", "PhoneNo"}
+		hdlr.DbUserColsDb = []string{"RealName", "Customer_id", "UserName", "FirstName", "MidName", "LastName ", "User_id", "Customer_id", "XAttrs", "PhoneNo"}
+	}
+	hdlr.anonUserPaths = make(map[string]bool)
+	for _, vv := range []string{"/api/1x1.gif", "/api/cipher", "/api/enc_version", "/api/send_support_message", "/api/srp_challenge", "/api/srp_getNg", "/api/srp_login", "/api/srp_logout", "/api/srp_register", "/api/srp_validate", "/api/version", "/api/resumeLogin"} {
+		hdlr.anonUserPaths[vv] = true
+	}
+	for _, vv := range hdlr.AnonUserPaths {
+		if vv[0:1] == "-" {
+			hdlr.anonUserPaths[vv[1:]] = false
+		} else {
+			hdlr.anonUserPaths[vv] = true
+		}
+	}
+	if len(hdlr.SecurityConfig.Roles) == 0 {
+		var SecurityData SecurityConfigType
+		err := json.Unmarshal([]byte(g_SecurityData_Default), &SecurityData)
+		if err != nil {
+			fmt.Printf("Unable to parse supplided security data\n")
+			es := jsonSyntaxErroLib.GenerateSyntaxError(g_SecurityData_Default, err)
+			fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
+			logrus.Errorf("Error: Invlaid JSON Error:\n%s\n", es)
+			return mid.ErrInternalError
+		}
+		// SecurityData := lib.SVar(g_SecurityData_Default)
+		Rn, RnH, An := SetupRoles(SecurityData.Roles, SecurityData.AccessLevels)
+		hdlr.SecurityConfig = SecurityData
+		hdlr.secRn = Rn
+		hdlr.secRnH = RnH
+		hdlr.secAn = An
+	} else {
+		Rn, RnH, An := SetupRoles(hdlr.SecurityConfig.Roles, hdlr.SecurityConfig.AccessLevels)
+		hdlr.secRn = Rn
+		hdlr.secRnH = RnH
+		hdlr.secAn = An
+	}
+	if len(hdlr.NGData.N) == 0 {
+		ng_data := make(map[string]Ng_struct)
+		err := json.Unmarshal([]byte(g_tVal), &ng_data)
+		if err != nil {
+			fmt.Printf("Unable to parse constant confiration data, Data: >>>%s<<<", g_tVal)
+			es := jsonSyntaxErroLib.GenerateSyntaxError(g_tVal, err)
+			fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
+			logrus.Errorf("Error: Invlaid JSON Error:\n%s\n", es)
+			return mid.ErrInternalError
+		}
+		if x, ok := ng_data[fmt.Sprintf("%d", hdlr.Bits)]; ok {
+			hdlr.NGData = x
+		} else {
+			fmt.Printf("Invalid size for Bits, %v\n", hdlr.Bits)
+			return mid.ErrInternalError
+		}
+	} // xyzzy - else -- N,G supplied - should check length / values
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*AesSrpType)(nil)

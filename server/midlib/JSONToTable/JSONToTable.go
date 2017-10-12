@@ -21,53 +21,70 @@ import (
 	"os"
 	"regexp"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	Modifed from: "encoding/json"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*JSONToTableType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &JSONToTableType{} }
+//
+//	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*JSONToTableType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			if hh.ConvertRowTo1LongTable && hh.Convert1LongTableToRow {
+//				fmt.Printf("Error: Invalid Configuration JSONToTable, both ConvertRowTo1LongTable and Convert1LongTableToRow are true, only one can be true at a time, Line No:%d\n", hh.LineNo)
+//				return mid.ErrInvalidConfiguration
+//			}
+//		}
+//		return nil
+//	}
+//
+//	// /api/tmpl/showRpt.tmpl -> fetch data inside template?
+//	// /api/tmpl/showRpt.tmpl?data=bob (data in row/table data)
+//	cfg.RegInitItem2("JSONToTable", initNext, createEmptyType, postInitValidation, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *JSONToTableType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*JSONToTableType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &JSONToTableType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &JSONToTableType{} }
-
-	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*JSONToTableType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			if hh.ConvertRowTo1LongTable && hh.Convert1LongTableToRow {
-				fmt.Printf("Error: Invalid Configuration JSONToTable, both ConvertRowTo1LongTable and Convert1LongTableToRow are true, only one can be true at a time, Line No:%d\n", hh.LineNo)
-				return mid.ErrInvalidConfiguration
-			}
-		}
-		return nil
-	}
-
-	// /api/tmpl/showRpt.tmpl -> fetch data inside template?
-	// /api/tmpl/showRpt.tmpl?data=bob (data in row/table data)
-	cfg.RegInitItem2("JSONToTable", initNext, createEmptyType, postInitValidation, `{
+	mid.RegInitItem3("JSONToTable", CreateEmpty, `{
 		"Paths":                   { "type":[ "string", "filepath" ], "isarray":true, "default":"/" },
 		"ConvertRowTo1LongTable":  { "type":[ "bool" ], "default":"false" },
 		"Convert1LongTableToRow":  { "type":[ "bool" ], "default":"false" },
@@ -75,9 +92,18 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *JSONToTableType) SetNext(next http.Handler) {
+func (hdlr *JSONToTableType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *JSONToTableType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	if hdlr.ConvertRowTo1LongTable && hdlr.Convert1LongTableToRow {
+		fmt.Printf("Error: Invalid Configuration JSONToTable, both ConvertRowTo1LongTable and Convert1LongTableToRow are true, only one can be true at a time, Line No:%d\n", hdlr.LineNo)
+		return mid.ErrInvalidConfiguration
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*JSONToTableType)(nil)

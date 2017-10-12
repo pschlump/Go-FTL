@@ -23,12 +23,18 @@ import (
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/tr"
 )
 
 const dbA = false
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 func Test_BasicAuthServer(t *testing.T) {
+
+	if !cfg.SetupRedisForTest("../test_redis.json") {
+		return
+	}
+
 	tests := []struct {
 		url           string
 		expectedCode  int
@@ -146,6 +152,13 @@ func Test_BasicAuthServer(t *testing.T) {
 		rec := httptest.NewRecorder()
 		wr := goftlmux.NewMidBuffer(rec, nil)
 
+		id := "test-01-BasicAuthServer"
+		trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+		trx.TrxIdSeen(id, test.url, "GET")
+		wr.RequestTrxId = id
+
+		wr.G_Trx = trx
+
 		var req *http.Request
 
 		req, err = http.NewRequest("GET", test.url, nil)
@@ -195,6 +208,14 @@ func Test_BasicAuthServer(t *testing.T) {
 					lib.SetupRequestHeaders(req, test.hdr)
 					rec1 := httptest.NewRecorder()
 					wr1 := goftlmux.NewMidBuffer(rec1, nil)
+
+					id := "test-01-StatusHandler"
+					trx := tr.NewTrx(cfg.ServerGlobal.RedisPool)
+					trx.TrxIdSeen(id, test.url, "GET")
+					wr1.RequestTrxId = id
+
+					wr1.G_Trx = trx
+
 					ms.ServeHTTP(wr1, req)
 					if db8 {
 						fmt.Printf("*3* wr1 StatusCode=%d\n", wr1.StatusCode)

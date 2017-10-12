@@ -68,6 +68,12 @@ func main() {
 
 	flag.Parse()
 
+	fns := flag.Args()
+	if len(fns) != 0 {
+		fmt.Fprintf(os.Stderr, "Usage: ./htaccess ... flags\n")
+		os.Exit(1)
+	}
+
 	// If file not exits - then create
 	if !Exists(*fileName) {
 		ioutil.WriteFile(*fileName, []byte(""), 0600)

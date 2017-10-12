@@ -16,39 +16,65 @@ import (
 	"net/http"
 	"strings"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*MidServer)
+//		if ok {
+//			pCfg.SetNext(next)
+//			pCfg.callNo = 1 // not boilerplate
+//			rv = pCfg
+//		} else {
+//			err = FtlConfigError
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &MidServer{} }
+//
+//	cfg.RegInitItem2("x_top", initNext, createEmptyType, nil, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Info":          { "type":[ "string","filepath" ], "isarray":true },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *MidServer) SetNext(next http.Handler) {
+//	// not boilerplate
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*MidServer)
-		if ok {
-			pCfg.SetNext(next)
-			pCfg.callNo = 1 // not boilerplate
-			rv = pCfg
-		} else {
-			err = FtlConfigError
-		}
-		return
+	CreateEmpty := func(name string) GoFTLMiddleWare {
+		x := &MidServer{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &MidServer{} }
-
-	cfg.RegInitItem2("x_top", initNext, createEmptyType, nil, `{
+	RegInitItem3("Gzip", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"Info":          { "type":[ "string","filepath" ], "isarray":true },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *MidServer) SetNext(next http.Handler) {
-	// not boilerplate
+func (hdlr *MidServer) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
+	//hdlr.Next = next
+	hdlr.callNo = 1
+	return
+}
+
+func (hdlr *MidServer) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ GoFTLMiddleWare = (*MidServer)(nil)

@@ -1,7 +1,7 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2016
+// Copyright (C) Philip Schlump, 2014-2017
 //
 // Do not remove the following lines - used in auto-update.
 // Version: 0.5.9
@@ -33,7 +33,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	// "github.com/pschlump/MiscLib"
 	"github.com/pschlump/json" // //	Modifed from: "encoding/json"
 	"github.com/pschlump/uuid"
 )
@@ -686,26 +688,67 @@ func ExistsIsDir(name string) bool {
 // ----------------------------------------------------------------------------------------------------------------------------------------------------
 func PathsMatch(Paths []string, APath string) bool {
 	if Paths == nil || len(Paths) == 0 {
+		fmt.Printf("PathsMatch: Match Path '' (empty)   :%s\n", MiscLib.ColorMagentaOnWhite, MiscLib.ColorReset, LF(2))
 		return true
 	}
 	for _, prefix := range Paths {
 		if strings.HasPrefix(APath, prefix) {
+			fn, pkg := GetPackageName(LF(2))
+			fmt.Printf("%sPathsMatch: Match Path '%s' to '%s'   %s : Package:%s %s %s File:%s\n", MiscLib.ColorMagentaOnWhite, APath, prefix, MiscLib.ColorReset,
+				MiscLib.ColorBlueOnWhite, pkg, MiscLib.ColorReset, fn)
 			return true
 		}
 	}
 	return false
 }
 
+// var ColorMagentaOnWhite string
+
 func PathsMatchN(Paths []string, APath string) int {
 	if Paths == nil || len(Paths) == 0 {
+		fmt.Printf("%sPathsMatchN: Match Path '' (empty)   %s:%s\n", MiscLib.ColorMagentaOnWhite, MiscLib.ColorReset, LF(2))
 		return 0
 	}
 	for ii, prefix := range Paths {
 		if strings.HasPrefix(APath, prefix) {
+			fn, pkg := GetPackageName(LF(2))
+			fmt.Printf("%sPathsMatchN: Match Path '%s' to '%s' -- #=%d   %s : Package:%s %s %s File:%s\n", MiscLib.ColorMagentaOnWhite, APath, prefix, ii, MiscLib.ColorReset,
+				MiscLib.ColorBlueOnWhite, pkg, MiscLib.ColorReset, fn)
 			return ii
 		}
 	}
 	return -1
+}
+
+//
+// Get Package Name from File Name
+// Input:  /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/TabServer2/ts2_ftl.go LineNo:647
+// 1. Split on ' ', pick out [0]
+// 2. If starts with /.../ skip change to .../Go-FTL, then pick out last "dir" TabServer2 as the "middlware" package.
+//
+var reUpToFTL = regexp.MustCompile(`^.*/Go-FTL/`)
+
+func GetPackageName(fnln string) (newFn, pkg string) {
+	newFn, pkg = fnln, fnln
+	s := strings.Split(fnln, " ")
+	// fmt.Printf("Raw -->%s<-- s[1] = -->%s<-- s[2] = -->%s<-- %d, %s\n", fnln, s[1], s[2], len(s), godebug.SVar(s))
+	if len(s) >= 3 {
+		fn, ln := s[1], s[2]
+		fn = reUpToFTL.ReplaceAllString(fn, ".../Go-FTL/")
+		// fmt.Printf("fn/after ->%s<-\n", fn)
+		fn = fn + ln[6:]
+		// fmt.Printf("fn/after ->%s<-\n", fn)
+		newFn = fn
+		dir, _ := filepath.Split(s[1])
+		// fmt.Printf("dir ->%s<-\n", dir)
+		if len(dir) > 2 && dir[len(dir)-1:] == "/" {
+			_, pkg = filepath.Split(dir[0 : len(dir)-1])
+			// fmt.Printf("pkg ->%s<-\n", pkg)
+		} else {
+			pkg = fn
+		}
+	}
+	return
 }
 
 func PathsMatchIgnore(Paths []string, APath string) bool {

@@ -21,7 +21,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -32,64 +33,105 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*ErrorTemplateType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &ErrorTemplateType{} }
+//
+//	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		// fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*ErrorTemplateType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			hh.errorsTemplate = make(map[string]string)
+//			for _, vv := range hh.Errors {
+//				for _, ww := range hh.TemplatePath {
+//					fn := ww + "/" + vv + ".tmpl"
+//					if lib.Exists(fn) {
+//						s, err := ioutil.ReadFile(fn)
+//						if err == nil {
+//							hh.errorsTemplate[vv] = string(s)
+//						} else {
+//							fmt.Printf("Error: Unable to read template file %s\n", err)
+//							return mid.ErrInvalidConfiguration
+//						}
+//						break
+//					}
+//				}
+//			}
+//		}
+//		return nil
+//	}
+//
+//	cfg.RegInitItem2("ErrorTemplate", initNext, createEmptyType, postInitValidation, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Errors":        { "type":[ "string" ], "isarray":true },
+//		"TemplatePath":  { "type":[ "string" ], "isarray":true, "default":"./errorTemplates/" },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//
+//}
+//
+//// normally identical
+//func (hdlr *ErrorTemplateType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*ErrorTemplateType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &ErrorTemplateType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &ErrorTemplateType{} }
-
-	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		// fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*ErrorTemplateType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			hh.errorsTemplate = make(map[string]string)
-			for _, vv := range hh.Errors {
-				for _, ww := range hh.TemplatePath {
-					fn := ww + "/" + vv + ".tmpl"
-					if lib.Exists(fn) {
-						s, err := ioutil.ReadFile(fn)
-						if err == nil {
-							hh.errorsTemplate[vv] = string(s)
-						} else {
-							fmt.Printf("Error: Unable to read template file %s\n", err)
-							return mid.ErrInvalidConfiguration
-						}
-						break
-					}
-				}
-			}
-		}
-		return nil
-	}
-
-	cfg.RegInitItem2("ErrorTemplate", initNext, createEmptyType, postInitValidation, `{
+	mid.RegInitItem3("ErrorTemplate", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"Errors":        { "type":[ "string" ], "isarray":true },
 		"TemplatePath":  { "type":[ "string" ], "isarray":true, "default":"./errorTemplates/" },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
-
 }
 
-// normally identical
-func (hdlr *ErrorTemplateType) SetNext(next http.Handler) {
+func (hdlr *ErrorTemplateType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *ErrorTemplateType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	hdlr.errorsTemplate = make(map[string]string)
+	for _, vv := range hdlr.Errors {
+		for _, ww := range hdlr.TemplatePath {
+			fn := ww + "/" + vv + ".tmpl"
+			if lib.Exists(fn) {
+				s, err := ioutil.ReadFile(fn)
+				if err == nil {
+					hdlr.errorsTemplate[vv] = string(s)
+				} else {
+					fmt.Printf("Error: Unable to read template file %s\n", err)
+					return mid.ErrInvalidConfiguration
+				}
+				break
+			}
+		}
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*ErrorTemplateType)(nil)

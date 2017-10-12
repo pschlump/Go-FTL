@@ -108,7 +108,7 @@ func ExecuteATemplate(tmpl string, data map[string]string) (rv string) {
 	t := template.New("line-template").Funcs(funcMapTmpl)
 	t, err := t.Parse(tmpl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error(): Invalid template: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error(102): Invalid template: %s\n", err)
 		return tmpl
 	}
 
@@ -118,7 +118,45 @@ func ExecuteATemplate(tmpl string, data map[string]string) (rv string) {
 	err = t.ExecuteTemplate(foo, "line-template", data)
 	// err = t.ExecuteTemplate(os.Stdout, "line-template", data)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error(): Invalid template processing: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error(103): Invalid template processing: %s\n", err)
+		return tmpl
+	}
+	foo.Flush()
+	rv = b.String() // Fetch the data back from the buffer
+	return
+}
+
+func ExecuteATemplateByName(tmpl, tmplName string, data map[string]string) (rv string) {
+	funcMapTmpl := template.FuncMap{
+		"PadR":        ms.PadOnRight,
+		"PadL":        ms.PadOnLeft,
+		"PicTime":     ms.PicTime,
+		"FTime":       ms.StrFTime,
+		"PicFloat":    ms.PicFloat,
+		"nvl":         ms.Nvl,
+		"Concat":      ms.Concat,
+		"title":       strings.Title, // The name "title" is what the function will be called in the template text.
+		"ifDef":       ms.IfDef,
+		"ifIsDef":     ms.IfIsDef,
+		"ifIsNotNull": ms.IfIsNotNull,
+		"dirname":     filepath.Dir, // xyzzyTemplateAdd - basename, dirname,
+		"basename":    filepath.Base,
+	}
+	t := template.New("line-template").Funcs(funcMapTmpl)
+	t, err := t.Parse(tmpl)
+	// fmt.Printf("---->>>>%s<<<<====, %s\n", tmpl, godebug.LF())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error(100): Invalid template: %s\n", err)
+		return tmpl
+	}
+
+	// Create an io.Writer to write to a string
+	var b bytes.Buffer
+	foo := bufio.NewWriter(&b)
+	err = t.ExecuteTemplate(foo, tmplName, data)
+	// err = t.ExecuteTemplate(os.Stdout, "line-template", data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error(101): Invalid template processing: %s\n", err)
 		return tmpl
 	}
 	foo.Flush()

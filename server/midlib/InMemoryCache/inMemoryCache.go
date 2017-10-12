@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/fileserve"
@@ -33,86 +35,103 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*InMemoryCacheType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		pCfg.cache = NewTimedInMemoryCache()
+//		PeriodicCleanup(pCfg.cache, pCfg.Duration)
+//		if len(pCfg.DiskCache) > 0 {
+//			pCfg.diskSize = make([]int64, len(pCfg.DiskCache), len(pCfg.DiskCache))
+//			for ii, vv := range pCfg.DiskCache {
+//				pCfg.diskSize[ii] = 0 // unlimited size
+//				if !lib.Exists(vv) {
+//					os.Mkdir(vv, 0755)
+//				}
+//				pCfg.diskCache = append(pCfg.diskCache, lib.FilepathAbs(vv))
+//			}
+//			for ii, vv := range pCfg.DiskSize {
+//				var u int64
+//				u, err = ConvertMGTPToValue(vv)
+//				if err != nil {
+//					fmt.Fprintf(os.Stderr, "%sWarning: %s - unlimited size used for %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
+//				}
+//				pCfg.diskSize[ii] = u
+//			}
+//			n_ex := 0 // count number of locations
+//			disk := make([]string, 0, len(pCfg.DiskCache))
+//			SizS := make([]string, 0, len(pCfg.DiskCache))
+//			SizI := make([]int64, 0, len(pCfg.DiskCache))
+//			for ii, vv := range pCfg.DiskCache {
+//				if !lib.Exists(vv) {
+//					err = os.MkdirAll(vv, 0700)
+//					if err != nil {
+//						fmt.Fprintf(os.Stderr, "%sError: %s - unable to create %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
+//						err = mid.FtlConfigError
+//					} else {
+//						disk = append(disk, vv)
+//						SizS = append(SizS, pCfg.DiskSize[ii])
+//						SizI = append(SizI, pCfg.diskSize[ii])
+//						n_ex++
+//					}
+//				} else {
+//					disk = append(disk, vv)
+//					SizS = append(SizS, pCfg.DiskSize[ii])
+//					SizI = append(SizI, pCfg.diskSize[ii])
+//					n_ex++
+//				}
+//				os.Remove(vv + "/test.txt")
+//				err = ioutil.WriteFile(vv+"/test.txt", []byte("test data\n"), 0600)
+//				if err != nil {
+//					fmt.Fprintf(os.Stderr, "%sError: %s - unable to create test file in %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
+//					err = mid.FtlConfigError
+//					return
+//				}
+//				os.Remove(vv + "/test.txt")
+//			}
+//			if n_ex == 0 && len(pCfg.DiskCache) > 0 { // if we have 0 left and we are supposed to cache on disk
+//				err = mid.FtlConfigError
+//				logrus.Errorf("Unable to initialize InMemoryCacheType - no place to cache files on disk. %s", godebug.LF())
+//				return
+//			}
+//			pCfg.DiskCache = disk
+//			pCfg.DiskSize = SizS
+//			pCfg.diskSize = SizI
+//		}
+//		pCfg.PeriodicCleanupDiskFiles()
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &InMemoryCacheType{} }
+//
+//	cfg.RegInitItem2("CacheData", initNext, createEmptyType, nil, `{
+//		}`)
+//
+//}
+//
+//// normally identical
+//func (hdlr *InMemoryCacheType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*InMemoryCache)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		pCfg.cache = NewTimedInMemoryCache()
-		PeriodicCleanup(pCfg.cache, pCfg.Duration)
-		if len(pCfg.DiskCache) > 0 {
-			pCfg.diskSize = make([]int64, len(pCfg.DiskCache), len(pCfg.DiskCache))
-			for ii, vv := range pCfg.DiskCache {
-				pCfg.diskSize[ii] = 0 // unlimited size
-				if !lib.Exists(vv) {
-					os.Mkdir(vv, 0755)
-				}
-				pCfg.diskCache = append(pCfg.diskCache, lib.FilepathAbs(vv))
-			}
-			for ii, vv := range pCfg.DiskSize {
-				var u int64
-				u, err = ConvertMGTPToValue(vv)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%sWarning: %s - unlimited size used for %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
-				}
-				pCfg.diskSize[ii] = u
-			}
-			n_ex := 0 // count number of locations
-			disk := make([]string, 0, len(pCfg.DiskCache))
-			SizS := make([]string, 0, len(pCfg.DiskCache))
-			SizI := make([]int64, 0, len(pCfg.DiskCache))
-			for ii, vv := range pCfg.DiskCache {
-				if !lib.Exists(vv) {
-					err = os.MkdirAll(vv, 0700)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "%sError: %s - unable to create %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
-						err = mid.FtlConfigError
-					} else {
-						disk = append(disk, vv)
-						SizS = append(SizS, pCfg.DiskSize[ii])
-						SizI = append(SizI, pCfg.diskSize[ii])
-						n_ex++
-					}
-				} else {
-					disk = append(disk, vv)
-					SizS = append(SizS, pCfg.DiskSize[ii])
-					SizI = append(SizI, pCfg.diskSize[ii])
-					n_ex++
-				}
-				os.Remove(vv + "/test.txt")
-				err = ioutil.WriteFile(vv+"/test.txt", []byte("test data\n"), 0600)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%sError: %s - unable to create test file in %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
-					err = mid.FtlConfigError
-					return
-				}
-				os.Remove(vv + "/test.txt")
-			}
-			if n_ex == 0 && len(pCfg.DiskCache) > 0 { // if we have 0 left and we are supposed to cache on disk
-				err = mid.FtlConfigError
-				logrus.Errorf("Unable to initialize InMemoryCache - no place to cache files on disk. %s", godebug.LF())
-				return
-			}
-			pCfg.DiskCache = disk
-			pCfg.DiskSize = SizS
-			pCfg.diskSize = SizI
-		}
-		pCfg.PeriodicCleanupDiskFiles()
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &InMemoryCacheType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &InMemoryCache{} }
-
-	cfg.RegInitItem2("CacheData", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("InMemoryCache", CreateEmpty, `{
 		"Paths":            { "type":["string","filepath"], "isarray":true, "default":"/" },
 		"Extensions":       { "type":[ "string" ], "isarray":true },
 		"Duration":         { "type":[ "int" ], "default":"60" },
@@ -125,19 +144,84 @@ func init() {
 		"DiskCleanupFreq":  { "type":[ "int" ], "defualt":"3600" },
 		"LineNo":           { "type":[ "int" ], "default":"1" }
 		}`)
-
 }
 
-// normally identical
-func (hdlr *InMemoryCache) SetNext(next http.Handler) {
+func (hdlr *InMemoryCacheType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	hdlr.cache = NewTimedInMemoryCache()
+	PeriodicCleanup(hdlr.cache, hdlr.Duration)
+	if len(hdlr.DiskCache) > 0 {
+		hdlr.diskSize = make([]int64, len(hdlr.DiskCache), len(hdlr.DiskCache))
+		for ii, vv := range hdlr.DiskCache {
+			hdlr.diskSize[ii] = 0 // unlimited size
+			if !lib.Exists(vv) {
+				os.Mkdir(vv, 0755)
+			}
+			hdlr.diskCache = append(hdlr.diskCache, lib.FilepathAbs(vv))
+		}
+		for ii, vv := range hdlr.DiskSize {
+			var u int64
+			u, err = ConvertMGTPToValue(vv)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%sWarning: %s - unlimited size used for %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
+			}
+			hdlr.diskSize[ii] = u
+		}
+		n_ex := 0 // count number of locations
+		disk := make([]string, 0, len(hdlr.DiskCache))
+		SizS := make([]string, 0, len(hdlr.DiskCache))
+		SizI := make([]int64, 0, len(hdlr.DiskCache))
+		for ii, vv := range hdlr.DiskCache {
+			if !lib.Exists(vv) {
+				err = os.MkdirAll(vv, 0700)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%sError: %s - unable to create %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
+					err = mid.FtlConfigError
+				} else {
+					disk = append(disk, vv)
+					SizS = append(SizS, hdlr.DiskSize[ii])
+					SizI = append(SizI, hdlr.diskSize[ii])
+					n_ex++
+				}
+			} else {
+				disk = append(disk, vv)
+				SizS = append(SizS, hdlr.DiskSize[ii])
+				SizI = append(SizI, hdlr.diskSize[ii])
+				n_ex++
+			}
+			os.Remove(vv + "/test.txt")
+			err = ioutil.WriteFile(vv+"/test.txt", []byte("test data\n"), 0600)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%sError: %s - unable to create test file in %s\n%s", MiscLib.ColorRed, err, vv, MiscLib.ColorReset)
+				err = mid.FtlConfigError
+				return
+			}
+			os.Remove(vv + "/test.txt")
+		}
+		if n_ex == 0 && len(hdlr.DiskCache) > 0 { // if we have 0 left and we are supposed to cache on disk
+			err = mid.FtlConfigError
+			logrus.Errorf("Unable to initialize InMemoryCacheType - no place to cache files on disk. %s", godebug.LF())
+			return
+		}
+		hdlr.DiskCache = disk
+		hdlr.DiskSize = SizS
+		hdlr.diskSize = SizI
+	}
+	hdlr.PeriodicCleanupDiskFiles()
+	hdlr.gCfg = gCfg
+	return
 }
 
-var _ mid.GoFTLMiddleWare = (*InMemoryCache)(nil)
+func (hdlr *InMemoryCacheType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
+}
+
+var _ mid.GoFTLMiddleWare = (*InMemoryCacheType)(nil)
 
 // --------------------------------------------------------------------------------------------------------------------------
 
-type InMemoryCache struct {
+type InMemoryCacheType struct {
 	Next            http.Handler                //
 	Paths           []string                    //
 	Extensions      []string                    // Legit extensions to cache
@@ -165,13 +249,13 @@ type InMemoryCache struct {
 	diskSize        []int64                     // Sizes in bytes for each cache, 0 unlimited, -1 do not use
 	diskCache       []string                    // disk catch converted to absolute paths
 	diskToUse       int                         // with of the disks to use for the next save - round robin allocation
-	gCfg           *cfg.ServerGlobalConfigType //
+	gCfg            *cfg.ServerGlobalConfigType //
 }
 
 // Parameterized for testing? or just change the test
-func NewInMemoryCacheServer(n http.Handler, p []string, e []string, d int, sl int) *InMemoryCache {
+func NewInMemoryCacheServer(n http.Handler, p []string, e []string, d int, sl int) *InMemoryCacheType {
 	var err error
-	x := &InMemoryCache{Next: n, Paths: p, Extensions: e, Duration: d, SizeLimit: sl}
+	x := &InMemoryCacheType{Next: n, Paths: p, Extensions: e, Duration: d, SizeLimit: sl}
 	x.cache = NewTimedInMemoryCache()
 	PeriodicCleanup(x.cache, d)
 	x.PeriodicCleanupDiskFiles()
@@ -192,7 +276,7 @@ func NewInMemoryCacheServer(n http.Handler, p []string, e []string, d int, sl in
 	return x
 }
 
-func (hdlr *InMemoryCache) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+func (hdlr *InMemoryCacheType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
 		if req.Method != "GET" { // only for GET requests
 			if cache_db2 {
@@ -319,7 +403,7 @@ func (hdlr *InMemoryCache) ServeHTTP(www http.ResponseWriter, req *http.Request)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------------------------
-func (hdlr *InMemoryCache) FoundInMemoryCache(url, hUrl string, www http.ResponseWriter, req *http.Request, rw *goftlmux.MidBuffer) (found bool) {
+func (hdlr *InMemoryCacheType) FoundInMemoryCache(url, hUrl string, www http.ResponseWriter, req *http.Request, rw *goftlmux.MidBuffer) (found bool) {
 
 	fmt.Printf("In check memory cache, %s\n", godebug.LF())
 
@@ -425,7 +509,7 @@ const MaxRetention int64 = 60 * 60 * 24 * 365 * 10 // 10 years
 // howLongToSave is in seconds into the futrue - need to convert this for ZADD to a meaningful time.
 // Add in the current time since beginning of epoc, then if current time is larger(in-loop) can
 // clean up file.
-func (hdlr *InMemoryCache) SaveInDiskCache(www http.ResponseWriter, req *http.Request, bod []byte, howLongToSave int64, rw *goftlmux.MidBuffer) {
+func (hdlr *InMemoryCacheType) SaveInDiskCache(www http.ResponseWriter, req *http.Request, bod []byte, howLongToSave int64, rw *goftlmux.MidBuffer) {
 	var err error
 
 	if len(hdlr.DiskCache) == 0 {
@@ -499,7 +583,7 @@ func (hdlr *InMemoryCache) SaveInDiskCache(www http.ResponseWriter, req *http.Re
 
 var ErrNoSpaceAvailable = errors.New("No space available on specified volumes")
 
-func (hdlr *InMemoryCache) GetFileName(www http.ResponseWriter, id string, bod []byte) (fn string, err error) {
+func (hdlr *InMemoryCacheType) GetFileName(www http.ResponseWriter, id string, bod []byte) (fn string, err error) {
 	ctypes := lib.GetCTypes(www, bod)
 	//ctypes, haveType := www.Header()["Content-Type"]
 	//if !haveType {
@@ -524,7 +608,7 @@ func (hdlr *InMemoryCache) GetFileName(www http.ResponseWriter, id string, bod [
 	return
 }
 
-func (hdlr *InMemoryCache) SpaceAvailable(path string, nth int, www http.ResponseWriter) bool {
+func (hdlr *InMemoryCacheType) SpaceAvailable(path string, nth int, www http.ResponseWriter) bool {
 	// TODO: Space - implement space check // path is where to check, // check space on disk
 	// nth - is internal check
 	if rw, ok := www.(*goftlmux.MidBuffer); ok {
@@ -540,7 +624,7 @@ func (hdlr *InMemoryCache) SpaceAvailable(path string, nth int, www http.Respons
 	return false
 }
 
-func (hdlr *InMemoryCache) FoundInDiskCache(url, hUrl string, www http.ResponseWriter, req *http.Request, rw *goftlmux.MidBuffer) bool {
+func (hdlr *InMemoryCacheType) FoundInDiskCache(url, hUrl string, www http.ResponseWriter, req *http.Request, rw *goftlmux.MidBuffer) bool {
 
 	if len(hdlr.DiskCache) == 0 {
 		return false
@@ -703,7 +787,7 @@ func (meta_data *MetaData) FoundOnTheFarm() (foundIt bool, fnInfo os.FileInfo) {
 }
 
 //	DiskCleanupFreq int					// clean up on disk files - default is hourly
-func (hdlr *InMemoryCache) PeriodicCleanupDiskFiles() {
+func (hdlr *InMemoryCacheType) PeriodicCleanupDiskFiles() {
 	d := hdlr.DiskCleanupFreq
 	if d == 0 {
 		return // turned off
@@ -741,8 +825,8 @@ func (hdlr *InMemoryCache) PeriodicCleanupDiskFiles() {
 
 //------------------------------------------------------------------------------------------------
 // comapre abs(cahce) path with fn prefix and if match then return true
-func (hdlr *InMemoryCache) InCachePath(fn string) bool {
-	// pCfg.diskCache = append ( pCfg.diskCache , filepath.Abs(vv) )
+func (hdlr *InMemoryCacheType) InCachePath(fn string) bool {
+	// hdlr.diskCache = append ( hdlr.diskCache , filepath.Abs(vv) )
 	for _, tPth := range hdlr.diskCache {
 		if strings.HasPrefix(fn, tPth) {
 			return true
@@ -753,7 +837,7 @@ func (hdlr *InMemoryCache) InCachePath(fn string) bool {
 
 //------------------------------------------------------------------------------------------------
 // Fetch the list of expired files and delete this from the list.
-func (hdlr *InMemoryCache) GetExpiredFiles() (kks []string, curTimeUnix string) {
+func (hdlr *InMemoryCacheType) GetExpiredFiles() (kks []string, curTimeUnix string) {
 	var err error
 	theKey := hdlr.RedisPrefix + "fct"
 	now := time.Now()

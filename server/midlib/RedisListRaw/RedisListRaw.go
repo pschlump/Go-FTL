@@ -57,6 +57,8 @@ import (
 	"os"
 	"strings"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -68,55 +70,71 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical - but not this time.
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RedisListRawHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		gCfg.ConnectToRedis()
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//
+//		hh, ok := h.(*RedisListRawHandlerType)
+//		if !ok {
+//			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			if len(hh.Filter) > 0 {
+//				hh.filter = make([]*lib.FilterType, 0, len(hh.filter))
+//				for ii, vv := range hh.Filter {
+//					ff, err := lib.ParseFilter(vv)
+//					if err != nil {
+//						fmt.Fprintf(os.Stderr, "%sError: Unable to parse the %d filter: Error: %s Line No:%d%s\n", MiscLib.ColorRed, ii, err, hh.LineNo, MiscLib.ColorReset)
+//						fmt.Printf("Error: Unable to parse the %d filter: Error: %s Line No:%d\n", ii, err, hh.LineNo)
+//						return mid.ErrInternalError
+//					}
+//					hh.filter = append(hh.filter, ff)
+//				}
+//			} else {
+//				hh.filter = []*lib.FilterType{}
+//			}
+//			godebug.Printf(db2, "Filter: end of postInit, hh.filter=%s, %s\n", godebug.SVarI(hh.filter), godebug.LF())
+//		}
+//
+//		return nil
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RedisListRawHandlerType{} }
+//
+//	cfg.RegInitItem2("RedisListRaw", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *RedisListRawHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical - but not this time.
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RedisListRawHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		gCfg.ConnectToRedis()
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RedisListRawHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-
-		hh, ok := h.(*RedisListRawHandlerType)
-		if !ok {
-			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			if len(hh.Filter) > 0 {
-				hh.filter = make([]*lib.FilterType, 0, len(hh.filter))
-				for ii, vv := range hh.Filter {
-					ff, err := lib.ParseFilter(vv)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "%sError: Unable to parse the %d filter: Error: %s Line No:%d%s\n", MiscLib.ColorRed, ii, err, hh.LineNo, MiscLib.ColorReset)
-						fmt.Printf("Error: Unable to parse the %d filter: Error: %s Line No:%d\n", ii, err, hh.LineNo)
-						return mid.ErrInternalError
-					}
-					hh.filter = append(hh.filter, ff)
-				}
-			} else {
-				hh.filter = []*lib.FilterType{}
-			}
-			godebug.Printf(db2, "Filter: end of postInit, hh.filter=%s, %s\n", godebug.SVarI(hh.filter), godebug.LF())
-		}
-
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &RedisListRawHandlerType{} }
-
-	cfg.RegInitItem2("RedisListRaw", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("RedisListRaw", CreateEmpty, `{
 		"Paths":             { "type":[ "string", "filepath" ], "isarray":true, "required":true },
 		"Prefix":            { "type":[ "string" ], "required":true },
 		"Filter":            { "type":[ "string" ], "isarray":true },
@@ -126,9 +144,31 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *RedisListRawHandlerType) SetNext(next http.Handler) {
+func (hdlr *RedisListRawHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	gCfg.ConnectToRedis()
+	hdlr.gCfg = gCfg
+	return
+}
+
+func (hdlr *RedisListRawHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	if len(hdlr.Filter) > 0 {
+		hdlr.filter = make([]*lib.FilterType, 0, len(hdlr.filter))
+		for ii, vv := range hdlr.Filter {
+			ff, err := lib.ParseFilter(vv)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%sError: Unable to parse the %d filter: Error: %s Line No:%d%s\n", MiscLib.ColorRed, ii, err, hdlr.LineNo, MiscLib.ColorReset)
+				fmt.Printf("Error: Unable to parse the %d filter: Error: %s Line No:%d\n", ii, err, hdlr.LineNo)
+				return mid.ErrInternalError
+			}
+			hdlr.filter = append(hdlr.filter, ff)
+		}
+	} else {
+		hdlr.filter = []*lib.FilterType{}
+	}
+	godebug.Printf(db2, "Filter: end of postInit, hdlr.filter=%s, %s\n", godebug.SVarI(hdlr.filter), godebug.LF())
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RedisListRawHandlerType)(nil)
@@ -158,7 +198,7 @@ func NewRedisListRawServer(n http.Handler, p []string, prefix string, userRoles 
 	return &RedisListRawHandlerType{Next: n, Paths: p, Prefix: prefix, UserRoles: userRoles, UserRolesReject: rj}
 }
 
-func (hdlr RedisListRawHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+func (hdlr *RedisListRawHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 
 	SandBoxPrefix := ""
 	GenKey := func() string {

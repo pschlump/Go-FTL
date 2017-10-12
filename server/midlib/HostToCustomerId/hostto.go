@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -28,43 +30,66 @@ import (
 
 const NIterations = 5000
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*HostToCustomerIdType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		gCfg.ConnectToRedis()
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &HostToCustomerIdType{} }
+//
+//	cfg.RegInitItem2("HostToCustomerId", initNext, createEmptyType, nil, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *HostToCustomerIdType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*HostToCustomerId)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		gCfg.ConnectToRedis()
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &HostToCustomerIdType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &HostToCustomerId{} }
-
-	cfg.RegInitItem2("HostToCustomerId", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("HostToCustomerId", CreateEmpty, `{
 		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
 		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"htci:" },
 		"LineNo":       	 { "type":[ "int" ], "default":"1" }
 		}`)
 }
 
-// normally identical
-func (hdlr *HostToCustomerId) SetNext(next http.Handler) {
+func (hdlr *HostToCustomerIdType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	gCfg.ConnectToRedis()
+	hdlr.gCfg = gCfg
+	return
 }
 
-var _ mid.GoFTLMiddleWare = (*HostToCustomerId)(nil)
+func (hdlr *HostToCustomerIdType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
+}
+
+var _ mid.GoFTLMiddleWare = (*HostToCustomerIdType)(nil)
 
 // --------------------------------------------------------------------------------------------------------------------------
 
-type HostToCustomerId struct {
+type HostToCustomerIdType struct {
 	Next        http.Handler                //
 	Paths       []string                    //
 	RedisPrefix string                      //
@@ -74,15 +99,15 @@ type HostToCustomerId struct {
 
 var loaded bool = false
 
-func NewBasicAuthServer(n http.Handler, p []string, redis_prefix, realm string) *HostToCustomerId {
-	return &HostToCustomerId{
+func NewBasicAuthServer(n http.Handler, p []string, redis_prefix, realm string) *HostToCustomerIdType {
+	return &HostToCustomerIdType{
 		Next:        n,
 		Paths:       p,
 		RedisPrefix: redis_prefix,
 	}
 }
 
-func (hdlr *HostToCustomerId) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+func (hdlr *HostToCustomerIdType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 
 	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
 		if rw, ok := www.(*goftlmux.MidBuffer); ok {
@@ -100,7 +125,7 @@ func (hdlr *HostToCustomerId) ServeHTTP(www http.ResponseWriter, req *http.Reque
 	hdlr.Next.ServeHTTP(www, req)
 }
 
-func (hdlr *HostToCustomerId) redisGetCustomerId(www http.ResponseWriter, rw *goftlmux.MidBuffer, req *http.Request) (customer_id string) {
+func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw *goftlmux.MidBuffer, req *http.Request) (customer_id string) {
 
 	key := hdlr.RedisPrefix + req.Host
 

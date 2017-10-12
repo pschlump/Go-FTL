@@ -6,8 +6,8 @@ import (
 	"github.com/pschlump/HashStr"
 )
 
-func init() {
-}
+//func init() {
+//}
 
 func Test_Exists(t *testing.T) {
 	b := Exists("dir.go")

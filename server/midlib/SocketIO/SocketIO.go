@@ -46,6 +46,7 @@ import (
 	"os"
 	"sync"
 
+	"www.2c-why.com/JsonX"
 	"www.2c-why.com/h2ppp/lib/H2pppCommon"
 
 	"github.com/Sirupsen/logrus"
@@ -65,96 +66,112 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*SocketIOHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		gCfg.ConnectToRedis()
+//		pCfg.gCfg = gCfg
+//
+//		pCfg.msgTo = "chat-bot" // ms := MicroServiceLib.NewMsCfgType("qr-img1", "qr-img1-reply") //xyzzy - need to set the reply template
+//		MyId := H2pppCommon.UUIDAsStrPacked()
+//		pCfg.ms = MicroServiceLib.NewMsCfgType(pCfg.msgTo, pCfg.msgTo+":"+MyId)
+//		pCfg.myId = MyId
+//		// ms.ConnectToRedis()                                        // Create the redis connection pool, alternative is ms.SetRedisPool(pool) // ms . SetRedisPool(pool *pool.Pool)
+//		pCfg.ms.SetRedisConnectInfo(gCfg.RedisConnectHost, gCfg.RedisConnectPort, gCfg.RedisConnectAuth)
+//		pCfg.ms.SetRedisPool(gCfg.RedisPool)
+//		pCfg.ms.SetupListen()
+//		pCfg.ms.ListenFor()
+//		return
+//	}
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		// fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*SocketIOHandlerType)
+//		if !ok {
+//			fmt.Fprintf(os.Stderr, "%sError: Wrong data type passed, Line No:%d\n%s", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+//			return mid.ErrInternalError
+//		} else {
+//
+//			hh.mutex.Lock()
+//			hh.LookupIds = make(map[string]*SocketIdType)
+//			hh.LookupTrxIds = make(map[string]string)
+//			hh.mutex.Unlock()
+//
+//			hh.apiEnableIR, _ = lib.ParseBool(hh.ApiEnableIR)
+//			hh.apiEnableRR, _ = lib.ParseBool(hh.ApiEnableRR)
+//
+//			server, err := socketio.NewServer(nil)
+//			if err != nil {
+//				logrus.Errorf("Error: %s\n", err)
+//				return mid.ErrInternalError
+//			}
+//			hh.server = server
+//
+//			client, err := redis.Dial("tcp", cfg.ServerGlobal.RedisConnectHost+":"+cfg.ServerGlobal.RedisConnectPort)
+//			if err != nil {
+//				log.Fatal(err)
+//			}
+//			if cfg.ServerGlobal.RedisConnectAuth != "" {
+//				err = client.Cmd("AUTH", cfg.ServerGlobal.RedisConnectAuth).Err
+//				if err != nil {
+//					log.Fatal(err)
+//				} else {
+//					fmt.Fprintf(os.Stderr, "Success: Connected to redis-server with AUTH.\n")
+//				}
+//			} else {
+//				fmt.Fprintf(os.Stderr, "Success: Connected to redis-server.\n")
+//			}
+//
+//			hh.subClient = pubsub.NewSubClient(client) // subClient *pubsub.SubClient
+//			hh.subChan = make(chan *pubsub.SubResp)
+//
+//			sr := hh.subClient.Subscribe(hh.MessageRespPrefix)
+//			if sr.Err != nil {
+//				fmt.Fprintf(os.Stderr, "%sError: subscribe, %s.%s\n", MiscLib.ColorRed, sr.Err, MiscLib.ColorReset)
+//			}
+//
+//			fmt.Printf("\nListening for messages to send to client at [%s]\n\n", hh.MessageRespPrefix)
+//
+//			hh.InitChatServer()
+//			hh.ListenFor(hh.server)
+//
+//			hh.server.On("error", func(so socketio.Socket, err error) {
+//				fmt.Printf("Error: %s, %s\n", err, godebug.LF())
+//			})
+//
+//		}
+//		return nil
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &SocketIOHandlerType{} }
+//
+//	cfg.RegInitItem2("SocketIO", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *SocketIOHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*SocketIOHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		gCfg.ConnectToRedis()
-		pCfg.gCfg = gCfg
-
-		pCfg.msgTo = "chat-bot" // ms := MicroServiceLib.NewMsCfgType("qr-img1", "qr-img1-reply") //xyzzy - need to set the reply template
-		MyId := H2pppCommon.UUIDAsStrPacked()
-		pCfg.ms = MicroServiceLib.NewMsCfgType(pCfg.msgTo, pCfg.msgTo+":"+MyId)
-		pCfg.myId = MyId
-		// ms.ConnectToRedis()                                        // Create the redis connection pool, alternative is ms.SetRedisPool(pool) // ms . SetRedisPool(pool *pool.Pool)
-		pCfg.ms.SetRedisConnectInfo(gCfg.RedisConnectHost, gCfg.RedisConnectPort, gCfg.RedisConnectAuth)
-		pCfg.ms.SetRedisPool(gCfg.RedisPool)
-		pCfg.ms.SetupListen()
-		pCfg.ms.ListenFor()
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &SocketIOHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		// fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*SocketIOHandlerType)
-		if !ok {
-			fmt.Fprintf(os.Stderr, "%sError: Wrong data type passed, Line No:%d\n%s", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-			return mid.ErrInternalError
-		} else {
-
-			hh.mutex.Lock()
-			hh.LookupIds = make(map[string]*SocketIdType)
-			hh.LookupTrxIds = make(map[string]string)
-			hh.mutex.Unlock()
-
-			hh.apiEnableIR, _ = lib.ParseBool(hh.ApiEnableIR)
-			hh.apiEnableRR, _ = lib.ParseBool(hh.ApiEnableRR)
-
-			server, err := socketio.NewServer(nil)
-			if err != nil {
-				logrus.Errorf("Error: %s\n", err)
-				return mid.ErrInternalError
-			}
-			hh.server = server
-
-			client, err := redis.Dial("tcp", cfg.ServerGlobal.RedisConnectHost+":"+cfg.ServerGlobal.RedisConnectPort)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if cfg.ServerGlobal.RedisConnectAuth != "" {
-				err = client.Cmd("AUTH", cfg.ServerGlobal.RedisConnectAuth).Err
-				if err != nil {
-					log.Fatal(err)
-				} else {
-					fmt.Fprintf(os.Stderr, "Success: Connected to redis-server with AUTH.\n")
-				}
-			} else {
-				fmt.Fprintf(os.Stderr, "Success: Connected to redis-server.\n")
-			}
-
-			hh.subClient = pubsub.NewSubClient(client) // subClient *pubsub.SubClient
-			hh.subChan = make(chan *pubsub.SubResp)
-
-			sr := hh.subClient.Subscribe(hh.MessageRespPrefix)
-			if sr.Err != nil {
-				fmt.Fprintf(os.Stderr, "%sError: subscribe, %s.%s\n", MiscLib.ColorRed, sr.Err, MiscLib.ColorReset)
-			}
-
-			fmt.Printf("\nListening for messages to send to client at [%s]\n\n", hh.MessageRespPrefix)
-
-			hh.InitChatServer()
-			hh.ListenFor(hh.server)
-
-			hh.server.On("error", func(so socketio.Socket, err error) {
-				fmt.Printf("Error: %s, %s\n", err, godebug.LF())
-			})
-
-		}
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &SocketIOHandlerType{} }
-
-	cfg.RegInitItem2("SocketIO", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("SocketIO", CreateEmpty, `{
 		"Paths":              { "type":["string","filepath"], "isarray":true, "required":true },
 		"InternalRequestPw":  { "type":[ "string" ] },
 		"ListClientApi":      { "type":[ "string" ], "default":"/api/sio/list-client" },
@@ -168,9 +185,73 @@ func init() {
 	// "SocketIOLibrary":    { "type":["string"], "default":"socket.io.js" },
 }
 
-// normally identical
-func (hdlr *SocketIOHandlerType) SetNext(next http.Handler) {
+func (hdlr *SocketIOHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	gCfg.ConnectToRedis()
+	hdlr.gCfg = gCfg
+
+	hdlr.msgTo = "chat-bot" // ms := MicroServiceLib.NewMsCfgType("qr-img1", "qr-img1-reply") //xyzzy - need to set the reply template
+	MyId := H2pppCommon.UUIDAsStrPacked()
+	hdlr.ms = MicroServiceLib.NewMsCfgType(hdlr.msgTo, hdlr.msgTo+":"+MyId)
+	hdlr.myId = MyId
+	// ms.ConnectToRedis()                                        // Create the redis connection pool, alternative is ms.SetRedisPool(pool) // ms . SetRedisPool(pool *pool.Pool)
+	hdlr.ms.SetRedisConnectInfo(gCfg.RedisConnectHost, gCfg.RedisConnectPort, gCfg.RedisConnectAuth)
+	hdlr.ms.SetRedisPool(gCfg.RedisPool)
+	hdlr.ms.SetupListen()
+	hdlr.ms.ListenFor()
+	return
+}
+
+func (hdlr *SocketIOHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	hdlr.mutex.Lock()
+	hdlr.LookupIds = make(map[string]*SocketIdType)
+	hdlr.LookupTrxIds = make(map[string]string)
+	hdlr.mutex.Unlock()
+
+	hdlr.apiEnableIR, _ = lib.ParseBool(hdlr.ApiEnableIR)
+	hdlr.apiEnableRR, _ = lib.ParseBool(hdlr.ApiEnableRR)
+
+	server, err := socketio.NewServer(nil)
+	if err != nil {
+		logrus.Errorf("Error: %s\n", err)
+		return mid.ErrInternalError
+	}
+	hdlr.server = server
+
+	client, err := redis.Dial("tcp", cfg.ServerGlobal.RedisConnectHost+":"+cfg.ServerGlobal.RedisConnectPort)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cfg.ServerGlobal.RedisConnectAuth != "" {
+		err = client.Cmd("AUTH", cfg.ServerGlobal.RedisConnectAuth).Err
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			fmt.Fprintf(os.Stderr, "Success: Connected to redis-server with AUTH.\n")
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "Success: Connected to redis-server.\n")
+	}
+
+	hdlr.subClient = pubsub.NewSubClient(client) // subClient *pubsub.SubClient
+	hdlr.subChan = make(chan *pubsub.SubResp)
+
+	sr := hdlr.subClient.Subscribe(hdlr.MessageRespPrefix)
+	if sr.Err != nil {
+		fmt.Fprintf(os.Stderr, "%sError: subscribe, %s.%s\n", MiscLib.ColorRed, sr.Err, MiscLib.ColorReset)
+	}
+
+	fmt.Printf("\nListening for messages to send to client at [%s]\n\n", hdlr.MessageRespPrefix)
+
+	hdlr.InitChatServer()
+	hdlr.ListenFor(hdlr.server)
+
+	hdlr.server.On("error", func(so socketio.Socket, err error) {
+		fmt.Printf("Error: %s, %s\n", err, godebug.LF())
+	})
+
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*SocketIOHandlerType)(nil)

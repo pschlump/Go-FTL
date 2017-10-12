@@ -27,10 +27,12 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/pschlump/Go-FTL/server/RedisSessionData"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	Modifed from: "encoding/json"
 )
 
+//    "github.com/pschlump/Go-FTL/server/RedisSessionData"
 // "github.com/pschlump/Go-FTL/server/base"
 
 // Notes:
@@ -45,43 +47,44 @@ import (
 // Bad side: Also it's all buffered in memory. -- Not that big a deal - and common to all proxy usages anyhow.
 type MidBuffer struct {
 	wr                  http.ResponseWriter
-	bb                  bytes.Buffer             // The body of the response
-	StatusCode          int                      // StatusCode like 200, 404 etc.
-	Headers             http.Header              // All the headers that will be writen when done
-	Length              int64                    //	Length of the response
-	Error               error                    // Most recent error, if StatusCode == 200, then ignore
-	Prefix              string                   // Tack onto response when you flush.
-	Postfix             string                   //
-	IndentFlag          bool                     //	If JSON/JsonX/XML searilize will searilize it with indentation
-	Row                 map[string]interface{}   //	Single Row Response -- or table header info
-	Table               []map[string]interface{} //	Table of Row Response
-	State               StateType                // Byte, Row, Table
-	SearilizeFormat     SearilizeType            // Byte, Row, Table
-	StartTime           time.Time                // Start time for deltaT and proxy timeout -- deltaT := time.Since(mb.StartTime).String()
-	Modtime             time.Time                // file modification time
-	NRewrite            int                      //	# of rewrites that have occured - may be a limit on this (prevents loops)
-	RerunRequest        bool                     //
-	AddInfo             map[string]string        // Way to pass info from middleware to middleware (Session)
-	MapLock             sync.Mutex               // Lock for accesing maps in this.
-	Ps                  Params                   // xyzzyParams - PJS - change request interface to pass/parse 'params' as modifed req
-	Next                http.Handler             // Required field for all chaining of middleware.
-	Hdlr                interface{}              // Handler to the "TOP" or nil
-	ResolvedFn          string                   // Single file name - resolved to local from fileserver
-	DependentFNs        []string                 // Set of files that if any have chagned (mod-datetime) then should not cache and let lower levels re-generate
-	IsProxyFile         bool                     // File was fetched by a proxy to another server - it is NOT(local)
-	SaveDataInCache     bool                     // If true then save the data in the cache (gzip -> new data)
-	DirTemplateFileName string                   //
-	TemplateLineNo      int                      //
-	IgnoreDirs          []string                 //
-	OriginalURL         string                   //
-	G_Trx               interface{}              //
-	Extend              map[string]interface{}   //
-	RequestTrxId        string                   //		// Id for the entire request //
-	IsHijacked          bool                     //
-	ParsedHTML          interface{}              //		New data
-	ParsedCSS           interface{}              //		New data
-	PackedData          interface{}              //		New data
-	Dependencies        interface{}              //		New data
+	bb                  bytes.Buffer                           // The body of the response
+	StatusCode          int                                    // StatusCode like 200, 404 etc.
+	Headers             http.Header                            // All the headers that will be writen when done
+	Length              int64                                  //	Length of the response
+	Error               error                                  // Most recent error, if StatusCode == 200, then ignore
+	Prefix              string                                 // Tack onto response when you flush.
+	Postfix             string                                 //
+	IndentFlag          bool                                   //	If JSON/JsonX/XML searilize will searilize it with indentation
+	Row                 map[string]interface{}                 //	Single Row Response -- or table header info
+	Table               []map[string]interface{}               //	Table of Row Response
+	State               StateType                              // Byte, Row, Table
+	SearilizeFormat     SearilizeType                          // Byte, Row, Table
+	StartTime           time.Time                              // Start time for deltaT and proxy timeout -- deltaT := time.Since(mb.StartTime).String()
+	Modtime             time.Time                              // file modification time
+	NRewrite            int                                    //	# of rewrites that have occured - may be a limit on this (prevents loops)
+	RerunRequest        bool                                   //
+	AddInfo             map[string]string                      // Way to pass info from middleware to middleware (Session)
+	MapLock             sync.Mutex                             // Lock for accesing maps in this.
+	Ps                  Params                                 // xyzzyParams - PJS - change request interface to pass/parse 'params' as modifed req
+	Next                http.Handler                           // Required field for all chaining of middleware.
+	Hdlr                interface{}                            // Handler to the "TOP" or nil
+	ResolvedFn          string                                 // Single file name - resolved to local from fileserver
+	DependentFNs        []string                               // Set of files that if any have chagned (mod-datetime) then should not cache and let lower levels re-generate
+	IsProxyFile         bool                                   // File was fetched by a proxy to another server - it is NOT(local)
+	SaveDataInCache     bool                                   // If true then save the data in the cache (gzip -> new data)
+	DirTemplateFileName string                                 //
+	TemplateLineNo      int                                    //
+	IgnoreDirs          []string                               //
+	OriginalURL         string                                 //
+	G_Trx               interface{}                            //
+	Extend              map[string]interface{}                 //
+	RequestTrxId        string                                 //		// Id for the entire request //
+	IsHijacked          bool                                   //
+	ParsedHTML          interface{}                            //		New data
+	ParsedCSS           interface{}                            //		New data
+	PackedData          interface{}                            //		New data
+	Dependencies        interface{}                            //		New data
+	Session             *RedisSessionData.RedisSessionDataType //
 }
 
 // AddInfo         map[string]interface{}   // Way to pass info from middleware to middleware (Session)

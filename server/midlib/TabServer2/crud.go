@@ -3,7 +3,7 @@ package TabServer2
 //
 // R E S T s e r v e r - Server Component	(TabServer2)
 //
-// Copyright (C) Philip Schlump, 2012-2016 -- All rights reserved.
+// Copyright (C) Philip Schlump, 2012-2017 -- All rights reserved.
 //
 // Do not remove the following lines - used in auto-update.
 // Version: 1.1.0
@@ -12,17 +12,24 @@ package TabServer2
 // File: TabServer2/crud.go
 //
 
+// xyzzy-JWT
+
 import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	jwt "www.2c-why.com/jwt-go"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
@@ -30,6 +37,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/sizlib"
+	"github.com/pschlump/Go-FTL/server/tmplp"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
@@ -49,7 +57,7 @@ func closure_respHandlerListSQLCfgFilesLoaded(hdlr *TabServer2Type) func(res htt
 
 	return func(res http.ResponseWriter, req *http.Request) { // Select
 
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of closure/respHandlerListSQLCfgFilesLoaded, %s\n", godebug.LF())
 		}
 
@@ -76,7 +84,7 @@ func closure_respHandlerListCfgFor(hdlr *TabServer2Type) func(res http.ResponseW
 
 	return func(res http.ResponseWriter, req *http.Request) { // Select
 
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of closure/respHandlerListCfgFor, %s\n", godebug.LF())
 		}
 
@@ -109,7 +117,7 @@ func closure_respHandlerListEndPoints(hdlr *TabServer2Type) func(res http.Respon
 
 	return func(res http.ResponseWriter, req *http.Request) { // Select
 
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of closure/respHandlerListEndPoints, %s\n", godebug.LF())
 		}
 
@@ -143,10 +151,10 @@ func closure_respHandlerTableGetPk1(hdlr *TabServer2Type) func(res http.Response
 
 	return func(res http.ResponseWriter, req *http.Request) { // Select
 
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of closure/respHandlerTagbleGetPk1, %s\n", godebug.LF())
 		}
-		if db_closure2 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-2") {
 			fmt.Fprintf(os.Stderr, "%sAT top of closure/respHandlerTagbleGetPk1, %s%s\n", MiscLib.ColorRed, godebug.LF(), MiscLib.ColorReset)
 		}
 		var rv string
@@ -310,10 +318,10 @@ func closure_respHandlerTableGet(hdlr *TabServer2Type) func(res http.ResponseWri
 
 	return func(res http.ResponseWriter, req *http.Request) { // Select
 
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of closure/respHandlerTableGet, %s\n", godebug.LF())
 		}
-		if db_closure2 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-2") {
 			fmt.Fprintf(os.Stderr, "%sAT top of closure/respHandlerTableGet, %s%s\n", MiscLib.ColorRed, godebug.LF(), MiscLib.ColorReset)
 		}
 
@@ -649,7 +657,7 @@ func closure_respHandlerTableGetCount(hdlr *TabServer2Type) func(res http.Respon
 		var s string = ""
 		var gotIt bool = false
 
-		if db_closure1 {
+		if hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") {
 			fmt.Printf("AT top of closure/respHandlerTableGetCount, %s\n", godebug.LF())
 		}
 
@@ -2367,13 +2375,13 @@ L:
 			case "s":
 				if v.eMin_len {
 					if len(dd) < v.Min_len {
-						err = errors.New(fmt.Sprintf("Error(10082): Parameter (%s) Too Short:%s Minimum Length %d", dd, i, v.Min_len))
+						err = errors.New(fmt.Sprintf("Error(10082): Parameter (%s) Too Short:%s Minimum Length %d value=[%s]", dd, i, v.Min_len, dd))
 						return
 					}
 				}
 				if v.eMax_len {
 					if len(dd) > v.Max_len {
-						err = errors.New(fmt.Sprintf("Error(10083): Parameter Too Long:%s Maximum Length %d", i, v.Max_len))
+						err = errors.New(fmt.Sprintf("Error(10083): Parameter Too Long:%s Maximum Length %d value=[%s]", i, v.Max_len, dd))
 						return
 					}
 				}
@@ -4066,12 +4074,14 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 	// xyzzyExtraDataQuery
 
 	if !done {
+		fmt.Printf("%sBefore At: %s\n%s%s", MiscLib.ColorGreen, godebug.LF(), (*ps).DumpParamTable(), MiscLib.ColorReset)
 		for i := 0; i < len(h.P); i++ {
 			aName := h.P[i]
-			data[i] = ps.ByName(aName)
 			if !(*ps).HasName(aName) {
+				fmt.Fprintf(os.Stderr, "%sWarning(10023): Missing data for %s - using empty string%s", MiscLib.ColorRed, aName, MiscLib.ColorReset)
 				trx.AddNote(1, fmt.Sprintf("Warning(10023): Mising data for %s - using empty string", aName))
 			}
+			data[i] = ps.ByName(aName)
 		}
 		// xyzzyAdd1 -- addCols, addVals -- from validation "optional" values
 		// for each optional param in validation, if haveByName - on command, and in h.Poptional? - then ...
@@ -4268,10 +4278,11 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 						if err != nil {
 							//fmt.Printf ( "Bad Data: %s\n", rv )
 							// rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10001): Parsing return value failed. sql-cfg.json[%s].G",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
+							fmt.Printf("rv=%s at:%s\n", rv, godebug.LF())
 							done = true
 							isError = true
 							ReturnErrorMessage(500, "Database Error", "10001",
-								fmt.Sprintf(`Error(10001): Parsing return value failed, sql-cfg.json[%s].G %s err:%q`, cfgTag, godebug.LFj(), err), res, req, *ps, trx, hdlr) // status:error
+								fmt.Sprintf(`Error(10001): Parsing return value failed for SetCookie, sql-cfg.json[%s].G %s err:%q`, cfgTag, godebug.LFj(), err), res, req, *ps, trx, hdlr) // status:error
 							rv = ""
 						}
 						if !done {
@@ -4302,6 +4313,98 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 							// fmt.Printf("teb = %s - at bot\n", sizlib.SVar(teb))
 							rv = sizlib.SVar(teb)
 						}
+					} else if len(h.SetSession) > 0 {
+						/*
+						   l_data = '{"status":"success","$send_email$":{'
+						   		||'"template":"please_confirm_registration"'
+						   		||',"username":'||to_json(p_username)
+						   		||',"real_name":'||to_json(p_real_name)
+						   		||',"email_token":'||to_json(l_email_token)
+						   		||',"app":'||to_json(p_app)
+						   		||',"name":'||to_json(p_name)
+						   		||',"url":'||to_json(p_url)
+						   		||',"from":'||to_json(l_from)
+						   	||'},"$session$":{'
+						   		||'"set":['
+						   			||'{"path":["gen","auth"],"value":"y"}'
+						   		||']'
+						   	||'}}';
+						*/
+						teb, err := sizlib.JSONStringToData(rv)
+						// fmt.Printf("teb = %s - at top\n", sizlib.SVar(teb))
+						if err != nil {
+							//fmt.Printf ( "Bad Data: %s\n", rv )
+							// rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10001): Parsing return value failed. sql-cfg.json[%s].G",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
+							fmt.Printf("rv=%s at:%s\n", rv, godebug.LF())
+							done = true
+							isError = true
+							ReturnErrorMessage(500, "Database Error", "10001",
+								fmt.Sprintf(`Error(10001): Parsing return value failed for SetSession, sql-cfg.json[%s].G %s err:%q`, cfgTag, godebug.LFj(), err), res, req, *ps, trx, hdlr) // status:error
+							rv = ""
+						}
+						if !done {
+							for vv, _ := range h.SetSession { // Set Seession data at this point - usually do_save is $session$ - this key gets procesed.
+								if rw, ok := res.(*goftlmux.MidBuffer); ok {
+									sesdata0, ok := teb[vv]
+									sesdata := ConvRawSesData(godebug.SVar(sesdata0))
+
+									// --------------------------------------------------------------------------------------------------------------------------
+									// {
+									//  "$session$":{"set":[{"path":["user","$is_logged_in$"],"value":"y"}]}
+									// ,"auth_token":"a2c2a98d-0054-4c11-b476-2f52d5270904"
+									// ,"config":"{}"
+									// ,"customer_id":"1"
+									// ,"privs":"[]"
+									// ,"seq":"929b11cc-b31b-4607-a23f-0dba7d4abeac"
+									// ,"status":"success"
+									// ,"user_id":"0ba414c8-ccdc-475b-98c0-537fd75e64db"
+									// }
+									// --------------------------------------------------------------------------------------------------------------------------
+									if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+										fmt.Fprintf(os.Stderr, "%sAT:%s -- session -- %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+									}
+									for _, aset := range sesdata.Set {
+										if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+											fmt.Fprintf(os.Stderr, "%sAT:%s %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+										}
+										if aset.Path[0] == "user" && aset.Path[1] == "$is_logged_in$" {
+											if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+												fmt.Fprintf(os.Stderr, "%sAT:%s %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+											}
+											if aset.Value == "y" {
+												if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+													fmt.Fprintf(os.Stderr, "%sAT:%s %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+												}
+												rw.Session.Login()
+											} else {
+												if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+													fmt.Fprintf(os.Stderr, "%sAT:%s %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+												}
+												rw.Session.Logout()
+											}
+										} else {
+											if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+												fmt.Fprintf(os.Stderr, "%sAT:%s %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+											}
+											rw.Session.SetData(aset.Path[0], aset.Path[1], aset.Value)
+											rw.Session.SetRule(aset.Path[1], false, true)
+										}
+										if hdlr.gCfg.DbOn("*", "TabServer2", "db-session") {
+											fmt.Fprintf(os.Stderr, "%sAT:%s %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, godebug.LF())
+											fmt.Fprintf(os.Stderr, "%sSession: %s, %s%s %s\n", MiscLib.ColorCyan, aset.Path, aset.Value, godebug.LF(), MiscLib.ColorReset)
+										}
+										trx.AddNote(1, fmt.Sprintf("Setting Session Name=%s Value=%s", aset.Path, aset.Value))
+									}
+									// --------------------------------------------------------------------------------------------------------------------------
+
+									if ok {
+										delete(teb, vv)
+									}
+								}
+								// fmt.Printf("teb = %s - at bot\n", sizlib.SVar(teb))
+								rv = sizlib.SVar(teb)
+							} // xyzzy - report error!
+						}
 					} else {
 						// new code - xyzzy87237283723 ----------------------------------------------------------------------------------------------------------------------------
 						_, err := sizlib.JSONStringToData(rv)
@@ -4311,6 +4414,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 							fmt.Fprintf(os.Stderr, "Bad Data (new case Tue Aug  4 11:36:38 MDT 2015) : %s\n", rv)
 							// xyzzyLog - this really should be logged!
 							// rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10001): Parsing return value failed. sql-cfg.json[%s].G",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
+							fmt.Printf("rv=%s at:%s\n", rv, godebug.LF())
 							done = true
 							isError = true
 							ReturnErrorMessage(500, "Database Error", "10001",
@@ -4818,14 +4922,18 @@ var funcMap map[string]funcMapType
 func init() {
 	// fmt.Printf("init in main\n")
 	funcMap = map[string]funcMapType{
-		"CacheEUser":          CacheEUser,
-		"DeCacheEUser":        DeCacheEUser,
-		"AfterPasswordChange": AfterPasswordChange,
-		"ConvertErrorToCode":  ConvertErrorToCode,
-		"PubEMailToSend":      PubEMailToSend,
-		// "ChargeCreditCard":        ChargeCreditCard,
+		"CacheEUser":              CacheEUser,
+		"DeCacheEUser":            DeCacheEUser,
+		"AfterPasswordChange":     AfterPasswordChange,
+		"ConvertErrorToCode":      ConvertErrorToCode,
+		"PubEMailToSend":          PubEMailToSend,
 		"SendReportsToGenMessage": SendReportsToGenMessage,
 		"SendEmailToGenMessage":   SendEmailToGenMessage,
+		"SendEmailMessage":        SendEmailMessage,
+		"RedirectTo":              RedirectTo,
+		"Sleep":                   Sleep,
+		"CreateJWTToken":          CreateJWTToken,
+		// "ChargeCreditCard":        ChargeCreditCard,
 	}
 }
 
@@ -4867,6 +4975,278 @@ func SendEmailToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag st
 
 	conn.Cmd("PUBLISH", "emailReadyToSend", fmt.Sprintf(`{"cmd":"readToSend","from":"tab-server1"}`))
 	return rv, false, 200
+}
+
+/*
+   l_data = '{"status":"success","$send_email$":{'
+   		||'"template":"please_confirm_registration"'
+   		||',"username":'||to_json(p_username)
+   		||',"real_name":'||to_json(p_real_name)
+   		||',"email_token":'||to_json(l_email_token)
+   		||',"app":'||to_json(p_app)
+   		||',"name":'||to_json(p_name)
+   		||',"url":'||to_json(p_url)
+   		||',"from":'||to_json(l_from)
+   	||'},"$session$":{'
+   		||'"set":['
+   			||'{"path":["gen","auth"],"value":"y"}'
+   		||']'
+   	||'}}';
+*/
+func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+
+	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+	type RedirectToData struct {
+		Status     string   `json:"status"`
+		RedirectTo string   `json:"$redirect_to$"`
+		Variables  []string `json:"$redirect_vars$"`
+	}
+
+	var ed RedirectToData
+	var all map[string]interface{}
+
+	err := json.Unmarshal([]byte(rv), &ed)
+	if err != nil {
+		return rv, false, 200
+	}
+	err = json.Unmarshal([]byte(rv), &all)
+	if err != nil {
+		return rv, false, 200
+	}
+
+	if ed.Status == "success" && ed.RedirectTo != "" {
+
+		to := ed.RedirectTo
+		fmt.Printf("%sAT: %s%s -- to %s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset, to)
+		if len(ed.Variables) > 0 {
+			fmt.Printf("%sAT: %s%s -- variables %s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset, ed.Variables)
+			sep := "?"
+			for _, vv := range ed.Variables {
+				if xx, ok := all[vv]; ok {
+					to += fmt.Sprintf("%s%s=%s", sep, url.QueryEscape(vv), url.QueryEscape(fmt.Sprintf("%v", xx)))
+					sep = "&"
+				}
+			}
+		}
+		fmt.Printf("%sAT: %s%s -- to %s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset, to)
+
+		res.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
+		res.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
+		res.Header().Set("Expires", "0")                                         // Proxies.
+		res.Header().Set("Content-Type", "text/html")                            //
+		res.Header().Set("Location", to)
+		res.WriteHeader(http.StatusTemporaryRedirect)
+		return rv, true, http.StatusTemporaryRedirect
+	}
+
+	return rv, false, 200
+}
+
+// xyzzy-JWT
+func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+
+	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+	// func SignToken(tokData []byte, keyFile string) (out string, err error) {
+	//	hdlr.KeyFilePrivate        string                      // private key file for signing JWT tokens
+	// https://github.com/dgrijalva/jwt-go.git
+
+	type RedirectToData struct {
+		Status    string   `json:"status"`
+		JWTClaims []string `json:"$JWT-claims$"`
+	}
+
+	var ed RedirectToData
+	var all map[string]interface{}
+
+	err := json.Unmarshal([]byte(rv), &ed)
+	if err != nil {
+		return rv, false, 200
+	}
+	err = json.Unmarshal([]byte(rv), &all)
+	if err != nil {
+		return rv, false, 200
+	}
+
+	if ed.Status == "success" && len(ed.JWTClaims) > 0 {
+
+		claims := make(map[string]string)
+		for _, vv := range ed.JWTClaims {
+			claims[vv] = all[vv].(string)
+			// delete(all, vv)
+		}
+		tokData := godebug.SVar(claims)
+
+		signedKey, err := SignToken([]byte(tokData), hdlr.KeyFilePrivate)
+		if err != nil {
+			fmt.Printf("Error: Unable to sign the JWT token, %s\n", err)
+			return rv, true, 406
+		}
+
+		all["jwt_token"] = signedKey
+
+		delete(all, "$JWT-claims$")
+
+		rv = godebug.SVar(all)
+		return rv, false, 200
+	}
+
+	return rv, false, 200
+}
+
+func Sleep(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+
+	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+	type RedirectToData struct {
+		Status string `json:"status"`
+		SleepN int    `json:"$sleep$"`
+	}
+
+	var ed RedirectToData
+	err := json.Unmarshal([]byte(rv), &ed)
+	if err != nil {
+		return rv, false, 200
+	}
+	if ed.SleepN > 0 {
+		slowDown := time.Duration(int64(ed.SleepN)) * time.Second
+		time.Sleep(slowDown)
+	}
+
+	return rv, false, 200
+}
+
+func SendEmailMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+
+	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+	type EmailData struct {
+		Status string            `json:"status"`
+		Email  map[string]string `json:"$send_email$"`
+	}
+
+	var ed EmailData
+	err := json.Unmarshal([]byte(rv), &ed)
+	if err != nil {
+		return rv, false, 200
+	}
+
+	fmt.Printf("%sAT:%s ed=%s %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, godebug.LF(), godebug.SVarI(ed))
+	var send_it = true
+	var log_it = false
+	if hdlr.gCfg.DbOn("*", "TabServer2", "db-email") {
+		log_it = true
+	}
+
+	var mp = regexp.MustCompile("^mis_piggy")
+	var kr = regexp.MustCompile("^kermit")
+	if mp.MatchString(ed.Email["email_addr"]) {
+		fmt.Printf("%sMiss Piggy Email Matched - skip send email, log  email%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+		send_it = false
+		log_it = true
+	}
+	fmt.Printf("%sBefore Kermit check - email=%s %s\n", MiscLib.ColorRed, MiscLib.ColorReset, ed.Email["email_addr"])
+	if kr.MatchString(ed.Email["email_addr"]) {
+		fmt.Printf("%sKermit Matched Email - send email, log  email%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+		ed.Email["email_addr"] = "pschlump@gmail.com"
+		send_it = true
+		log_it = true
+	}
+
+	fmt.Printf("send_it %v log_it %v to = [%s]\n", send_it, log_it, ed.Email["email_addr"])
+
+	if ed.Status == "success" {
+		fmt.Printf("%sAT:%s %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, godebug.LF())
+		s1, b1, b2, err := hdlr.TemplateEmail(ed.Email["template"], ed.Email)
+
+		if log_it {
+			fmt.Printf("Subject: %s\nHTML: %s\nSubject: %s\nText: %s\nerr=%s\n", s1, b1, b2, err)
+			if _, ok := ed.Email["log_id"]; ok {
+				ioutil.WriteFile(fmt.Sprintf("./output/%s.log", ed.Email["log_id"]), []byte(fmt.Sprintf("Subject:%s\nHTML:%s\nText:%s\n", s1, b1, b2)), 0666)
+			}
+		}
+		if send_it {
+			fmt.Printf("Sending email\n")
+			fmt.Printf("%sSending email%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+			fmt.Printf("%sSending email%s\n", MiscLib.ColorYellow, MiscLib.ColorReset)
+			fmt.Printf("%sSending email%s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
+			fmt.Printf("%sSending email%s\n", MiscLib.ColorYellow, MiscLib.ColorReset)
+			fmt.Printf("%sSending email%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+			fmt.Printf("Sending email to %s\n", ed.Email["email_addr"])
+			SendEmailViaAWS(s1, b1, b2, ed.Email["email_addr"])
+			// xyzzy - if error - then it should be logged -> ./output! -- Notification sent to ?me?
+		} else {
+			fmt.Printf("Not Sending email\n")
+			fmt.Printf("%sNot Sending email%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+			fmt.Printf("%sNot Sending email%s\n", MiscLib.ColorYellow, MiscLib.ColorReset)
+			fmt.Printf("%sNot Sending email%s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
+			fmt.Printf("%sNot Sending email%s\n", MiscLib.ColorYellow, MiscLib.ColorReset)
+			fmt.Printf("%sNot Sending email%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+			fmt.Printf("Not Sending email to %s\n", ed.Email["email_addr"])
+		}
+
+		// remove email data from return.
+		teb := make(map[string]interface{})
+		err = json.Unmarshal([]byte(rv), &teb)
+		if err != nil {
+			fmt.Printf("Internal error on sending email %s - data %s\n", err, rv)
+			return "", true, 500
+		}
+		delete(teb, "$send_email$")
+		rv = godebug.SVar(teb)
+		fmt.Printf("%sAT:%s rv=%s %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+	} else {
+		fmt.Printf("%sAT:%s rv=%s %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+		// xyzzy - should remove email info then return error.
+	}
+
+	return rv, false, 200
+
+}
+
+var getTmplCache map[string][]byte
+var getTmplLock sync.Mutex
+
+func init() {
+	getTmplCache = make(map[string][]byte)
+}
+
+func (hdlr *TabServer2Type) getTemplate(name string) string {
+	getTmplLock.Lock()
+	defer getTmplLock.Unlock()
+	var tv []byte
+	var ok bool
+	if tv, ok = getTmplCache[name]; !ok || string(tv) == "" {
+		fn := hdlr.EmailTemplateDir + name + ".tmpl"
+		tv, err := ioutil.ReadFile(fn)
+		if err != nil {
+			fmt.Printf("Unable to open %s - email template file, err=%s, %s\n", fn, err, godebug.LF())
+			fmt.Fprintf(os.Stderr, "%sUnable to open %s - email template file, err=%s, %s%s\n", MiscLib.ColorRed, fn, err, godebug.LF(), MiscLib.ColorReset)
+		}
+		getTmplCache[name] = tv
+		return string(tv)
+	}
+	return string(tv)
+	//	return `template={{.template}}
+	//username={{.username}}
+	//real_name={{.real_name}}
+	//email_token={{.email_token}}
+	//app={{.app}}
+	//url={{.url}}
+	//from={{.from}}
+	//`
+}
+
+// s1, b1, s2, b2, err := TemplateEmail ( ed.Email["template"], ed )
+func (hdlr *TabServer2Type) TemplateEmail(template_name string, mdata map[string]string) (s1, b1, b2 string, err error) {
+	// s1, b1, s2, b2 = "s1", "b1", "s2", "b2"
+	fmt.Printf("TemlateEmail mdata=%s\n", godebug.SVarI(mdata))
+	s1 = tmplp.ExecuteATemplateByName(hdlr.getTemplate(template_name), "email_subject", mdata)
+	b1 = tmplp.ExecuteATemplateByName(hdlr.getTemplate(template_name), "body_html", mdata)
+	b2 = tmplp.ExecuteATemplateByName(hdlr.getTemplate(template_name), "body_text", mdata)
+	return
 }
 
 //func init() {
@@ -5707,14 +6087,149 @@ func (hdlr *TabServer2Type) RemapParams(ps *goftlmux.Params, h SQLOne, trx *tr.T
 	}
 }
 
+type SesItems struct {
+	Path  []string
+	Value string
+}
+
+type SesDataType struct {
+	Set []SesItems
+}
+
+func ConvRawSesData(ss string) (rv SesDataType) {
+	err := json.Unmarshal([]byte(ss), &rv)
+	if err != nil {
+		rv.Set = []SesItems{}
+	}
+	return
+}
+
+// Helper func:  Read input from specified file or stdin
+func loadData(p string) ([]byte, error) {
+	if p == "" {
+		return nil, fmt.Errorf("No path specified")
+	}
+
+	var rdr io.Reader
+	//	if p == "-" {
+	//		rdr = os.Stdin
+	//	} else if p == "+" {
+	//		return []byte("{}"), nil
+	//	} else {
+	if f, err := os.Open(p); err == nil {
+		rdr = f
+		defer f.Close()
+	} else {
+		return nil, err
+	}
+	//	}
+	return ioutil.ReadAll(rdr)
+}
+
+// Create, sign, and output a token.  This is a great, simple example of
+// how to use this library to create and sign a token.
+func SignToken(tokData []byte, keyFile string) (out string, err error) {
+
+	// parse the JSON of the claims
+	var claims jwt.MapClaims
+	if err = json.Unmarshal(tokData, &claims); err != nil {
+		err = fmt.Errorf("Couldn't parse claims JSON: %v", err)
+		return
+	}
+
+	//-	// add command line claims
+	//-	if len(flagClaims) > 0 {
+	//-		for k, v := range flagClaims {
+	//-			claims[k] = v
+	//-		}
+	//-	}
+
+	// get the key
+	var key interface{}
+	key, err = loadData(keyFile)
+	if err != nil {
+		err = fmt.Errorf("Couldn't read key: %v", err)
+		return
+	}
+
+	// get the signing alg
+	// alg := jwt.GetSigningMethod(*flagAlg)
+	alg := jwt.GetSigningMethod("RS256") // xyzzy - Param
+	if alg == nil {
+		err = fmt.Errorf("Couldn't find signing method: %v", "RS256") // xyzzy Param
+		return
+	}
+
+	// create a new token
+	token := jwt.NewWithClaims(alg, claims)
+
+	//-	// add command line headers
+	//-	if len(flagHead) > 0 {
+	//-		for k, v := range flagHead {
+	//-			token.Header[k] = v
+	//-		}
+	//-	}
+
+	if isEs() {
+		if k, ok := key.([]byte); !ok {
+			err = fmt.Errorf("Couldn't convert key data to key")
+			return
+		} else {
+			key, err = jwt.ParseECPrivateKeyFromPEM(k)
+			if err != nil {
+				return
+			}
+		}
+	} else if isRs() {
+		if k, ok := key.([]byte); !ok {
+			err = fmt.Errorf("Couldn't convert key data to key")
+			return
+		} else {
+			key, err = jwt.ParseRSAPrivateKeyFromPEM(k)
+			if err != nil {
+				return
+			}
+		}
+	}
+
+	if out, err = token.SignedString(key); err == nil {
+		if db81 {
+			fmt.Println(out)
+		}
+	} else {
+		err = fmt.Errorf("Error signing token: %v", err)
+	}
+
+	return
+}
+
+func isEs() bool {
+	// return strings.HasPrefix(*flagAlg, "ES")
+	return false
+}
+
+func isRs() bool {
+	// return strings.HasPrefix(*flagAlg, "RS")
+	return true
+}
+
+const db81 = false
+const db1 = false
+const db2 = false
+const db4 = false // Redis Sessions
 const db_post = false
-const db_closure1 = true
-const db_closure2 = true
 const db_get1 = false
 const db_RemapParams = false
 const db_trace_functions = false
 const db_GenUpdateSet = false
+
 const db_DumpInsert = true
 const db_DumpDelete = true
+
+// const hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") = true
+// const hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-2") = true
+// const hdlr.gCfg.DbOn("*", "TabServer2", "db-email") = true
+// const hdlr.gCfg.DbOn("*", "TabServer2", "db-session") = true
+//			if hdlr.gCfg.DbOn("*", "SessionRedis", "db1") {
 
 /* vim: set noai ts=4 sw=4: */

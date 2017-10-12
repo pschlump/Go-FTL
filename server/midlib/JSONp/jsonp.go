@@ -22,56 +22,72 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*JSONPHandlerType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		// fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*JSONPHandlerType)
+//		if !ok {
+//			fmt.Fprintf(os.Stderr, "%sError: Wrong data type passed, Line No:%d\n%s", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+//			return mid.ErrInternalError
+//		} else {
+//			var err error
+//			if db1 {
+//				fmt.Printf("RegExp >%s<\n", hh.CallbackMustMatch)
+//			}
+//			hh.callbackMustMatchRe, err = regexp.Compile(hh.CallbackMustMatch)
+//			if err != nil {
+//				fmt.Fprintf(os.Stderr, "%sError: Unable to read compile regular expression >%s<, LineNo:%v error:%s\n%s", MiscLib.ColorRed, hh.CallbackMustMatch, hh.LineNo, err, MiscLib.ColorReset)
+//				return mid.ErrInvalidConfiguration
+//			}
+//		}
+//		return nil
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &JSONPHandlerType{} }
+//
+//	cfg.RegInitItem2("JSONp", initNext, createEmptyType, postInit, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *JSONPHandlerType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*JSONPHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &JSONPHandlerType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		// fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*JSONPHandlerType)
-		if !ok {
-			fmt.Fprintf(os.Stderr, "%sError: Wrong data type passed, Line No:%d\n%s", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-			return mid.ErrInternalError
-		} else {
-			var err error
-			if db1 {
-				fmt.Printf("RegExp >%s<\n", hh.CallbackMustMatch)
-			}
-			hh.callbackMustMatchRe, err = regexp.Compile(hh.CallbackMustMatch)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%sError: Unable to read compile regular expression >%s<, LineNo:%v error:%s\n%s", MiscLib.ColorRed, hh.CallbackMustMatch, hh.LineNo, err, MiscLib.ColorReset)
-				return mid.ErrInvalidConfiguration
-			}
-		}
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &JSONPHandlerType{} }
-
-	cfg.RegInitItem2("JSONp", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("JSONp", CreateEmpty, `{
 		"Paths":              { "type":["string","filepath"], "isarray":true, "required":true },
 		"CallbackMustMatch":  { "type":["string"], "default":"^[a-zA-Z\\$_][a-zA-Z0-9\\$_]*$" },
 		"CallbackName":       { "type":["string"], "default":"callback" },
@@ -79,9 +95,22 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *JSONPHandlerType) SetNext(next http.Handler) {
+func (hdlr *JSONPHandlerType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *JSONPHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	if db1 {
+		fmt.Printf("RegExp >%s<\n", hdlr.CallbackMustMatch)
+	}
+	hdlr.callbackMustMatchRe, err = regexp.Compile(hdlr.CallbackMustMatch)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%sError: Unable to read compile regular expression >%s<, LineNo:%v error:%s\n%s", MiscLib.ColorRed, hdlr.CallbackMustMatch, hdlr.LineNo, err, MiscLib.ColorReset)
+		return mid.ErrInvalidConfiguration
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*JSONPHandlerType)(nil)

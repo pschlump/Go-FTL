@@ -41,36 +41,52 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*HTML5PathType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &HTML5PathType{} }
+//
+//	cfg.RegInitItem2("HTML5Path", initNext, createEmptyType, nil, `{
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *HTML5PathType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*HTML5PathHandlerType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &HTML5PathType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &HTML5PathHandlerType{} }
-
-	cfg.RegInitItem2("HTML5Path", initNext, createEmptyType, nil, `{
+	mid.RegInitItem3("HTML5Path", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"LimitTo":       { "type":["string","filepath"], "isarray":true },
 		"ReplaceWith":   { "type":["string","filepath"], "default":"${1}" },
@@ -80,16 +96,21 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *HTML5PathHandlerType) SetNext(next http.Handler) {
+func (hdlr *HTML5PathType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
 }
 
-var _ mid.GoFTLMiddleWare = (*HTML5PathHandlerType)(nil)
+func (hdlr *HTML5PathType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
+}
+
+var _ mid.GoFTLMiddleWare = (*HTML5PathType)(nil)
 
 // --------------------------------------------------------------------------------------------------------------------------
 
-type HTML5PathHandlerType struct {
+type HTML5PathType struct {
 	Next         http.Handler //
 	Paths        []string     //
 	LimitTo      []string     // Checked on Request AFTER return of 404 - since the req.URL.Path can have changed (think re-write)
@@ -99,11 +120,11 @@ type HTML5PathHandlerType struct {
 	LineNo       int          //
 }
 
-func NewHTML5PathServer(n http.Handler, p []string) *HTML5PathHandlerType {
-	return &HTML5PathHandlerType{Next: n, Paths: p, ReplaceWith: "/index.html"}
+func NewHTML5PathServer(n http.Handler, p []string) *HTML5PathType {
+	return &HTML5PathType{Next: n, Paths: p, ReplaceWith: "/index.html"}
 }
 
-func (hdlr *HTML5PathHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+func (hdlr *HTML5PathType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	//{
 	//	pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path)
 	//	fmt.Fprintf(os.Stderr, "%sReq: [%s] match to [%s] pn=%d, %s%s\n", MiscLib.ColorCyan, req.URL.Path, lib.SVar(hdlr.Paths), pn, godebug.LF(), MiscLib.ColorReset)

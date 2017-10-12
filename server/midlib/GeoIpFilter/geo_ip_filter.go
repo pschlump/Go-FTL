@@ -23,7 +23,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"www.2c-why.com/JsonX"
+
 	"github.com/oschwald/maxminddb-golang"
 
 	"github.com/pschlump/Go-FTL/server/cfg"
@@ -31,30 +32,51 @@ import (
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*GeoIPFilterType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &GeoIPFilterType{} }
+//
+//	cfg.RegInitItem2("GeoIpFilter", initNext, createEmptyType, InitGeoIPFilter, `{
+//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
+//		"Action":        { "type":[ "string" ], "list":[ "reject", "allow" ], "default":"allow" },
+//		"CountryCodes":  { "type":[ "string" ], "default":"index.html", "isarray":true },
+//		"DBFileName":    { "type":[ "string","filepath" ], "default":"./cfg/GeoLite2-Country.mmdb" },
+//		"PageIfBlocked": { "type":[ "string","filepath" ] },
+//		"LineNo":        { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *GeoIPFilterType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*GeoIPFilterType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &GeoIPFilterType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &GeoIPFilterType{} }
-
-	cfg.RegInitItem2("GeoIpFilter", initNext, createEmptyType, InitGeoIPFilter, `{
+	mid.RegInitItem3("GeoIPFilter", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"Action":        { "type":[ "string" ], "list":[ "reject", "allow" ], "default":"allow" },
 		"CountryCodes":  { "type":[ "string" ], "default":"index.html", "isarray":true },
@@ -64,9 +86,14 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *GeoIPFilterType) SetNext(next http.Handler) {
+func (hdlr *GeoIPFilterType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *GeoIPFilterType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*GeoIPFilterType)(nil)

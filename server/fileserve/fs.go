@@ -717,6 +717,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 
 		if db11 {
 			fmt.Printf("/////////////////////////////////////////////////////////////////////\n// ServeFile called with %s, %v, %s\n", name, fcfg.LineNo, godebug.LF())
+			fmt.Printf("fcfg=%s\n", godebug.SVarI(fcfg))
 		}
 
 		var found bool
@@ -797,6 +798,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 							}
 							if err != nil {
 								// xyzzLog - log error
+								fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 								http.NotFound(www, req)
 								return
 							} else {
@@ -811,6 +813,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 										fmt.Fprintf(os.Stderr, "t_root [%s] at=%s\n", t_root, godebug.LF())
 									}
 								case PreFail:
+									fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 									http.NotFound(www, req)
 									return
 								case PreNext:
@@ -874,14 +877,17 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 			if dbE {
 				fmt.Fprintf(os.Stderr, "name [%s] at=%s\n", name, godebug.LF())
 			}
-			name, err = filepath.Abs(filepath.Clean("./" + name))
+			// OLD: name, err = filepath.Abs(filepath.Clean("./" + name))
+			name, err = filepath.Abs(filepath.Clean(fcfg.Root[0] + name))
 			if err != nil {
 				logrus.Error(fmt.Sprintf("Error: 404: converting file path from %s to %s", nameOrig, name))
+				fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 				http.NotFound(www, req)
 				return
 			}
 			if found, fileInfo = lib.ExistsGetFileInfo(name); !found {
 				logrus.Error(fmt.Sprintf("Error: 404: file not found %s\n", name))
+				fmt.Fprintf(os.Stderr, "%sAT %s ->%s<-%s\n", MiscLib.ColorCyan, godebug.LF(), name, MiscLib.ColorReset)
 				http.NotFound(www, req)
 				return
 			}
@@ -895,6 +901,8 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 		}
 
 		if fileInfo == nil {
+			fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
+			fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 			http.NotFound(www, req)
 			return
 		}
@@ -947,6 +955,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 			//	fmt.Fprintf(os.Stderr, ">%s< end at %d\n", name, nnn)
 			//}
 			logrus.Error(fmt.Sprintf(`{"Error":%q, "FileName":%q, "FileName/Hex":"%x", "LineNo":%q}`, "0 chars found in file name", name, name, godebug.LF()))
+			fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 			http.NotFound(www, req)
 			return
 		}
@@ -954,6 +963,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 		fh, err := os.Open(name) // xyzzy - FileSystem.Open - lock to 1 directory (see top of file)
 		if err != nil {
 			logrus.Error(fmt.Sprintf(`{"FilesystemError":%q, "FileName":%q, "LineNo":%q}`, err, name, godebug.LF()))
+			fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 			http.NotFound(www, req)
 			return
 		}
@@ -976,6 +986,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 				}
 				fcfg.dirList(www, fh, req, name, t_root)
 			} else {
+				fmt.Fprintf(os.Stderr, "%sAT %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 				http.NotFound(www, req)
 			}
 			return

@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -29,54 +31,80 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*RejectIPAddressType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		pCfg.gCfg = gCfg
+//		return
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &RejectIPAddressType{} }
+//
+//	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//		// fmt.Printf("In postInitValidation, h=%v\n", h)
+//		hh, ok := h.(*RejectIPAddressType)
+//		if !ok {
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			if hh.RedisPrefix != "" && len(hh.IPAddrs) > 0 {
+//				fmt.Printf("Error: Can not have both a set of IP Addres and a RedisPrefix at the same time - RejectIPAddress, Line No:%d\n", hh.LineNo)
+//				return mid.ErrInvalidConfiguration
+//			}
+//		}
+//		return nil
+//	}
+//
+//	cfg.RegInitItem2("RejectIPAddress", initNext, createEmptyType, postInitValidation, `{
+//		}`)
+//
+//	// FIXME - testing with invalid input
+//
+//}
+//
+//// normally identical
+//func (hdlr *RejectIPAddressType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
+// FIXME - testing with invalid input
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*RejectIPAddressType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		pCfg.gCfg = gCfg
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &RejectIPAddressType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &RejectIPAddressType{} }
-
-	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-		// fmt.Printf("In postInitValidation, h=%v\n", h)
-		hh, ok := h.(*RejectIPAddressType)
-		if !ok {
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			if hh.RedisPrefix != "" && len(hh.IPAddrs) > 0 {
-				fmt.Printf("Error: Can not have both a set of IP Addres and a RedisPrefix at the same time - RejectIPAddress, Line No:%d\n", hh.LineNo)
-				return mid.ErrInvalidConfiguration
-			}
-		}
-		return nil
-	}
-
-	cfg.RegInitItem2("RejectIPAddress", initNext, createEmptyType, postInitValidation, `{
+	mid.RegInitItem3("RejectIPAddress", CreateEmpty, `{
 		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
 		"IPAddrs":       { "type":[ "string","ip" ], "isarray":true },
 		"RedisPrefix":   { "type":[ "string" ] },
 		"LineNo":        { "type":[ "int" ], "default":"1" }
 		}`)
-
-	// FIXME - testing with invalid input
-
 }
 
-// normally identical
-func (hdlr *RejectIPAddressType) SetNext(next http.Handler) {
+func (hdlr *RejectIPAddressType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *RejectIPAddressType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	if hdlr.RedisPrefix != "" && len(hdlr.IPAddrs) > 0 {
+		fmt.Printf("Error: Can not have both a set of IP Addres and a RedisPrefix at the same time - RejectIPAddress, Line No:%d\n", hdlr.LineNo)
+		return mid.ErrInvalidConfiguration
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*RejectIPAddressType)(nil)

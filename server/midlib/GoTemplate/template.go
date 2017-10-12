@@ -22,6 +22,8 @@ import (
 	"strings"
 	"text/template"
 
+	"www.2c-why.com/JsonX"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -34,65 +36,88 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+//func init() {
+//
+//	// normally identical
+//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+//		pCfg, ok := ppCfg.(*GoTemplateType)
+//		if ok {
+//			pCfg.SetNext(next)
+//			rv = pCfg
+//		} else {
+//			err = mid.FtlConfigError
+//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+//		}
+//		return
+//	}
+//
+//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
+//
+//		hh, ok := h.(*GoTemplateType)
+//		if !ok {
+//			logrus.Errorf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+//			return mid.ErrInternalError
+//		} else {
+//			// xyzzy - check hh.TemplateRoot exists
+//			n := 0
+//			m := 0
+//			for ii, vv := range hh.TemplateRoot {
+//				if !lib.ExistsIsDir(vv) {
+//					logrus.Warnf("Warning: at %d path %s is not a directory - will not have any templates, Line No: %d", ii, vv, hh.LineNo)
+//				} else {
+//					n++
+//					fList := sizlib.FilesMatchingPattern(vv, ".tmpl")
+//					if len(fList) > 0 {
+//						m++
+//					}
+//				}
+//			}
+//			if n == 0 {
+//				logrus.Errorf("Warning: did not find any directory with templates, Line No: %d", hh.LineNo)
+//				fmt.Printf("Warning: did not find any directory with templates, Line No: %d\n", hh.LineNo)
+//				fmt.Fprintf(os.Stderr, "%sWarning: did not find any directory with templates, Line No: %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+//				return mid.ErrInternalError
+//			}
+//			if m == 0 {
+//				logrus.Warnf("Warning: did not find any matching files in any directories, Line No: %d", hh.LineNo)
+//				fmt.Printf("Warning: did not find any matching files in any directories, Line No: %d\n", hh.LineNo)
+//				fmt.Fprintf(os.Stderr, "%sWarning: did not find any matching files in any directories, Line No: %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
+//			}
+//		}
+//
+//		return nil
+//	}
+//
+//	// normally identical
+//	createEmptyType := func() interface{} { return &GoTemplateType{} }
+//
+//	// /api/tmpl/showRpt.tmpl -> fetch data inside template?
+//	// /api/tmpl/showRpt.tmpl?data=bob (data in row/table data)
+//	cfg.RegInitItem2("GoTemplate", initNext, createEmptyType, postInit, `{
+//		"Paths":                 { "type":[ "string", "filepath" ], "isarray":true, "default":"/" },
+//		"TemplateParamName":     { "type":[ "string" ], "default":"template_name" },
+//		"TemplateName":          { "type":[ "string" ], "default":"" },
+//		"TemplateLibraryName":   { "type":[ "string" ], "isarray":true, "default":"" },
+//		"TemplateRoot":          { "type":[ "string" ], "isarray":true, "default":"" },
+//		"Root":                  { "type":[ "string" ], "isarray":true, "default":"" },
+//		"LineNo":                { "type":[ "int" ], "default":"1" }
+//		}`)
+//}
+//
+//// normally identical
+//func (hdlr *GoTemplateType) SetNext(next http.Handler) {
+//	hdlr.Next = next
+//}
+
 func init() {
-
-	// normally identical
-	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-		pCfg, ok := ppCfg.(*GoTemplateType)
-		if ok {
-			pCfg.SetNext(next)
-			rv = pCfg
-		} else {
-			err = mid.FtlConfigError
-			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-		}
-		return
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &GoTemplateType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
 	}
-
-	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-
-		hh, ok := h.(*GoTemplateType)
-		if !ok {
-			logrus.Errorf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-			return mid.ErrInternalError
-		} else {
-			// xyzzy - check hh.TemplateRoot exists
-			n := 0
-			m := 0
-			for ii, vv := range hh.TemplateRoot {
-				if !lib.ExistsIsDir(vv) {
-					logrus.Warnf("Warning: at %d path %s is not a directory - will not have any templates, Line No: %d", ii, vv, hh.LineNo)
-				} else {
-					n++
-					fList := sizlib.FilesMatchingPattern(vv, ".tmpl")
-					if len(fList) > 0 {
-						m++
-					}
-				}
-			}
-			if n == 0 {
-				logrus.Errorf("Warning: did not find any directory with templates, Line No: %d", hh.LineNo)
-				fmt.Printf("Warning: did not find any directory with templates, Line No: %d\n", hh.LineNo)
-				fmt.Fprintf(os.Stderr, "%sWarning: did not find any directory with templates, Line No: %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-				return mid.ErrInternalError
-			}
-			if m == 0 {
-				logrus.Warnf("Warning: did not find any matching files in any directories, Line No: %d", hh.LineNo)
-				fmt.Printf("Warning: did not find any matching files in any directories, Line No: %d\n", hh.LineNo)
-				fmt.Fprintf(os.Stderr, "%sWarning: did not find any matching files in any directories, Line No: %d%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-			}
-		}
-
-		return nil
-	}
-
-	// normally identical
-	createEmptyType := func() interface{} { return &GoTemplateType{} }
-
-	// /api/tmpl/showRpt.tmpl -> fetch data inside template?
-	// /api/tmpl/showRpt.tmpl?data=bob (data in row/table data)
-	cfg.RegInitItem2("GoTemplate", initNext, createEmptyType, postInit, `{
+	mid.RegInitItem3("GoTemplate", CreateEmpty, `{
 		"Paths":                 { "type":[ "string", "filepath" ], "isarray":true, "default":"/" },
 		"TemplateParamName":     { "type":[ "string" ], "default":"template_name" },
 		"TemplateName":          { "type":[ "string" ], "default":"" },
@@ -103,9 +128,39 @@ func init() {
 		}`)
 }
 
-// normally identical
-func (hdlr *GoTemplateType) SetNext(next http.Handler) {
+func (hdlr *GoTemplateType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *GoTemplateType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[string]interface{}, serverName string, pNo, callNo int) (err error) {
+	// xyzzy - check hdlr.TemplateRoot exists
+	n := 0
+	m := 0
+	for ii, vv := range hdlr.TemplateRoot {
+		if !lib.ExistsIsDir(vv) {
+			logrus.Warnf("Warning: at %d path %s is not a directory - will not have any templates, Line No: %d", ii, vv, hdlr.LineNo)
+		} else {
+			n++
+			fList := sizlib.FilesMatchingPattern(vv, ".tmpl")
+			if len(fList) > 0 {
+				m++
+			}
+		}
+	}
+	if n == 0 {
+		logrus.Errorf("Warning: did not find any directory with templates, Line No: %d", hdlr.LineNo)
+		fmt.Printf("Warning: did not find any directory with templates, Line No: %d\n", hdlr.LineNo)
+		fmt.Fprintf(os.Stderr, "%sWarning: did not find any directory with templates, Line No: %d%s\n", MiscLib.ColorRed, hdlr.LineNo, MiscLib.ColorReset)
+		return mid.ErrInternalError
+	}
+	if m == 0 {
+		logrus.Warnf("Warning: did not find any matching files in any directories, Line No: %d", hdlr.LineNo)
+		fmt.Printf("Warning: did not find any matching files in any directories, Line No: %d\n", hdlr.LineNo)
+		fmt.Fprintf(os.Stderr, "%sWarning: did not find any matching files in any directories, Line No: %d%s\n", MiscLib.ColorRed, hdlr.LineNo, MiscLib.ColorReset)
+	}
+	return
 }
 
 var _ mid.GoFTLMiddleWare = (*GoTemplateType)(nil)
