@@ -27,7 +27,7 @@ import (
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 
-	"www.2c-why.com/JsonX"
+	JsonX "github.com/pschlump/JSONx"
 	"www.2c-why.com/SqlEr"
 )
 

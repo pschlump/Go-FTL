@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"www.2c-why.com/JsonX"
+	JsonX "github.com/pschlump/JSONx"
 
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"

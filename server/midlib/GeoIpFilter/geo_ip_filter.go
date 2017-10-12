@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"os"
 
-	"www.2c-why.com/JsonX"
+	JsonX "github.com/pschlump/JSONx"
 
 	"github.com/oschwald/maxminddb-golang"
 

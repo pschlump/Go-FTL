@@ -17,7 +17,7 @@ import (
 	"os"
 	"time"
 
-	"www.2c-why.com/JsonX"
+	JsonX "github.com/pschlump/JSONx"
 
 	"github.com/pschlump/Go-FTL/server/RedisSessionData"
 	"github.com/pschlump/Go-FTL/server/cfg"

@@ -28,12 +28,10 @@ import (
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/hash-file/lib"
-	"www.2c-why.com/JsonX"
 )
-
-// xyzzy - start mod to JsonX - "www.2c-why.com/JsonX"
 
 // --------------------------------------------------------------------------------------------------------------------------
 

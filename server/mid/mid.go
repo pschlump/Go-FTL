@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"www.2c-why.com/JsonX"
+	JsonX "github.com/pschlump/JSONx"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"

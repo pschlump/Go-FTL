@@ -29,7 +29,6 @@ import (
 	"github.com/pschlump/json"          //	"encoding/json"
 	"github.com/pschlump/radix.v2/pool" // Modified pool to have NewAuth for authorized connections
 	//	meta, err := UnmarshalString(godebug.FILE(), In, &Out)
-	// JsonXScanner "www.2c-why.com/JsonX"
 )
 
 // "github.com/jackc/pgx" //
