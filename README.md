@@ -2,7 +2,6 @@ Easy-to-configure Web server and Reverse Proxy Server in Go (golang).
 =====================================================================
 
 ## Index
-## Index
 
 * [Overview](#overview)
 * [Install](#install)
