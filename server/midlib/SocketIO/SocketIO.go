@@ -47,7 +47,7 @@ import (
 	"sync"
 
 	JsonX "github.com/pschlump/JSONx"
-	"www.2c-why.com/h2ppp/lib/H2pppCommon"
+	// "www.2c-why.com/h2ppp/lib/H2pppCommon"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
@@ -82,7 +82,7 @@ import (
 //		pCfg.gCfg = gCfg
 //
 //		pCfg.msgTo = "chat-bot" // ms := MicroServiceLib.NewMsCfgType("qr-img1", "qr-img1-reply") //xyzzy - need to set the reply template
-//		MyId := H2pppCommon.UUIDAsStrPacked()
+//		MyId := sizlib.UUIDAsStrPacked()
 //		pCfg.ms = MicroServiceLib.NewMsCfgType(pCfg.msgTo, pCfg.msgTo+":"+MyId)
 //		pCfg.myId = MyId
 //		// ms.ConnectToRedis()                                        // Create the redis connection pool, alternative is ms.SetRedisPool(pool) // ms . SetRedisPool(pool *pool.Pool)
@@ -192,7 +192,7 @@ func (hdlr *SocketIOHandlerType) InitializeWithConfigData(next http.Handler, gCf
 	hdlr.gCfg = gCfg
 
 	hdlr.msgTo = "chat-bot" // ms := MicroServiceLib.NewMsCfgType("qr-img1", "qr-img1-reply") //xyzzy - need to set the reply template
-	MyId := H2pppCommon.UUIDAsStrPacked()
+	MyId := sizlib.UUIDAsStrPacked()
 	hdlr.ms = MicroServiceLib.NewMsCfgType(hdlr.msgTo, hdlr.msgTo+":"+MyId)
 	hdlr.myId = MyId
 	// ms.ConnectToRedis()                                        // Create the redis connection pool, alternative is ms.SetRedisPool(pool) // ms . SetRedisPool(pool *pool.Pool)
@@ -583,7 +583,7 @@ func (hdlr *SocketIOHandlerType) Publish(Id, msg string) {
 
 		fmt.Printf("AT: %s\n", godebug.LF())
 
-		id := H2pppCommon.UUIDAsStrPacked()
+		id := sizlib.UUIDAsStrPacked()
 		hdlr.ms.SendMessage(&MicroServiceLib.MsMessageToSend{
 			To: hdlr.msgTo,
 			Id: id,

@@ -14,6 +14,7 @@ import (
 	// "github.com/jackc/pgx" //  https://github.com/jackc/pgx
 
 	_ "github.com/lib/pq"
+	"github.com/taskcluster/slugid-go/slugid"
 
 	"crypto/sha1"
 	"errors"
@@ -31,8 +32,11 @@ import (
 	"strings"
 	"time"
 
+	newUuid "github.com/pborman/uuid"
+
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
+	"github.com/pschlump/uuid"
 )
 
 // "github.com/nu7hatch/gouuid"
@@ -1135,5 +1139,52 @@ func DbFprint(db bool, fp io.Writer, format string, arg ...interface{}) {
 }
 
 const db1099 = true
+
+const ReturnPacked = true
+
+func UUIDAsStr() (s_id string) {
+	id, _ := uuid.NewV4()
+	s_id = id.String()
+	return
+}
+
+func UUIDAsStrPacked() (s_id string) {
+	if ReturnPacked {
+		s := UUIDAsStr()
+		return UUIDToSlug(s)
+	} else {
+		return UUIDAsStr()
+	}
+}
+
+func GetLead() (lead string) {
+	if ReturnPacked {
+		return "/_/"
+	} else {
+		return "/ipfs/"
+	}
+}
+
+func UUIDToSlug(uuid string) (slug string) {
+	// slug = id
+	uuidType := newUuid.Parse(uuid)
+	if uuidType != nil {
+		slug = slugid.Encode(uuidType)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "slug: ERROR: Cannot encode invalid uuid '%v' into a slug\n", uuid) // Xyzzy - logrus
+	return
+}
+
+func SlugToUUID(slug string) (uuid string) {
+	// uuid = slug
+	uuidType := slugid.Decode(slug)
+	if uuidType != nil {
+		uuid = uuidType.String()
+		return
+	}
+	fmt.Fprintf(os.Stderr, "slug: ERROR: Cannot decode invalid slug '%v' into a UUID\n", slug) // Xyzzy - logrus
+	return
+}
 
 /* vim: set noai ts=4 sw=4: */

@@ -28,10 +28,8 @@ import (
 	"github.com/pschlump/godebug"
 
 	JsonX "github.com/pschlump/JSONx"
-	"www.2c-why.com/SqlEr"
+	"github.com/pschlump/SqlEr" // "www.2c-why.com/SqlEr"
 )
-
-// "www.2c-why.com/SqlEr"
 
 // --------------------------------------------------------------------------------------------------------------------------
 

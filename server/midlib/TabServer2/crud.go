@@ -29,7 +29,7 @@ import (
 	"sync"
 	"time"
 
-	jwt "www.2c-why.com/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go" // jwt "www.2c-why.com/jwt-go" -- Moved to ~/Projects
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
