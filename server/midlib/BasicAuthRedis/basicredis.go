@@ -61,41 +61,6 @@ import (
 
 const NIterations = 5000
 
-//func init() {
-//
-//	// normally identical
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*BasicAuthRedis)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-//		}
-//		gCfg.ConnectToRedis()
-//		pCfg.gCfg = gCfg
-//		return
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &BasicAuthRedis{} }
-//
-//	cfg.RegInitItem2("BasicAuthRedis", initNext, createEmptyType, nil, `{
-//		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
-//		"Realm":        	 { "type":[ "string" ], "required":true },
-//		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"BasicAuth" },
-//		"HashUsername":  	 { "type":[ "bool" ], "required":false, "default":"false" },
-//		"HashUsernameSalt":  { "type":[ "string" ], "required":false, "default":"8H3QhT9uHElh+c5NfowHx1gLeDw6qBMSTLvoL87GcB4FwflM8v2cTs" },
-//		"LineNo":       	 { "type":[ "int" ], "default":"1" }
-//		}`)
-//}
-//
-//// normally identical
-//func (hdlr *BasicAuthRedis) SetNext(next http.Handler) {
-//	hdlr.Next = next
-//}
-
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
 		x := &BasicAuthRedis{}

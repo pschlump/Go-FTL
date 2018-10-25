@@ -170,8 +170,9 @@ func main() {
 
 		redis_client.Cmd("SET", key, value)
 	} else {
-		fmt.Printf("user-redis: Error: Invalid combination of options\n")
-		Usage()
+		// fmt.Printf("user-redis: Error: Invalid combination of options\n")
+		// Usage()
+		fmt.Printf ( "user-redis: connected to redis successfully\n")
 	}
 
 }

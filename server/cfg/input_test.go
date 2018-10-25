@@ -16,8 +16,11 @@ import (
 	"testing"
 
 	"github.com/pschlump/Go-FTL/server/lib"
-	"github.com/pschlump/json" //	"encoding/json"
+
+	JsonX "github.com/pschlump/JSONx"
 )
+
+// "github.com/pschlump/json" //	"encoding/json"
 
 func Test_IsInputValid(t *testing.T) {
 	tests := []struct {
@@ -99,10 +102,14 @@ func Test_IsInputValid(t *testing.T) {
 
 	for ii, test := range tests {
 
-		fmt.Printf("---------------------------------------------- test %d ----------------------------------------------------- \n\n", ii)
+		if db818 {
+			fmt.Printf("---------------------------------------------- test %d ----------------------------------------------------- \n\n", ii)
+		}
 
 		data := make(map[string]interface{})
-		err := json.Unmarshal([]byte(test.raw_data), &data)
+		// err := json.Unmarshal([]byte(test.raw_data), &data)
+		meta, err := JsonX.Unmarshal(fmt.Sprintf("Test:%d", ii), []byte(test.raw_data), &data)
+		_ = meta
 		if err != nil {
 			t.Errorf("Error: Invlaid test %s/%d data %s\n", test.mid_name, ii, test.raw_data)
 		} else {
@@ -112,8 +119,10 @@ func Test_IsInputValid(t *testing.T) {
 			eok, dflt, msg := IsInputValid(test.mid_name, test.vs, data)
 			// xyzzy40 - validate []interface{}
 
-			fmt.Printf("Data is now >>>%s<<<\n", lib.SVarI(data))
-			fmt.Printf("Dflt is now >>>%s<<<\n", lib.SVarI(data))
+			if db818 {
+				fmt.Printf("Data is now >>>%s<<<\n", lib.SVarI(data))
+				fmt.Printf("Dflt is now >>>%s<<<\n", lib.SVarI(data))
+			}
 
 			//if eok != test.expectedValid {
 			//	t.Errorf("Error %2d, Invalid error, got %v expected %v\n", ii, eok, test.expectedValid)
@@ -165,6 +174,10 @@ func Test_MapJsonToStruct(t *testing.T) {
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 	} else {
-		fmt.Printf("End Result=%s\n", lib.SVarI(aCfgSimpleProxyType))
+		if db818 {
+			fmt.Printf("End Result=%s\n", lib.SVarI(aCfgSimpleProxyType))
+		}
 	}
 }
+
+const db818 = false

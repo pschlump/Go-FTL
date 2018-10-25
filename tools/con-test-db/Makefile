@@ -2,6 +2,9 @@
 all:
 	go build
 
+linux: 
+	GOOS=linux go build -o con-test-db.linux .
+
 test: test_setup test1 test2
 	@echo PASS
 

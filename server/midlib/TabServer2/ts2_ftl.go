@@ -28,7 +28,7 @@ import (
 	"github.com/pschlump/godebug"
 
 	JsonX "github.com/pschlump/JSONx"
-	"github.com/pschlump/SqlEr" // "www.2c-why.com/SqlEr"
+	"github.com/pschlump/SqlEr"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -656,7 +656,7 @@ func (hdlr *TabServer2Type) ServeHTTP(www http.ResponseWriter, req *http.Request
 			trx := mid.GetTrx(rw)
 			trx.PathMatched(1, "TabServer2", hdlr.Paths, pn, req.URL.Path)
 
-			fmt.Printf("In TabServer2, %s\n", godebug.LF())
+			fmt.Printf("In TabServer2, hdlr.ApiTableKey=%s %s\n", hdlr.ApiTableKey, godebug.LF())
 
 			// ----------------------------------------------------------------------------------------------------------------------------------------
 			// xyzzy - Use redis hdlr.RedisApiTableKey != "" => check in redis using this as the prefix

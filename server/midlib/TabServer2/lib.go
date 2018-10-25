@@ -774,6 +774,10 @@ type SQLOne struct {
 	Attr_col        string
 	Attr_tmpl       string
 
+	Tag_col_name string
+	Tag_col      string
+	Tag_tmpl     string
+
 	ReMapParameter []RemapParameterType
 
 	Comment            string

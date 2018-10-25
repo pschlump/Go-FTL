@@ -29,7 +29,7 @@ import (
 	"sync"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go" // jwt "www.2c-why.com/jwt-go" -- Moved to ~/Projects
+	jwt "github.com/dgrijalva/jwt-go"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
@@ -432,7 +432,7 @@ func closure_respHandlerTableGet(hdlr *TabServer2Type) func(res http.ResponseWri
 			}
 		}
 		fmtData := psP.ByNameDflt("__fmt__", "JSON")
-		fmt.Printf("Query: %s\n", Query)
+		fmt.Printf("\n%sQuery: %s\nData:%s%s\n\n", MiscLib.ColorGreen, Query, godebug.SVarI(data), MiscLib.ColorReset)
 		if !gotIt {
 			Rows, err := hdlr.gCfg.Pg_client.Db.Query(Query, data...)
 			if err != nil {
@@ -1012,7 +1012,7 @@ func closure_respHandlerTablePost(hdlr *TabServer2Type) func(res http.ResponseWr
 		} else {
 			// fmt.Printf("AT: %s\n", godebug.LF())
 			if db_post || db_DumpInsert {
-				fmt.Printf("\nQuery: %s\n\tData:%s\n\tAT:%s\n\n", Query, tr.SVar(data), godebug.LF())
+				fmt.Printf("\n%sQuery: %s\n\tData:%s\n%s\tAT:%s\n\n", MiscLib.ColorGreen, Query, tr.SVar(data), MiscLib.ColorReset, godebug.LF())
 			}
 			err = sizlib.Run1Thx(hdlr.gCfg.Pg_client.Db, trx, Query, data...)
 		}
@@ -1815,7 +1815,7 @@ func GenWhereFromWc(wc WhereClause, trx *tr.Trx, h SQLOne, bind *[]interface{}, 
 					fmt.Printf("At, %s ->%s<-\n", godebug.LF(), ss)
 					s += and + ss
 				} else {
-					fmt.Printf("At, %s\n", godebug.LF())
+					fmt.Printf("%sAt, %s%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
 					ty, err := ValidateColInWhere(vv.Name, h)
 					if (vv.Op == "like" || vv.Op == "not like") && (ty == "i" || ty == "f" || ty == "d") {
 						trx.AddNote(1, fmt.Sprintf("Genrally not a good idea to use like/not-like with a numeric or date type; for column %s%s", h.setWhereAlias, vv.Name))
@@ -4058,7 +4058,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			for _, fx_name := range h.CallBefore {
 				if !exit {
 					trx.AddNote(1, fmt.Sprintf("CallBefore[%s]", fx_name))
-					rv, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, *ps, trx)
+					rv, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				}
 			}
 		}
@@ -4235,6 +4235,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			trx.SetQry(qry, 1, data...)
 			Rows, err := hdlr.gCfg.Pg_client.Db.Query(qry, data...)
 			if err != nil {
+				fmt.Printf("qry: %s data: %s, at:%s\n", qry, data, godebug.LF())
 				rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10002): Database Error. sql-cfg.json[%s].G",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
 				done = true
 				isError = true
@@ -4624,7 +4625,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			trx.AddNote(1, fmt.Sprintf("CallAfter [%s]", fx_name))
 			if !exit {
 				fmt.Printf("CallAfter [%s]\n", fx_name)
-				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, *ps, trx)
+				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				// , "CallAfter": ["SendReportsToGenMessage", "SendEmailToGenMessage"]
 				fmt.Printf("CallAfter exit at bottom=%v\n", exit)
 			}
@@ -4770,7 +4771,7 @@ func (hdlr *TabServer2Type) RespHandlerRedis(res http.ResponseWriter, req *http.
 			for _, fx_name := range h.CallBefore {
 				if !exit {
 					trx.AddNote(1, fmt.Sprintf("CallBefore[%s]", fx_name))
-					rv, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, *ps, trx)
+					rv, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				}
 			}
 		}
@@ -4856,7 +4857,7 @@ func (hdlr *TabServer2Type) RespHandlerRedis(res http.ResponseWriter, req *http.
 		for _, fx_name := range h.CallAfter {
 			trx.AddNote(1, fmt.Sprintf("CallAfter fore[%s]", fx_name))
 			if !exit {
-				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, *ps, trx)
+				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 			}
 		}
 	}
@@ -4878,7 +4879,7 @@ func (hdlr *TabServer2Type) RespHandlerRedis(res http.ResponseWriter, req *http.
 
 // ==============================================================================================================================================================================
 // ==============================================================================================================================================================================
-func PubEMailToSend(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func PubEMailToSend(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
 
@@ -4898,7 +4899,7 @@ func PubEMailToSend(res http.ResponseWriter, req *http.Request, cfgTag string, r
 
 // ==============================================================================================================================================================================
 // ==============================================================================================================================================================================
-func (hdlr *TabServer2Type) CallFunction(ba string, fx_name string, res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx) (string, bool, int) {
+func (hdlr *TabServer2Type) CallFunction(ba string, fx_name string, res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx) (string, bool, int) {
 	var exit bool = false
 	var a_status int = 200
 	if fx, ok := funcMap[fx_name]; ok {
@@ -4911,17 +4912,17 @@ func (hdlr *TabServer2Type) CallFunction(ba string, fx_name string, res http.Res
 	return rv, exit, a_status
 }
 
-type funcMapType func(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int)
+type FuncMapType func(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int)
 
 // ==============================================================================================================================================================================
 //  Call by name of func table
 // ==============================================================================================================================================================================
 // var funcMap map[string]func(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx) (string, bool, int)
-var funcMap map[string]funcMapType
+var funcMap map[string]FuncMapType
 
 func init() {
 	// fmt.Printf("init in main\n")
-	funcMap = map[string]funcMapType{
+	funcMap = map[string]FuncMapType{
 		"CacheEUser":              CacheEUser,
 		"DeCacheEUser":            DeCacheEUser,
 		"AfterPasswordChange":     AfterPasswordChange,
@@ -4937,7 +4938,15 @@ func init() {
 	}
 }
 
-func SendReportsToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func FuncMapExtend(name string, fx FuncMapType) (err error) {
+	if _, ok := funcMap[name]; ok {
+		err = fmt.Errorf("Invalid - %s is already defined\n", name)
+	}
+	funcMap[name] = fx
+	return
+}
+
+func SendReportsToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 	//if isError {
 	//	return rv, true, 500
 	//}
@@ -4957,7 +4966,7 @@ func SendReportsToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag 
 	return rv, false, 200
 }
 
-func SendEmailToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func SendEmailToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 	//if isError {
 	//	return rv, true, 500
 	//}
@@ -4993,7 +5002,7 @@ func SendEmailToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag st
    		||']'
    	||'}}';
 */
-func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
@@ -5044,7 +5053,7 @@ func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv st
 }
 
 // xyzzy-JWT
-func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
@@ -5095,7 +5104,7 @@ func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, r
 	return rv, false, 200
 }
 
-func Sleep(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func Sleep(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
@@ -5117,7 +5126,7 @@ func Sleep(res http.ResponseWriter, req *http.Request, cfgTag string, rv string,
 	return rv, false, 200
 }
 
-func SendEmailMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func SendEmailMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
@@ -5297,7 +5306,7 @@ func (hdlr *TabServer2Type) TemplateEmail(template_name string, mdata map[string
 		StatusHTTPVersionNotSupported = 505
 
 */
-func ConvertErrorToCode(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func ConvertErrorToCode(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 	var exit bool = false
 	var a_status int = 200
 	x, err := sizlib.JSONStringToData(rv)
@@ -5307,7 +5316,7 @@ func ConvertErrorToCode(res http.ResponseWriter, req *http.Request, cfgTag strin
 		// http.Error(res, "400 Bad Request", http.StatusBadRequest)
 		ReturnErrorMessage(400, "Bad Request", "19043",
 			fmt.Sprintf(`Error(19043): Bad Request (%s) sql-cfg.json[%s] %s %s`, sizlib.EscapeError(err), cfgTag, err, godebug.LF()),
-			res, req, ps, trx, hdlr) // status:error
+			res, req, *ps, trx, hdlr) // status:error
 		exit = true
 		a_status = 500
 	} else {
@@ -5316,7 +5325,7 @@ func ConvertErrorToCode(res http.ResponseWriter, req *http.Request, cfgTag strin
 			// http.Error(res, "406 Not Acceptable", http.StatusNotAcceptable)
 			ReturnErrorMessage(406, "Not Acceptable", "19044",
 				fmt.Sprintf(`Error(19044): Not Acceptable (%s) sql-cfg.json[%s] %s %s`, sizlib.EscapeError(err), cfgTag, err, godebug.LF()),
-				res, req, ps, trx, hdlr) // status:error
+				res, req, *ps, trx, hdlr) // status:error
 			exit = true
 			a_status = 406
 		}
@@ -5333,7 +5342,7 @@ func GetSI(s string, data map[string]interface{}) string {
 }
 
 // ==============================================================================================================================================================================
-func CacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func CacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
 
@@ -5360,7 +5369,7 @@ func CacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv st
 		a_status = 406
 		ReturnErrorMessage(406, "Error(10009): Parsing return value vaivfailed", "10009",
 			fmt.Sprintf(`Error(10009): Parsing return value failed sql-cfg.json[%s] %s - Post function CacheEUser, %s`, cfgTag, err, godebug.LF()),
-			res, req, ps, trx, hdlr) // status:error
+			res, req, *ps, trx, hdlr) // status:error
 		rv = ""
 	} else {
 		success := GetSI("status", x)
@@ -5501,7 +5510,7 @@ Try some of these numbers:
 //}
 
 // ==============================================================================================================================================================================
-func DeCacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func DeCacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
 
@@ -5532,7 +5541,7 @@ func DeCacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv 
 }
 
 // ==============================================================================================================================================================================
-func AfterPasswordChange(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func AfterPasswordChange(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
 
@@ -5558,7 +5567,7 @@ func AfterPasswordChange(res http.ResponseWriter, req *http.Request, cfgTag stri
 		a_status = 406
 		ReturnErrorMessage(406, "Error(10009): Parsing return value vaivfailed", "10009",
 			fmt.Sprintf(`Error(10009): Parsing return value failed sql-cfg.json[%s] %s - Post function CacheEUser, %s`, cfgTag, err, godebug.LF()),
-			res, req, ps, trx, hdlr) // status:error
+			res, req, *ps, trx, hdlr) // status:error
 		rv = ""
 	} else {
 		success := GetSI("status", x)
@@ -5796,6 +5805,37 @@ func EALookup(name string, table_name string, hdlr *TabServer2Type) (bool, *EAAt
 	return false, nil
 }
 
+// xyzzy5000
+// qt_m["cat_col"] = fmt.Sprintf(`%s%s%s%s`, h.setWhereAlias, DbBeginQuote, h.Category_col, DbEndQuote)
+// t, _ := GetDataListAsInList("s", vv, trx, h, bind)
+// Used in categories - this is a postgresql specific function. -- Sets up an in list.
+func GetDataListAsInList(ty string, wc WhereClause, trx *tr.Trx, h SQLOne, bind *[]interface{}) (string, error) {
+	s := "("
+	com := ""
+	for _, vv := range wc.List {
+		switch ty {
+		case "i":
+			s += com + fmt.Sprintf("%d", vv.Val1i)
+		case "f":
+			s += com + fmt.Sprintf("%f", vv.Val1f)
+		case "u": // UUID/GUID
+			s += com + "'" + vv.Val1s + "'"
+		case "":
+			fallthrough
+		case "s":
+			s += com + "'" + vv.Val1s + "'"
+		/* d, t, e */
+		default:
+			trx.AddNote(1, fmt.Sprintf("Invalid Type: %s for column %s", ty, wc.Name))
+			return "", errors.New(fmt.Sprintf("Error(12233): Invalid Type: %s for column %s", ty, wc.Name))
+		}
+		com = ","
+	}
+	s = s + ")"
+	fmt.Printf("Category|Tag At, %s ->%s<-\n", godebug.LF(), s)
+	return s, nil
+}
+
 // Used in categories - this is a postgresql specific function.
 func GetDataListAsArray(ty string, wc WhereClause, trx *tr.Trx, h SQLOne, bind *[]interface{}) (string, error) {
 	s := "{"
@@ -5820,7 +5860,7 @@ func GetDataListAsArray(ty string, wc WhereClause, trx *tr.Trx, h SQLOne, bind *
 		com = ","
 	}
 	s = s + "}"
-	fmt.Printf("Category At, %s ->%s<-\n", godebug.LF(), s)
+	fmt.Printf("Category|Tag At, %s ->%s<-\n", godebug.LF(), s)
 	return s, nil
 }
 
@@ -5908,11 +5948,13 @@ func ExtendeAttributes(vv WhereClause, wc WhereClause, trx *tr.Trx, h SQLOne, bi
 	err = nil
 	qt_m := make(map[string]string)
 	if vv.Name == h.Key_word_col_name {
-		fmt.Printf("At, %s\n", godebug.LF())
+		fmt.Printf("%sAt, %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 		processed = true
 		trx.AddNote(2, "Processing key_word extended attribute")
 		// legit ops on keywords,
 		//		kw = 'a'
+		// https://www.postgresql.org/docs/9.5/static/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES
+		// Looks like operator should be "@@"
 		if !sizlib.InArray(vv.Op, []string{"==", "="}) {
 			fmt.Printf("At, %s\n", godebug.LF())
 			trx.AddNote(1, fmt.Sprintf("Error: Processing extended attributes, invalid op=%s %s%s", vv.Op, h.setWhereAlias, vv.Name))
@@ -5925,7 +5967,7 @@ func ExtendeAttributes(vv WhereClause, wc WhereClause, trx *tr.Trx, h SQLOne, bi
 			rv = sizlib.Qt(h.Key_word_tmpl, qt_m)
 		}
 	} else if vv.Name == h.Category_col_name {
-		fmt.Printf("At, %s\n", godebug.LF())
+		fmt.Printf("%sAt, %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
 		processed = true
 		trx.AddNote(2, "Processing category extended attribute")
 		// %{cat_vals%}
@@ -5938,18 +5980,21 @@ func ExtendeAttributes(vv WhereClause, wc WhereClause, trx *tr.Trx, h SQLOne, bi
 		} else {
 			fmt.Printf("At, %s\n", godebug.LF())
 			s, err := GetDataListAsArray("s", vv, trx, h, bind)
+			// xyzzy5000
+			t, _ := GetDataListAsInList("s", vv, trx, h, bind)
 			if err != nil {
 				fmt.Printf("At, %s\n", godebug.LF())
 				trx.AddNote(1, fmt.Sprintf("Error: Processing extended attributes, invalid data type=%s %s%s", "s", h.setWhereAlias, vv.Name))
 				return false, "", errors.New(fmt.Sprintf("Error(14239): Error: Processing extended attributes, invalid data type=%s %s%s", "s", h.setWhereAlias, vv.Name))
 			} else {
-				fmt.Printf("At, %s\n", godebug.LF())
 				qt_m["cat_vals"] = s
+				qt_m["cat_in_vals"] = t
 				qt_m["cat_col"] = fmt.Sprintf(`%s%s%s%s`, h.setWhereAlias, DbBeginQuote, h.Category_col, DbEndQuote)
+				fmt.Printf("s = ->%s<- qt_m=%s At, %s\n", s, godebug.SVar(qt_m), godebug.LF())
 				rv = sizlib.Qt(h.Category_tmpl, qt_m)
 			}
 		}
-	} else if h.Attr_table_name != "" {
+	} else if h.Attr_table_name != "" { // xyzzy - this should be some checkon name in attribute table names?
 		fmt.Printf("At, %s\n", godebug.LF())
 		fnd, x := EALookup(vv.Name, h.Attr_table_name, hdlr)
 		if fnd {
@@ -5964,6 +6009,34 @@ func ExtendeAttributes(vv WhereClause, wc WhereClause, trx *tr.Trx, h SQLOne, bi
 			bp = AddBindValueByType(bind, vv, x.Attr_type) // keywords are alwasy strings, or list of strings
 			qt_m["attr_vals"] = hdlr.BindPlaceholder(bp)   // %{attr_vals%} -- vv.Val1s, etc (based on type)
 			rv = sizlib.Qt(h.Attr_tmpl, qt_m)
+		}
+	} else if vv.Name == h.Tag_col_name {
+		fmt.Printf("%sAt, %s%s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset)
+		processed = true
+		trx.AddNote(2, "Processing tag extended attribute")
+		// %{cat_vals%}
+		// legit ops on keywords,
+		//		cat in ( 'id1', 'id2' )
+		if vv.Op != "in" {
+			fmt.Printf("At, %s\n", godebug.LF())
+			trx.AddNote(1, fmt.Sprintf("Error: Processing extended attributes, invalid op=%s %s%s", vv.Op, h.setWhereAlias, vv.Name))
+			return false, "", errors.New(fmt.Sprintf("Error(14239): Error: Processing extended attributes, invalid op=%s %s%s", vv.Op, h.setWhereAlias, vv.Name))
+		} else {
+			fmt.Printf("At, %s\n", godebug.LF())
+			s, err := GetDataListAsArray("s", vv, trx, h, bind)
+			// xyzzy5000
+			t, _ := GetDataListAsInList("s", vv, trx, h, bind)
+			if err != nil {
+				fmt.Printf("At, %s\n", godebug.LF())
+				trx.AddNote(1, fmt.Sprintf("Error: Processing extended attributes, invalid data type=%s %s%s", "s", h.setWhereAlias, vv.Name))
+				return false, "", errors.New(fmt.Sprintf("Error(14239): Error: Processing extended attributes, invalid data type=%s %s%s", "s", h.setWhereAlias, vv.Name))
+			} else {
+				qt_m["tag_vals"] = s
+				qt_m["tag_in_vals"] = t
+				qt_m["tag_col"] = fmt.Sprintf(`%s%s%s%s`, h.setWhereAlias, DbBeginQuote, h.Tag_col, DbEndQuote)
+				rv = sizlib.Qt(h.Tag_tmpl, qt_m)
+				fmt.Printf("%ss = ->%s<- qt_m=%s rv= ->%s<- At, %s%s\n", MiscLib.ColorYellow, s, godebug.SVar(qt_m), rv, godebug.LF(), MiscLib.ColorReset)
+			}
 		}
 	}
 	return

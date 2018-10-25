@@ -21,118 +21,67 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/oleiade/reflections" //
 	"github.com/pschlump/Go-FTL/server/lib"
-	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/check-json-syntax/lib" // jsonSyntaxErroLib "github.com/pschlump/check-json-syntax/lib" //
-	"github.com/pschlump/godebug"               //
-	"github.com/pschlump/json"                  //	"encoding/json"
-	"github.com/pschlump/mapstructure"          //
+	"github.com/pschlump/MiscLib"      // jsonSyntaxErroLib "github.com/pschlump/check-json-syntax/lib" //
+	"github.com/pschlump/godebug"      //
+	"github.com/pschlump/mapstructure" //
+
+	JsonX "github.com/pschlump/JSONx"
 )
 
-// Input and Validation
-//
-//
-// Pass a chunk of input to a validaiton function
-//
-//	ok, msg := IsInputValid ( ValidationDataJson ValidationType, data map[string]interface{} ) ( bool, string ) {
-//		return true, ""
-//	}
-//
-//if ok - then valid, else "msg" is the syntax errors in that chunk.
-//
-//Map from a validated data set onto a structure for the user's data.
-//
-//	err := MapJsonToStruct ( data map[string]interface{}, st interface{} ) {
-//		for name, val := range data {
-//			x, found := lookupName ( name, st )
-//			if found {
-//				st.x = val.(type)
-//			} else {
-//				st.extra[name] = val
-//			}
-//		}
-//	}
-//
-//
-//	cfg.RegInitItem("simple_proxy", fx, `{
-//		"Paths": { "type":["string","filepath"], "isarray":true, "required":true },
-//		"To": { "type":["string","url"], "required":true },
-//		"Extra": { "allowed":false }
-//		}`)
-//
-//	type CfgSimpleProxyType struct {
-//		Paths []string
-//		To  string
-//	}
-//
-// "http://192.168.0.157:2000/": {
-//		"simple_proxy": {
-//			"Paths": "/api",
-//			"To": "http://localhost:8204/"
-//		}
-// }
-//
-// "http://192.168.0.157:2000/": {
-//		"simple_proxy": {
-//			"Paths": [ "/api", "/app" ] ,
-//			"To": "http://localhost:8204/"
-//		}
-// }
-//
-//
-// Notes: https://godoc.org/github.com/mitchellh/mapstructure
-//		https://github.com/mitchellh/mapstructure
-
 type VType struct {
-	Type      []string `json:"type"`      // One of the types, string, int, float, filepath, url, bool,
-	IsArray   bool     `json:"isarray"`   // Convert single item to array 1 long
-	Required  bool     `json:"required"`  // Must be suplied
-	Default   string   `json:"default"`   // A string that can be converted into a value if not supplied - implies that Required is meangless
-	List      []string `json:"list"`      // Must be one of the listed values
-	ReMatch   string   `json:"rematch"`   // Must match the regular expression
-	MinValInt int      `json:"minvalint"` // Must be g.e. this value
-	MaxValInt int      `json:"maxvalint"` // Must be l.e. this value
-	Allowed   bool     `json:"allowed"`   // Is extra allowed?
-	MinLength int      `json:"minlength"` // String MinLen, MaxLen
-	MaxLength int      `json:"maxlength"` //
+	Type      []string `gfJsonX:"type"`      // One of the types, string, int, float, filepath, url, bool,
+	IsArray   bool     `gfJsonX:"isarray"`   // Convert single item to array 1 long
+	Required  bool     `gfJsonX:"required"`  // Must be suplied
+	Default   string   `gfJsonX:"default"`   // A string that can be converted into a value if not supplied - implies that Required is meangless
+	List      []string `gfJsonX:"list"`      // Must be one of the listed values
+	ReMatch   string   `gfJsonX:"rematch"`   // Must match the regular expression
+	MinValInt int      `gfJsonX:"minvalint"` // Must be g.e. this value
+	MaxValInt int      `gfJsonX:"maxvalint"` // Must be l.e. this value
+	Allowed   bool     `gfJsonX:"allowed"`   // Is extra allowed?
+	MinLength int      `gfJsonX:"minlength"` // String MinLen, MaxLen
+	MaxLength int      `gfJsonX:"maxlength"` //
 	reMatch   *regexp.Regexp
 }
 
 type ValidationType map[string]VType
 
+// const xyzzyJsonX = true
+
 func IsInputValid(mid_name string, ValidationDataJson string, data map[string]interface{}) (eok bool, dflt map[string]interface{}, msg string) {
 
 	// fmt.Printf("At top of IsInputValid for %s\nvalid=%s\ndata=%s\n", mid_name, ValidationDataJson, lib.SVarI(data))
+	// fmt.Printf("AT: %s\n", godebug.LF())
 
 	eok = true // assume the best
 	dflt = make(map[string]interface{})
 
-	// conver ValidationDataJson -> ValidationType
 	var vt ValidationType
-	err := json.Unmarshal([]byte(ValidationDataJson), &vt)
+	meta, err := JsonX.Unmarshal(fmt.Sprintf("Middleware:%s", mid_name), []byte(ValidationDataJson), &vt)
+	_ = meta
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%sError: Invlaid validation for %s data %s%s\n", MiscLib.ColorRed, mid_name, ValidationDataJson, MiscLib.ColorReset)
-		es := jsonSyntaxErroLib.GenerateSyntaxError(ValidationDataJson, err)
-		fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
-		logrus.Errorf("Error: Invlaid validation for %s Error:\n%s\n", mid_name, es)
+		fmt.Fprintf(os.Stderr, "%sError: Invlaid validation for %s data %s, err=%s%s\n", MiscLib.ColorRed, mid_name, ValidationDataJson, err, MiscLib.ColorReset)
+		eok = false
+		msg = "Falied to parse validation string"
+		return
 	}
 
 	//fmt.Printf("vt=%s\n", lib.SVarI(vt))
 
-	LineNoI, okA := data["LineNo"]
-	LineNoF, okB := LineNoI.(float64)
-	if !okA || !okB {
-		LineNoF = 1
+	var LineNo int
+
+	if xLineNo, ok := data["LineNo"].(int64); !ok {
+		fmt.Printf("\n%sInvalid LineNo, data[\"LineNo\"]= ->%s<-, %s%s\n\n", MiscLib.ColorRed, data["LineNo"], godebug.LF(), MiscLib.ColorRed)
+		LineNo = -99224455
+	} else {
+		LineNo = int(xLineNo)
 	}
-	LineNo := int(LineNoF)
 
 	// This loop only processes data that is "present" - so if something is a Default - it will be skipped
 	// completely.  The next loop fills in defaults.  Therefore defaults will not get checked for
 	// valid data.  That is also correct.   You many want to use an invalid value for a default
 	// to mark data that is absent.
-
 	for name, val := range data {
 		// fmt.Printf("name [%s], %s\n", name, godebug.LF()) // "Paths", "To"
 		if vv, ok := vt[name]; ok {
@@ -141,7 +90,7 @@ func IsInputValid(mid_name string, ValidationDataJson string, data map[string]in
 			switch val.(type) {
 			case string:
 				if !lib.InArray("string", vv.Type) {
-					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected String, %s, is not allowed in %s\n", LineNo, val, name, mid_name)
+					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected String, %s, is not allowed in %s, AT:%s\n", LineNo, val, name, mid_name, godebug.LF())
 					eok = false
 				}
 				for _, tt := range vv.Type {
@@ -155,7 +104,7 @@ func IsInputValid(mid_name string, ValidationDataJson string, data map[string]in
 						}
 						_, err := url.Parse(s)
 						if err != nil {
-							msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type - Expected URL, %s, is not allowed in %s\n", LineNo, name, mid_name)
+							msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type - Expected URL, %s, is not allowed in %s, AT:%s\n", LineNo, name, mid_name, godebug.LF())
 							eok = false
 						}
 					case "filepath":
@@ -164,7 +113,7 @@ func IsInputValid(mid_name string, ValidationDataJson string, data map[string]in
 							fmt.Printf("SYNTAX Error: invalid type [%T] for string, name[%s]\n", val, name)
 						}
 						if len(s) == 0 {
-							msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected FilePath, %s, is not allowed in %s\n", LineNo, val, name, mid_name)
+							msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected FilePath, %s, is not allowed in %s, AT:%s\n", LineNo, val, name, mid_name, godebug.LF())
 							eok = false
 						}
 					case "float":
@@ -248,7 +197,7 @@ func IsInputValid(mid_name string, ValidationDataJson string, data map[string]in
 				}
 			case bool:
 				if !lib.InArray("bool", vv.Type) {
-					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected Bool, %s, is not allowed in %s\n", LineNo, val, name, mid_name)
+					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected Bool, %s, is not allowed in %s, AT:%s\n", LineNo, val, name, mid_name, godebug.LF())
 					eok = false
 				} else {
 					fmt.Printf("name[%s] vv.Default=%s, %s\n", name, vv.Default, godebug.LF())
@@ -271,32 +220,54 @@ func IsInputValid(mid_name string, ValidationDataJson string, data map[string]in
 				} else if isFloat {
 					// xyzzy10 - MinValFloat, MaxValFloat
 				} else {
-					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected Float, %s, is not allowed in %s\n", LineNo, val, name, mid_name)
+					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected Float, %s, is not allowed in %s, AT:%s\n", LineNo, val, name, mid_name, godebug.LF())
+					eok = false
+				}
+			case int64:
+				isInt := lib.InArray("int", vv.Type)
+				isFloat := lib.InArray("float", vv.Type)
+				// fmt.Printf("float64 <><><><> isInt=%v isFloat=%v\n", isInt, isFloat)
+				if isInt {
+					data[name] = int(data[name].(int64))
+					// xyzzy10 - MinValInt, MaxValInt
+				} else if isFloat {
+					data[name] = float64(data[name].(int64))
+					// xyzzy10 - MinValFloat, MaxValFloat
+				} else {
+					msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T - Expected Int64, %s, is not allowed in %s, AT:%s\n", LineNo, val, name, mid_name, godebug.LF())
 					eok = false
 				}
 			case map[string]interface{}:
-				fmt.Printf("**************************************** New one --- map[string]interface{} AT: %s\n", godebug.LF())
+				// fmt.Printf("**************************************** New one --- map[string]interface{} AT: %s\n", godebug.LF())
 				// Nothing to do for validation?
 				// xyzy10 validate it?
+			case map[string]string:
+				// fmt.Printf("**************************************** New one --- map[string]string AT: %s\n", godebug.LF())
+				// Nothing to do for validation?
+				// xyzy10 validate it?
+			case []string:
+				// fmt.Printf("**************************************** New one --- Array of string --- AT: %s\n", godebug.LF())
+			case []int64:
+				fmt.Printf("**************************************** New one --- Array of int64 --- AT: %s\n", godebug.LF())
 			case []interface{}:
-				fmt.Printf("**************************************** New one --- Array of interface{} --- AT: %s\n", godebug.LF())
+				// fmt.Printf("**************************************** New one --- Array of interface{} --- AT: %s\n", godebug.LF())
 				// Nothing to do for validation?
 				// xyzzy40 -- validate data in array
 				// xyzzy40 - validate []interface{}
 			default:
 				fmt.Printf("**************************************** --- syntax error --- AT: %s\n", godebug.LF())
-				msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T, %s, is not allowed in %s\n", LineNo, val, name, mid_name)
+				msg += fmt.Sprintf("Syntax Error: Line:%d Invalid type %T, %s, is not allowed in %s, AT:%s\n", LineNo, val, name, mid_name, godebug.LF())
 				eok = false
 			}
 		} else if ww, ok2 := vt["Extra"]; ok2 {
 			if ww.Allowed {
 				// assign data to Extra[name] - in stuff
 			} else {
-				msg += fmt.Sprintf("Syntax Error: Line:%d Extra configuraiton field, %s, is not allowed in %s, %s\n", LineNo, name, mid_name, godebug.LF())
+				msg += fmt.Sprintf("Syntax Error: Line:%d Extra configuraiton field, %s, is not allowed in %s, AT:%s\n", LineNo, name, mid_name, godebug.LF())
 				eok = false
 			}
 		} else {
-			msg += fmt.Sprintf("Syntax Error: Line:%d Extra configuraiton field, %s, is not allowed in %s, %s\n", LineNo, name, mid_name, godebug.LF())
+			msg += fmt.Sprintf("Syntax Error: Line:%d Extra configuraiton field, %s, is not allowed in %s, AT:%s\n", LineNo, name, mid_name, godebug.LF())
 			eok = false
 		}
 	}
@@ -365,7 +336,8 @@ func MapJsonToStruct(data map[string]interface{}, dflt map[string]interface{}, m
 	// Verify that we were passed a pointer to a struture, if not error
 	rv := reflect.ValueOf(ms)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return &json.InvalidUnmarshalError{Type: reflect.TypeOf(ms)}
+		// return &json.InvalidUnmarshalError{Type: reflect.TypeOf(ms)}
+		return fmt.Errorf("Invalid unmarshaling error")
 	}
 
 	// Get all the "tags" in the structure

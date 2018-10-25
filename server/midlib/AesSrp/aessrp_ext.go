@@ -140,8 +140,8 @@ import (
 	"github.com/pschlump/MiscLib"                //
 	"github.com/pschlump/check-json-syntax/lib"  //
 	"github.com/pschlump/godebug"                //
-	"github.com/pschlump/gosrp"                  // Path: /Users/corwin/go/src/www.2c-why.com/gosrp
-	"github.com/pschlump/gosrp/big"              // "math/big" - modified to support SRP from standard GO library
+	"github.com/pschlump/gosrp"                  //
+	"github.com/pschlump/gosrp/big"              //
 	"github.com/pschlump/json"                   //	"encoding/json" - modified to allow dummy output of channels
 	"github.com/pschlump/uuid"                   // defects fixed, modified to be faster
 	"github.com/pschlump/verhoeff_algorithm"     //

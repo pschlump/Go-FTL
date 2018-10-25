@@ -1,17 +1,10 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2015-2016
+// Copyright (C) Philip Schlump, 2014-2018.
 //
-// Do not remove the following lines - used in auto-update.
-// Version: 0.5.9
-// BuildNo: 1811
-// FileId: 1246
 //
-
-// Package dumpit impements ZipIt compression middleware
-//
-// Copyright (C) Philip Schlump, 2016
+// Package ZipIt implements compression middleware
 //
 
 package ZipIt

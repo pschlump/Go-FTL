@@ -30,6 +30,18 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
+/*
+Error (00011): Unable to initialize module ErrorReturn in server http://www.redux-react-class.com, 1 error(s) decoding:
+
+* 'ErrorCode': source data must be an array or slice, got int
+Error (00011): Unable to initialize module ErrorReturn in server http://www.redux-react-class.com, 1 error(s) decoding:
+
+* 'ErrorCode': source data must be an array or slice, got int
+Error (00011): Unable to initialize module ErrorReturn in server http://www.redux-react-class.com, 1 error(s) decoding:
+
+* 'ErrorCode': source data must be an array or slice, got int
+*/
+
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
 		x := &ErrorReturnHandlerType{}
@@ -38,8 +50,8 @@ func init() {
 		return x
 	}
 	mid.RegInitItem3("ErrorReturn", CreateEmpty, `{
-		"Paths":              { "type":["string","filepath"], "isarray":true, "required":true },
-		"ErrorCode":          { "type":["int"] },
+		"Paths":              { "type":[ "string", "filepath" ], "isarray":true, "required":true },
+		"ErrorCode":          { "type":[ "int" ], "isarray":true },
 		"LineNo":             { "type":[ "int" ], "default":"1" }
 		}`)
 }

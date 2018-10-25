@@ -3,12 +3,11 @@ package goftlmux
 //
 // Go Go Mux - Go Fast Mux / Router for HTTP requests
 //
-// (C) Philip Schlump, 2013-2016. All rights reserved.
-// Version: 0.5.4
-// BuildNo: 810
+// (C) Philip Schlump, 2013-2018. All rights reserved.
 //
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +21,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/common"
 	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/MiscLib"
-	debug "github.com/pschlump/godebug"
+	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
 )
 
@@ -157,14 +156,14 @@ func (ps *Params) CreateSearch() {
 func (ps *Params) DumpParam() (rv string) {
 	var Data2 []Param
 	Data2 = ps.Data[0:ps.NParam]
-	rv = debug.SVar(Data2)
+	rv = godebug.SVar(Data2)
 	return
 }
 
 func (ps *Params) DumpParamDB() (rv string) {
 	var Data2 []Param
 	Data2 = ps.Data[0:ps.NParam]
-	rv = debug.SVarI(Data2)
+	rv = godebug.SVarI(Data2)
 	return
 }
 
@@ -191,7 +190,7 @@ func SetupUnsedParam(NormalUnused []UnusedParam) {
 			re, err := regexp.Compile(pp.Match)
 			pp.re = re
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%sError: invalid regular expression for unused paremeters at [%d] in set -->>%s<<--, %s, %s%s\n", MiscLib.ColorRed, ii, pp.Match, err, debug.LF(), MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "%sError: invalid regular expression for unused paremeters at [%d] in set -->>%s<<--, %s, %s%s\n", MiscLib.ColorRed, ii, pp.Match, err, godebug.LF(), MiscLib.ColorReset)
 			}
 			NormalUnused[ii] = pp
 		}
@@ -256,12 +255,12 @@ func (ps *Params) DumpParamNVF() (rv []common.NameValueFrom) {
 func (ps *Params) ByName(name string) (rv string) {
 	rv = ""
 	// xyzzy100 Change this to use a map[string]int - build maps on setup.
-	// fmt.Printf("Looking For: %s, ps = %s\n", name, debug.SVarI(ps.Data[0:ps.NParam]))
+	// fmt.Printf("Looking For: %s, ps = %s\n", name, godebug.SVarI(ps.Data[0:ps.NParam]))
 	// fmt.Printf("ByName ------------------------\n")
 	if ps.search_ready {
 		// fmt.Printf("Is True ------------------------\n")
 		if i, ok := ps.search[name]; ok {
-			nn, ff := debug.LINEnf(2)
+			nn, ff := godebug.LINEnf(2)
 			ps.Data[i].UsedAt = nn
 			ps.Data[i].UsedFile = ff
 			rv = ps.Data[i].Value
@@ -271,7 +270,7 @@ func (ps *Params) ByName(name string) (rv string) {
 
 	for i := 0; i < ps.NParam; i++ {
 		if ps.Data[i].Name == name {
-			nn, ff := debug.LINEnf(2)
+			nn, ff := godebug.LINEnf(2)
 			if ps.Data[i].UsedAt != 0 {
 				fmt.Printf("ByName - overwrite: Line:%d File:%s\n", ps.Data[i].UsedAt, ps.Data[i].UsedFile)
 			}
@@ -288,12 +287,12 @@ func (ps *Params) GetByName(name string) (rv string, found bool) {
 	rv = ""
 	found = false
 	// xyzzy100 Change this to use a map[string]int - build maps on setup.
-	// fmt.Printf("Looking For: %s, ps = %s\n", name, debug.SVarI(ps.Data[0:ps.NParam]))
+	// fmt.Printf("Looking For: %s, ps = %s\n", name, godebug.SVarI(ps.Data[0:ps.NParam]))
 	// fmt.Printf("ByName ------------------------\n")
 	if ps.search_ready {
 		// fmt.Printf("Is True ------------------------\n")
 		if i, ok := ps.search[name]; ok {
-			nn, ff := debug.LINEnf(2)
+			nn, ff := godebug.LINEnf(2)
 			ps.Data[i].UsedAt = nn
 			ps.Data[i].UsedFile = ff
 			rv = ps.Data[i].Value
@@ -304,7 +303,7 @@ func (ps *Params) GetByName(name string) (rv string, found bool) {
 
 	for i := 0; i < ps.NParam; i++ {
 		if ps.Data[i].Name == name {
-			nn, ff := debug.LINEnf(2)
+			nn, ff := godebug.LINEnf(2)
 			ps.Data[i].UsedAt = nn
 			ps.Data[i].UsedFile = ff
 			rv = ps.Data[i].Value
@@ -319,14 +318,14 @@ func (ps *Params) GetByNameAndType(name string, ft FromType) (rv string, found b
 	rv = ""
 	found = false
 	// xyzzy100 Change this to use a map[string]int - build maps on setup.
-	// fmt.Printf("Looking For: %s, ps = %s\n", name, debug.SVarI(ps.Data[0:ps.NParam]))
+	// fmt.Printf("Looking For: %s, ps = %s\n", name, godebug.SVarI(ps.Data[0:ps.NParam]))
 	// fmt.Printf("ByName ------------------------\n")
 	if ps.search_ready {
 		// fmt.Printf("Is True ------------------------\n")
 		if i, ok := ps.search[name]; ok {
 			trv := ps.Data[i].Value
 			if ps.Data[i].From == ft {
-				nn, ff := debug.LINEnf(2)
+				nn, ff := godebug.LINEnf(2)
 				ps.Data[i].UsedAt = nn
 				ps.Data[i].UsedFile = ff
 				rv = trv
@@ -340,7 +339,7 @@ func (ps *Params) GetByNameAndType(name string, ft FromType) (rv string, found b
 		if ps.Data[i].Name == name {
 			trv := ps.Data[i].Value
 			if ps.Data[i].From == ft {
-				nn, ff := debug.LINEnf(2)
+				nn, ff := godebug.LINEnf(2)
 				ps.Data[i].UsedAt = nn
 				ps.Data[i].UsedFile = ff
 				rv = trv
@@ -358,7 +357,7 @@ func (ps *Params) ByNameDflt(name string, dflt string) (rv string) {
 	if ps.search_ready {
 		// fmt.Printf("Is True ------------------------\n")
 		if i, ok := ps.search[name]; ok {
-			nn, ff := debug.LINEnf(2)
+			nn, ff := godebug.LINEnf(2)
 			ps.Data[i].UsedAt = nn
 			ps.Data[i].UsedFile = ff
 			rv = ps.Data[i].Value
@@ -368,14 +367,14 @@ func (ps *Params) ByNameDflt(name string, dflt string) (rv string) {
 
 	for i := 0; i < ps.NParam; i++ {
 		if ps.Data[i].Name == name {
-			nn, ff := debug.LINEnf(2)
+			nn, ff := godebug.LINEnf(2)
 			ps.Data[i].UsedAt = nn
 			ps.Data[i].UsedFile = ff
 			rv = ps.Data[i].Value
 			return
 		}
 	}
-	// fmt.Printf("MoD, %s\n", debug.LF())
+	// fmt.Printf("MoD, %s\n", godebug.LF())
 	return
 }
 
@@ -421,6 +420,20 @@ func (ps *Params) PositionOf(name string) (rv int) {
 	return
 }
 
+func (ps *Params) GetAllParam(skip ...string) (rv []common.NameValueFrom) {
+	for _, vv := range ps.Data[0:ps.NParam] {
+		if !sizlib.InArray(vv.Name, skip) {
+			rv = append(rv, common.NameValueFrom{
+				Name:      vv.Name,
+				Value:     vv.Value,
+				From:      vv.From.String(),
+				ParamType: vv.Type.String(),
+			})
+		}
+	}
+	return
+}
+
 func (ps *Params) ByPostion(pos int) (name string, val string, outRange bool) {
 	// xyzzy101 Change this to use a map[string]int - build maps on setup.
 	if pos >= 0 && pos < ps.NParam {
@@ -434,7 +447,7 @@ func AddValueToParams(Name string, Value string, Type ParamType, From FromType, 
 	ps.search_ready = false
 	j := ps.PositionOf(Name)
 	k = ps.NParam
-	// db("AddValueToParams","j=%d k=%d %s\n", j, k, debug.LF())
+	// db("AddValueToParams","j=%d k=%d %s\n", j, k, godebug.LF())
 	if j >= 0 {
 		ps.Data[j].Value = Value
 		ps.Data[j].Type = Type
@@ -448,7 +461,7 @@ func AddValueToParams(Name string, Value string, Type ParamType, From FromType, 
 		// xyzzy - check for more than MaxParams
 	}
 	ps.NParam = k
-	// db(A"AddValueToParams","At end: NParam=%d %s\n", ps.NParam, debug.SVar(ps.Data[0:ps.NParam]))
+	// db(A"AddValueToParams","At end: NParam=%d %s\n", ps.NParam, godebug.SVar(ps.Data[0:ps.NParam]))
 	return
 }
 
@@ -459,20 +472,26 @@ func ParseBodyAsParams(www *MidBuffer, req *http.Request, ps *Params) int {
 	ct := req.Header.Get("Content-Type")
 	if db9 {
 		fmt.Printf("*************************************************************************** content type \n")
-		fmt.Printf("content-type: %s, %s\n", ct, debug.LF())
+		fmt.Printf("content-type: %s, %s\n", ct, godebug.LF())
 		fmt.Printf("*************************************************************************** content type \n")
 	}
 	if req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH" || req.Method == "DELETE" {
-		fmt.Printf("AT %s\n", debug.LF())
+		fmt.Printf("AT %s\n", godebug.LF())
 		if req.PostForm == nil {
-			fmt.Printf("AT %s\n", debug.LF())
+			fmt.Printf("AT %s\n", godebug.LF())
 			if strings.HasPrefix(ct, "application/json") {
-				fmt.Printf("AT %s\n", debug.LF())
+				fmt.Printf("AT %s\n", godebug.LF())
+				buf, err2 := ioutil.ReadAll(req.Body)
+				if err2 != nil {
+					fmt.Printf("Error(20008): Malformed body, RequestURI=%s err=%v\n", req.RequestURI, err2)
+				}
+				rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 				body, err2 := ioutil.ReadAll(req.Body)
 				if err2 != nil {
 					fmt.Printf("Error(20008): Malformed JSON body, RequestURI=%s err=%v\n", req.RequestURI, err2)
 				}
-				fmt.Printf("THIS ONE                                           !!!!!!!!!!!!!!! body >%s< AT %s\n", body, debug.LF())
+				req.Body = rdr2
+				fmt.Printf("THIS ONE                                           !!!!!!!!!!!!!!! body >%s< AT %s\n", body, godebug.LF())
 				var jsonData map[string]interface{}
 				err := json.Unmarshal(body, &jsonData)
 				if err == nil {
@@ -492,7 +511,7 @@ func ParseBodyAsParams(www *MidBuffer, req *http.Request, ps *Params) int {
 						case string:
 							Value = fmt.Sprintf("%v", v)
 						default:
-							Value = fmt.Sprintf("%s", debug.SVar(v))
+							Value = fmt.Sprintf("%s", godebug.SVar(v))
 						}
 						AddValueToParams(Name, Value, 'b', FromBodyJson, ps)
 					}
@@ -500,7 +519,7 @@ func ParseBodyAsParams(www *MidBuffer, req *http.Request, ps *Params) int {
 					fmt.Printf("Error: in parsing JSON data >%s< Error: %s\n", body, err)
 				}
 			} else {
-				fmt.Printf("AT %s\n", debug.LF())
+				fmt.Printf("AT %s\n", godebug.LF())
 				err := req.ParseForm()
 				if err != nil {
 					fmt.Printf("Error(20010): Malformed body, RequestURI=%s err=%v\n", req.RequestURI, err)
@@ -513,7 +532,7 @@ func ParseBodyAsParams(www *MidBuffer, req *http.Request, ps *Params) int {
 				}
 			}
 		} else {
-			fmt.Printf("AT %s\n", debug.LF())
+			fmt.Printf("AT %s\n", godebug.LF())
 			for Name, v := range req.PostForm {
 				if len(v) > 0 {
 					AddValueToParams(Name, v[0], 'b', FromBody, ps)
@@ -530,30 +549,26 @@ func ParseBodyAsParamsReg(www http.ResponseWriter, req *http.Request, ps *Params
 	ct := req.Header.Get("Content-Type")
 	if db4 {
 		fmt.Printf("*************************************************************************** content type \n")
-		fmt.Printf("content-type: %s, %s\n", ct, debug.LF())
+		fmt.Printf("content-type: %s, %s\n", ct, godebug.LF())
 		fmt.Printf("*************************************************************************** content type \n")
 	}
 	if req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH" || req.Method == "DELETE" {
 		if db4 {
-			fmt.Printf("AT %s\n", debug.LF())
+			fmt.Printf("AT %s\n", godebug.LF())
 		}
 		if req.PostForm == nil {
 			if db4 {
-				fmt.Printf("AT %s\n", debug.LF())
+				fmt.Printf("AT %s\n", godebug.LF())
 			}
 			if strings.HasPrefix(ct, "application/json") {
 				if db4 {
-					fmt.Printf("AT %s\n", debug.LF())
+					fmt.Printf("AT %s\n", godebug.LF())
 				}
-				body, err2 := ioutil.ReadAll(req.Body)
-				if err2 != nil {
-					fmt.Printf("Error(20008): Malformed JSON body, RequestURI=%s err=%v\n", req.RequestURI, err2)
-				}
+				body := PeekAtBody(req)
 				var jsonData map[string]interface{}
 				err := json.Unmarshal(body, &jsonData)
 				if db4 {
-					fmt.Printf("AT %s\n", debug.LF())
-					fmt.Printf("THIS ONE                                           !!!!!!!!!!!!!!! body >%s< AT %s\n", body, debug.LF())
+					fmt.Printf("AT %s\n", godebug.LF())
 				}
 				if err == nil {
 					for Name, v := range jsonData {
@@ -572,20 +587,21 @@ func ParseBodyAsParamsReg(www http.ResponseWriter, req *http.Request, ps *Params
 						case string:
 							Value = fmt.Sprintf("%v", v)
 						default:
-							Value = fmt.Sprintf("%s", debug.SVar(v))
+							Value = fmt.Sprintf("%s", godebug.SVar(v))
 						}
 						AddValueToParams(Name, Value, 'b', FromBodyJson, ps)
 					}
 				} else {
-					fmt.Printf("Error: in parsing JSON data >%s< Error: %s\n", body, err)
+					fmt.Printf("Error: in parsing JSON data >%s< Error: %s, %s\n", body, err, godebug.LF())
 				}
 				if db5 {
-					fmt.Printf("Params Are: %s AT %s\n", ps.DumpParamDB(), debug.LF())
+					fmt.Printf("Params Are: %s AT %s\n", ps.DumpParamDB(), godebug.LF())
 				}
 			} else {
 				if db4 {
-					fmt.Printf("AT %s\n", debug.LF())
+					fmt.Printf("AT %s\n", godebug.LF())
 				}
+				buf := PeekAtBody(req)
 				err := req.ParseForm()
 				if err != nil {
 					fmt.Printf("Error(20010): Malformed body, RequestURI=%s err=%v\n", req.RequestURI, err)
@@ -596,10 +612,14 @@ func ParseBodyAsParamsReg(www http.ResponseWriter, req *http.Request, ps *Params
 						}
 					}
 				}
+				req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+				if db4 {
+					fmt.Printf("AT %s\n", godebug.LF())
+				}
 			}
 		} else {
 			if db4 {
-				fmt.Printf("AT %s\n", debug.LF())
+				fmt.Printf("AT %s\n", godebug.LF())
 			}
 			for Name, v := range req.PostForm {
 				if len(v) > 0 {
@@ -609,6 +629,31 @@ func ParseBodyAsParamsReg(www http.ResponseWriter, req *http.Request, ps *Params
 		}
 	}
 	return 0
+}
+
+func PeekAtBody(req *http.Request) []byte {
+	if req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH" || req.Method == "DELETE" {
+		bodyBytes, _ := ioutil.ReadAll(req.Body)
+		req.Body.Close() //  must close
+		if db44 {
+			if len(bodyBytes) == 0 {
+				fmt.Printf("%sLen Now 0 ! AT %s, %s, %s%s\n", MiscLib.ColorRed, godebug.LF(), godebug.LF(2), godebug.LF(3), MiscLib.ColorReset)
+				fmt.Fprintf(os.Stdout, "%sLen Now 0 ! AT %s, %s, %s%s\n", MiscLib.ColorRed, godebug.LF(), godebug.LF(2), godebug.LF(3), MiscLib.ColorReset)
+			}
+		}
+		if db45 {
+			if len(bodyBytes) == 0 {
+				fmt.Printf("%sBody ->%s<- AT: %s, %s%s\n", MiscLib.ColorRed, bodyBytes, godebug.LF(2), godebug.LF(3), MiscLib.ColorReset)
+				fmt.Fprintf(os.Stdout, "%sBody ->%s<- AT: %s, %s%s\n", MiscLib.ColorRed, bodyBytes, godebug.LF(2), godebug.LF(3), MiscLib.ColorReset)
+			} else {
+				fmt.Printf("%sBody ->%s<- AT: %s, %s%s\n", MiscLib.ColorGreen, bodyBytes, godebug.LF(2), godebug.LF(3), MiscLib.ColorReset)
+				fmt.Fprintf(os.Stdout, "%sBody ->%s<- AT: %s, %s%s\n", MiscLib.ColorGreen, bodyBytes, godebug.LF(2), godebug.LF(3), MiscLib.ColorReset)
+			}
+		}
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		return bodyBytes
+	}
+	return []byte{}
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -744,7 +789,7 @@ func ParseQueryParams(www *MidBuffer, req *http.Request, ps *Params) int {
 		return 0
 	}
 	m, err := url.ParseQuery(req.URL.RawQuery)
-	// db("ParseQueryParams","Parsing Raw Query ->%s<-, m=%s\n", req.URL.RawQuery, debug.SVar(m))
+	// db("ParseQueryParams","Parsing Raw Query ->%s<-, m=%s\n", req.URL.RawQuery, godebug.SVar(m))
 	if err != nil {
 		fmt.Printf("Unable to parse URL query, %s\n", err)
 	}
@@ -753,7 +798,7 @@ func ParseQueryParams(www *MidBuffer, req *http.Request, ps *Params) int {
 		if len(v) == 1 {
 			vv = v[0]
 		} else {
-			vv = debug.SVar(v)
+			vv = godebug.SVar(v)
 		}
 		AddValueToParams(Name, vv, 'q', FromParams, ps)
 	}
@@ -766,7 +811,7 @@ func ParseQueryParamsReg(www http.ResponseWriter, req *http.Request, ps *Params)
 		return 0
 	}
 	m, err := url.ParseQuery(req.URL.RawQuery)
-	// db("ParseQueryParams","Parsing Raw Query ->%s<-, m=%s\n", req.URL.RawQuery, debug.SVar(m))
+	// db("ParseQueryParams","Parsing Raw Query ->%s<-, m=%s\n", req.URL.RawQuery, godebug.SVar(m))
 	if err != nil {
 		fmt.Printf("Unable to parse URL query, %s\n", err)
 	}
@@ -775,7 +820,7 @@ func ParseQueryParamsReg(www http.ResponseWriter, req *http.Request, ps *Params)
 		if len(v) == 1 {
 			vv = v[0]
 		} else {
-			vv = debug.SVar(v)
+			vv = godebug.SVar(v)
 		}
 		AddValueToParams(Name, vv, 'q', FromParams, ps)
 	}
@@ -796,13 +841,13 @@ func PrefixWith(www *MidBuffer, req *http.Request, ps *Params) int {
 
 // -------------------------------------------------------------------------------------------------
 func MethodParam(www *MidBuffer, req *http.Request, ps *Params) int {
-	// fmt.Printf("MethodParam, Params Are: %s, %s\n", ps.DumpParam(), debug.LF())
-	// fmt.Printf("%s\n", debug.LF())
+	// fmt.Printf("MethodParam, Params Are: %s, %s\n", ps.DumpParam(), godebug.LF())
+	// fmt.Printf("%s\n", godebug.LF())
 	if ps.HasName("METHOD") {
 		x := ps.ByName("METHOD")
-		// fmt.Printf("x=%s %s\n", x, debug.LF())
+		// fmt.Printf("x=%s %s\n", x, godebug.LF())
 		if b, ok := validMethod[x]; ok && b {
-			// fmt.Printf("A Valid Method: b=%v ok=%v %s\n", ok, b, debug.LF())
+			// fmt.Printf("A Valid Method: b=%v ok=%v %s\n", ok, b, godebug.LF())
 			req.Method = x
 		}
 	}
@@ -811,12 +856,12 @@ func MethodParam(www *MidBuffer, req *http.Request, ps *Params) int {
 
 func MethodParamReg(www http.ResponseWriter, req *http.Request, ps *Params) int {
 	//fmt.Printf("MethodParam\n")
-	//fmt.Printf("%s\n", debug.LF())
+	//fmt.Printf("%s\n", godebug.LF())
 	if ps.HasName("METHOD") {
-		//fmt.Printf("%s\n", debug.LF())
+		//fmt.Printf("%s\n", godebug.LF())
 		x := ps.ByName("METHOD")
 		if b, ok := validMethod[x]; ok && b {
-			//fmt.Printf("%s\n", debug.LF())
+			//fmt.Printf("%s\n", godebug.LF())
 			req.Method = x
 		}
 	}
@@ -850,5 +895,7 @@ Link: <https://api.github.com/search/code?q=addClass+user%3Amozilla&page=2>; rel
 const db4 = false // Parse Body
 const db5 = false // Dump params to log (stdout) in human format.
 const db9 = false
+const db44 = false
+const db45 = false
 
 /* vim: set noai ts=4 sw=4: */

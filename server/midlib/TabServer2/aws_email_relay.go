@@ -17,8 +17,6 @@ import (
 	"github.com/pschlump/godebug"
 )
 
-// "www.2c-why.com/ses-aws/email-lib"
-
 //--var kermit *regexp.Regexp
 //--var mis_piggy *regexp.Regexp
 var el *emaillib.EmailLib

@@ -12,7 +12,6 @@
 package mid
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,18 +25,16 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
-	"github.com/pschlump/Go-FTL/server/lib"
-	"github.com/pschlump/Go-FTL/server/sizlib" //
+	"github.com/pschlump/Go-FTL/server/lib" //
 	"github.com/pschlump/Go-FTL/server/tmplp"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/Go-FTL/server/urlpath"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/check-json-syntax/lib"
 	"github.com/pschlump/godebug"
-	// "github.com/pschlump/json" //	"encoding/json"
 	"github.com/pschlump/uuid"
-	// Modified pool to have NewAuth for authorized connections
 )
+
+// Modified pool to have NewAuth for authorized connections
 
 type GoFTLMiddleWare interface {
 	// InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (rv GoFTLMiddleWare, err error)
@@ -101,69 +98,78 @@ func LookupPluginList() (rv string) {
 func ReadConfigFile2(fn string) {
 	// Note: best test for this is in the TabServer2 - test 0001 - checks that this works.
 
-	xyzzyJsonX := false
 	RawConfig := make(map[string]interface{})
 
-	if xyzzyJsonX {
+	fmt.Printf("\n\n%sAt: %s%s\n\n", MiscLib.ColorGreen, lib.LF(), MiscLib.ColorReset)
+	meta, err := JsonX.UnmarshalFile(fn, &RawConfig)
+	_ = meta
+	lib.IsErrFatal(err) // all errors are fatal, print, exit if error
 
-		// xyzzy - chagne to use options and turn on `json:` as an option.
-
-		////fmt.Printf("At: %s\n", lib.LF())
-		meta, err := JsonX.UnmarshalFile(fn, &RawConfig)
-		_ = meta
-		lib.IsErrFatal(err) // all errors are fatal, print, exit if error
-
-		// xyzzyJsonX - print out errors, eval if fatal!
-
-	} else {
-
-		file, err := sizlib.ReadJSONDataWithComments(fn)
-		lib.IsErrFatal(err)
-
-		////fmt.Printf("At: %s\n", lib.LF())
-		err = json.Unmarshal(file, &RawConfig)
-		if err != nil {
-			es := jsonSyntaxErroLib.GenerateSyntaxError(string(file), err)
-			fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorYellow, es, MiscLib.ColorReset)
-			logrus.Errorf("Error: Invlaid JSON for %s %s Error:\n%s\n", fn, file, es)
-			lib.IsErrFatal(err) // all errors are fatal, print, exit if error
-		}
-	}
+	fmt.Printf("At: %s\n", godebug.LF())
 
 	if cfg.ServerGlobal.Config == nil {
 		cfg.ServerGlobal.Config = make(map[string]cfg.PerServerConfigType)
 	}
 
+	fmt.Printf("At: %s\n", godebug.LF())
 	for name, v := range RawConfig {
+		fmt.Printf("At: %s\n", godebug.LF())
 
 		vv := v.(map[string]interface{}) // vv is a map[string]interface{}
 		if db_g1 {
-			fmt.Printf("Configuration for >%s< typeof vv = %T\n", name, vv)
+			fmt.Printf("Configuration for >%s< typeof vv = %T, %s\n", name, vv, godebug.LF())
 		}
 		// perServerConfig := PerServerConfigType{IndexFileList: []string{"index.html", "index.tmpl"}}
 		perServerConfig := cfg.PerServerConfigType{}
 		perServerConfig.Name = name
 		LineNoF, ok := vv["LineNo"]
-		LineNo := int(LineNoF.(float64))
+		fmt.Printf("%sType of vv[LineNo] = %T %v, %s%s\n", MiscLib.ColorGreen, LineNoF, ok, godebug.LF(), MiscLib.ColorReset)
+		var LineNo int
 		if !ok {
 			if db_g1 {
 				fmt.Printf("Missing LineNo from config\n")
 			}
 			LineNo = 1
+		} else {
+			LineNo = int(LineNo)
 		}
 
 		// LineNo + FileName -----------------------------------------------------------------------------
-		//fmt.Printf("At: %s\n", lib.LF())
+		// fmt.Fprintf(os.Stderr, "%sInfo: AT: %s%s\n", MiscLib.ColorRed, godebug.LF(), MiscLib.ColorReset)
+
 		perServerConfig.LineNo = 1
 		if tt, ok := vv["LineNo"]; ok {
-			perServerConfig.LineNo = int(tt.(float64))
-			LineNo = perServerConfig.LineNo
-			delete(vv, "LineNo")
+			fmt.Printf("tt=%v\n", tt)
+			if tt == nil {
+				fmt.Printf("%sInfo: LineNo not set - %s - probably old config file / nil value%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
+			} else {
+				ttInt, ok := tt.(int64)
+				if ok {
+					perServerConfig.LineNo = int(ttInt)
+					LineNo = perServerConfig.LineNo
+					delete(vv, "LineNo")
+				} else {
+					fmt.Printf("%sInfo: LineNo not set - %s - probably old config file%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
+					perServerConfig.LineNo = 0
+					LineNo = 0
+				}
+			}
 		}
 		perServerConfig.FileName = fn
 		if tt, ok := vv["FileName"]; ok {
-			perServerConfig.FileName = tt.(string)
-			delete(vv, "FileName")
+			fmt.Printf("tt=%v\n", tt)
+			if tt == nil {
+				fmt.Printf("%sInfo: FileName not set - %s - probably old config file / nil value%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
+			} else {
+				ttStr, ok := tt.(string)
+				if ok {
+					perServerConfig.FileName = ttStr
+					delete(vv, "FileName")
+				} else {
+					fmt.Printf("%sInfo: FileName not set - %s - probably old config file%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
+					perServerConfig.FileName = "--unknown--"
+				}
+			}
 		}
 
 		// ConfigData -----------------------------------------------------------------------------
@@ -186,8 +192,9 @@ func ReadConfigFile2(fn string) {
 				perServerConfig.ListenTo = append(perServerConfig.ListenTo, ss)
 			} else {
 				// xyzzy - check type as array
-				for _, ww := range tt.([]interface{}) {
-					perServerConfig.ListenTo = append(perServerConfig.ListenTo, ww.(string))
+				fmt.Printf("%stt= %T, %s%s\n", MiscLib.ColorGreen, tt, godebug.LF(), MiscLib.ColorReset)
+				for _, ww := range tt.([]string) {
+					perServerConfig.ListenTo = append(perServerConfig.ListenTo, ww)
 				}
 			}
 			if db_g1 {
@@ -202,29 +209,30 @@ func ReadConfigFile2(fn string) {
 			}
 		}
 
-		//fmt.Printf("At: %s\n", lib.LF())
 		// certs -----------------------------------------------------------------------------
 		if tt, ok := vv["certs"]; ok {
 			if db_g1 {
-				fmt.Printf("\tcerts typeof = %T, %+v\n", tt, tt)
+				fmt.Printf("\tcerts typeof = %T, %+v, %s\n", tt, tt, godebug.LF())
+				fmt.Fprintf(os.Stderr, "\tcerts typeof = %T, %+v, %s\n", tt, tt, godebug.LF())
 			}
 			// xyzzy - check type as array
-			for _, ww := range tt.([]interface{}) {
-				perServerConfig.Certs = append(perServerConfig.Certs, ww.(string))
+			// for _, ww := range tt.([]interface{}) {
+			for _, ww := range tt.([]string) {
+				// perServerConfig.Certs = append(perServerConfig.Certs, ww.(string))
+				perServerConfig.Certs = append(perServerConfig.Certs, ww)
 			}
 			if db_g1 {
 				fmt.Printf("\tperServerConfig.Certs = %v\n", perServerConfig.Certs)
+				fmt.Fprintf(os.Stderr, "\tperServerConfig.Certs = %v\n", perServerConfig.Certs)
 			}
 			delete(vv, "certs")
 		}
 
 		// plugins -----------------------------------------------------------------------------
-		//fmt.Printf("At: %s\n", lib.LF())
 		if tt, ok := vv["plugins"]; ok {
 			// Iterate over the array of plugins
 			for ii, ww := range tt.([]interface{}) {
 				// Get the name of this plugin
-				//fmt.Printf("At: %s\n", lib.LF())
 				wwt, ok := ww.(map[string]interface{})
 				if !ok {
 					fmt.Printf("Syntax Error: Line:%d Invalid data for plugin configuration (on %d'th plugin)\n", LineNo, ii)
@@ -247,13 +255,12 @@ func ReadConfigFile2(fn string) {
 				}
 			}
 		}
-		// perServerConfig.Plugins = vv["plugins"].([]map[string]interface{})
-		//fmt.Printf("At: %s\n", lib.LF())
+		fmt.Printf("At: %s\n", godebug.LF())
 		perServerConfig.Plugins = vv["plugins"]
-		//fmt.Printf("At: %s\n", lib.LF())
 		cfg.ServerGlobal.Config[name] = perServerConfig
-		//fmt.Printf("At: %s\n", lib.LF())
+		fmt.Printf("At: %s\n", godebug.LF())
 	}
+	fmt.Printf("At: %s\n", godebug.LF())
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -388,11 +395,9 @@ func (hdlr *TopHandler) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 			rw.StatusCode = http.StatusOK
 		}
 		if rw.StatusCode != http.StatusOK { // 200
-			// xyzzyTrx -- If rw.RerunRequest is true note that - and exit due to a non-200 code
 			break
 		}
 		if rw.RerunRequest == false { // If no re-run request
-			// xyzzyTrx
 			break
 		}
 	}
@@ -487,7 +492,7 @@ func GetTrx1(rw *goftlmux.MidBuffer) (ptr *tr.Trx) {
 	panic(fmt.Sprintf("Invalid Type - Should have has a *tr.Trx, %s\n", godebug.LF(2)))
 }
 
-const db_g1 = false
+const db_g1 = true
 const dbTop = false
 
 /* vim: set noai ts=4 sw=4: */

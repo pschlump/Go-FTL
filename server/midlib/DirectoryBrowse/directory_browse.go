@@ -1,7 +1,7 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2016
+// Copyright (C) Philip Schlump, 2014-2018
 //
 // Do not remove the following lines - used in auto-update.
 // Version: 0.5.9
@@ -29,37 +29,6 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
-
-//func init() {
-//
-//	// normally identical
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*DirectoryBrowseType)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-//		}
-//		return
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &DirectoryBrowseType{} }
-//
-//	cfg.RegInitItem2("DirectoryBrowse", initNext, createEmptyType, nil, `{
-//        "Paths":            { "type":[ "string", "filepath" ], "isarray":true, "required":true },
-//        "TemplateName":     { "type":[ "string" ], "default":"" },
-//        "TemplateRoot":     { "type":[ "[]string","filepath" ], "default":"" },
-//        "LineNo":           { "type":[ "int" ], "default":"1" }
-//        }`)
-//}
-//
-//// normally identical
-//func (hdlr *DirectoryBrowseType) SetNext(next http.Handler) {
-//	hdlr.Next = next
-//}
 
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {

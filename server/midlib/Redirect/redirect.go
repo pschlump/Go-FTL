@@ -1,7 +1,7 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2016
+// Copyright (C) Philip Schlump, 2014-2018
 //
 // Do not remove the following lines - used in auto-update.
 // Version: 0.5.9
@@ -15,8 +15,8 @@
 // From: https://news.ycombinator.com/item?id=12411747
 // ohthehugemanate said, "301 redirects are the herpes of the Internet.  You make one mistake, and it's with you for the rest of eternity."
 //
-// Alwasy remember that some browsers STILL do not properly handle caching of 301 and once a 301 redirect is used it is permanent until
-// the OS is re-installed on the machine.  In those browsers that do handle cachine it could easily be 10 years before the 301 can be update.
+// Always remember that some browsers STILL do not properly handle caching of 301 and once a 301 redirect is used it is permanent until
+// the OS is re-installed on the machine.  In those browsers that do handle caching it could easily be 10 years before the 301 can be update.
 //
 
 package Redirect
@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 
 	JsonX "github.com/pschlump/JSONx"
+	"github.com/pschlump/MiscLib"
 
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -37,81 +38,6 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
-
-//func init() {
-//
-//	// normally identical
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*RedirectHandlerType)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-//		}
-//		return
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &RedirectHandlerType{} }
-//
-//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-//		fmt.Printf("In postInitValidation, h=%v\n", h)
-//		hh, ok := h.(*RedirectHandlerType)
-//		if !ok {
-//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-//			return mid.ErrInternalError
-//		} else {
-//			for ii, vv := range hh.To {
-//				if vv.Code == "" {
-//					vv.Code = "307"
-//				} else if code, ok := decodeCode[vv.Code]; ok {
-//					vv.Code = fmt.Sprintf("%d", code)
-//				} else {
-//					fmt.Printf("Error: Invalid response code %s at position %d - should be 301 or 307 - Redirect, Line No:%d\n", vv, ii, hh.LineNo)
-//					return mid.ErrInvalidConfiguration
-//				}
-//				hh.To[ii] = vv
-//			}
-//		}
-//		if hh.TemplateFileName != "" {
-//			hh.TemplateFileName = lib.FilepathAbs(filepath.Clean("./" + hh.TemplateFileName))
-//			if lib.Exists(hh.TemplateFileName) {
-//				b, err := ioutil.ReadFile(hh.TemplateFileName)
-//				if err != nil {
-//					fmt.Printf("Error: Specified redirect template file %s Error: %s, Line No:%d\n", hh.TemplateFileName, err, hh.LineNo)
-//					return mid.ErrInvalidConfiguration
-//				}
-//				hh.templateData = string(b)
-//			} else {
-//				fmt.Printf("Error: Specified redirect template file %s missing, Line No:%d\n", hh.TemplateFileName, hh.LineNo)
-//				return mid.ErrInvalidConfiguration
-//			}
-//		} else {
-//			hh.templateData = // use default template
-//				`<html>
-//<head>
-//<title>Moved</title>
-//</head>
-//<body>
-//<h1>Moved</h1>
-//<p>This page has moved to <a href="{{.RedirectTo}}">{{.RedirectTo}}</a>.</p>
-//</body>
-//</html>
-//`
-//		}
-//		return nil
-//	}
-//
-//	cfg.RegInitItem2("Redirect", initNext, createEmptyType, postInit, `{
-//		}`)
-//}
-//
-//// normally identical
-//func (hdlr *RedirectHandlerType) SetNext(next http.Handler) {
-//	hdlr.Next = next
-//}
 
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
@@ -222,6 +148,7 @@ func (hdlr *RedirectHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Re
 		}
 		if db1 {
 			fmt.Printf("rest >%s< req.RequestURI >%s< n = %d\n", rest, req.RequestURI, n)
+			// req.URL.RawQuery [id=444222333] req.URL.Path [/q/], File: /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/mid/mid.go LineNo:292
 		}
 		if rw, ok := www.(*goftlmux.MidBuffer); ok {
 
@@ -234,6 +161,7 @@ func (hdlr *RedirectHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Re
 			code := hdlr.To[n].Code
 			data["RedirectCode"] = code
 			data["THE_REST"] = rest
+			data["THE_URL"] = rest
 			if db1 {
 				fmt.Printf("hdlr.To[%d]= >%s<\n", n, hdlr.To[n])
 			}
@@ -251,6 +179,9 @@ func (hdlr *RedirectHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Re
 				www.Header().Set("Expires", "0")                                         // Proxies.
 				www.Header().Set("Content-Type", "text/html")                            //
 				www.Header().Set("Location", To)
+				if db1 {
+					fmt.Printf("%sLocation %s%s\n", MiscLib.ColorGreen, To, MiscLib.ColorReset)
+				}
 				www.WriteHeader(http.StatusTemporaryRedirect)
 			} else {
 				if db1 {
@@ -290,6 +221,6 @@ Content-Length: 174
 </html>
 */
 
-const db1 = false
+const db1 = true
 
 /* vim: set noai ts=4 sw=4: */

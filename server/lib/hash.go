@@ -5,8 +5,6 @@ import (
 	"fmt"
 )
 
-// import "github.com/pschlump/gosrp" // Path: /Users/corwin/go/src/www.2c-why.com/gosrp
-
 // ----------------------------------------------------------------------------------------------------------------------------
 // func Sha256(s string) (rv string) {
 // 	rv = gosrp.Hashstring(s)

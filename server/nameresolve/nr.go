@@ -1,7 +1,7 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2016
+// Copyright (C) Philip Schlump, 2014-2018
 //
 // Convert names into handlers for sert of names
 // Version: 0.5.9
@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -109,13 +110,14 @@ type IpToHostPort struct {
 }
 
 type NameResolve struct {
-	IpLookup map[string]map[string]*IpToHostPort //
-	Debug1   bool                                //
-	Debug2   bool                                // Use In: func GetProtoHostPort(name string) (proto, host, port string, err error)
-	Debug3   bool                                //
-	Debug4   bool                                //
-	Debug5   bool                                //
-	mutex    sync.Mutex                          //
+	IpLookup  map[string]map[string]*IpToHostPort //
+	RawLookup map[string]*IpToHostPort
+	Debug1    bool       //
+	Debug2    bool       // Use In: func GetProtoHostPort(name string) (proto, host, port string, err error)
+	Debug3    bool       //
+	Debug4    bool       //
+	Debug5    bool       //
+	mutex     sync.Mutex //
 }
 
 func (nr *NameResolve) ServeHTTP(www http.ResponseWriter, req *http.Request) {
@@ -168,7 +170,8 @@ func NewNameResolve() *NameResolve {
 	return &NameResolve{
 		// First string is IP address only
 		// Second string is NamePattern:port
-		IpLookup: make(map[string]map[string]*IpToHostPort),
+		IpLookup:  make(map[string]map[string]*IpToHostPort),
+		RawLookup: make(map[string]*IpToHostPort),
 	}
 }
 
@@ -363,8 +366,6 @@ func (nr *NameResolve) AddName(namePattern string, hdlr http.Handler, id int, ad
 	}
 
 	for jj, ww := range IPs {
-		_ = jj
-
 		ips := ""
 		if IsIp4(ww.String()) {
 			ips = fmt.Sprintf("%s:%s", ww, port)
@@ -398,8 +399,20 @@ func (nr *NameResolve) AddName(namePattern string, hdlr http.Handler, id int, ad
 				Handler: hdlr,
 				Id:      id,
 			}
+			nr.RawLookup[namePattern] = xx[hp]
 		}
 	}
+	return
+}
+
+//			p1, err := bot.GetRawTopHandler ( listen );
+func (nr *NameResolve) GetRawTopHandler(listen string) (Handler http.Handler, err error) {
+	tmp, ok := nr.RawLookup[listen]
+	if !ok {
+		err = fmt.Errorf("Did not find %s listener\n", listen)
+		return
+	}
+	Handler = tmp.Handler
 	return
 }
 
@@ -470,31 +483,42 @@ func GetProtoHostPort(name string) (proto, host, port string, err error) {
 	name = strings.TrimRight(name, "/")
 	// fmt.Printf("After [%s]\n", name)
 	if strings.HasPrefix(name, "http://") {
+		port = "80"
 		name = name[7:]
 	} else if strings.HasPrefix(name, "https://") {
 		proto = "https:"
+		port = "443"
 		name = name[8:]
 	}
-	host, port, err = net.SplitHostPort(name)
-	if err != nil {
-		if strings.HasPrefix(fmt.Sprintf("%s", err), "missing port in address") {
-			if proto == "http:" {
-				port = "80"
-				host = name
-				err = nil
-			} else if proto == "https:" {
-				port = "443"
-				host = name
-				err = nil
+	/*
+		host, port, err = net.SplitHostPort(name)
+		if err != nil {
+			if strings.HasPrefix(fmt.Sprintf("%s", err), "missing port in address") {
+				if proto == "http:" {
+					port = "80"
+					host = name
+					err = nil
+				} else if proto == "https:" {
+					port = "443"
+					host = name
+					err = nil
+				}
+			} else {
+				fmt.Printf(" Error: %s, %s\n", err, godebug.LF())
 			}
-		} else {
+		} else if err != nil {
 			fmt.Printf(" Error: %s, %s\n", err, godebug.LF())
 		}
-	} else if err != nil {
-		fmt.Printf(" Error: %s, %s\n", err, godebug.LF())
+	*/
+	urlPort := regexp.MustCompile(".*:.*")
+	if urlPort.MatchString(name) {
+		aa := strings.Split(name, ":")
+		host, port = aa[0], aa[1]
+	} else {
+		host = name
 	}
 	if db4 {
-		fmt.Printf(" proto [%s] host [%s] port [%s]\n", proto, host, port)
+		fmt.Printf("name ->%s<- proto [%s] host [%s] port [%s], %s\n", name, proto, host, port, godebug.LF())
 	}
 	return
 }

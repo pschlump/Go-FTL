@@ -1,18 +1,11 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2015-2016
-//
-// Do not remove the following lines - used in auto-update.
-// Version: 0.5.9
-// BuildNo: 1811
-// FileId: 1287
+// Copyright (C) Philip Schlump, 2014-2018
 //
 
 //
-// Package header rewrite
-//
-// Copyright (C) Philip Schlump, 2016
+// Rewwrite the request.
 //
 
 package Rewrite
@@ -36,63 +29,6 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
-
-//func init() {
-//
-//	// normally identical
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*RewriteHandlerType)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-//		}
-//		return
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &RewriteHandlerType{} }
-//
-//	postInitValidation := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-//		fmt.Printf("In postInitValidation, h=%v\n", h)
-//		hh, ok := h.(*RewriteHandlerType)
-//		if !ok {
-//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-//			return mid.ErrInternalError
-//		} else {
-//			if rewrite_db1 {
-//				fmt.Printf("Parsed Data Is: %s\n", lib.SVarI(hh))
-//			}
-//			// Validate internal "struct" data
-//			if len(hh.MatchReplace) == 0 {
-//				fmt.Printf("Error: MatchReplace can not be empty - must have atleast one pair\n")
-//				return mid.ErrInternalError
-//			}
-//			// build the parsed REs from input
-//			for ii, vv := range hh.MatchReplace {
-//				re, err := regexp.Compile(vv.Match)
-//				if err != nil {
-//					fmt.Printf("Invalid regular expression %s, #%d in set of match/replace pairs Error: %s\n", vv.Match, ii, err)
-//				}
-//				hh.matchre = append(hh.matchre, re)
-//			}
-//			//if rewrite_db1 {
-//			//	os.Exit(1) // Exit so can see results of change -
-//			//}
-//		}
-//		return nil
-//	}
-//
-//	cfg.RegInitItem2("Rewrite", initNext, createEmptyType, postInitValidation, `{
-//		}`)
-//}
-//
-//// normally identical
-//func (hdlr *RewriteHandlerType) SetNext(next http.Handler) {
-//	hdlr.Next = next
-//}
 
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
@@ -133,9 +69,6 @@ func (hdlr *RewriteHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cf
 		}
 		hdlr.matchre = append(hdlr.matchre, re)
 	}
-	//if rewrite_db1 {
-	//	os.Exit(1) // Exit so can see results of change -
-	//}
 	return
 }
 
@@ -144,7 +77,11 @@ var _ mid.GoFTLMiddleWare = (*RewriteHandlerType)(nil)
 // --------------------------------------------------------------------------------------------------------------------------
 type MatchReplaceType struct {
 	Match    string // regular expression
+	And      string // TODO: Requires that a get/post-form variable be set
+	AndValue string // TODO: Requires that a get/post-form variable be set to this value.  "" means any value.
 	Replace  string // replacement string, with ${1} pattern replacements in it
+	Set      string // TODO: Set a new variable in the Params
+	SetTo    string // TODO: To a value - will have ${n} values to use in set.
 	Template string // TODO: apply templates after replace
 }
 
@@ -158,16 +95,16 @@ type RewriteHandlerType struct {
 	matchre      []*regexp.Regexp   //
 }
 
-func NewRewriteServer(n http.Handler, p []string, h, v string) *RewriteHandlerType {
-	x := &RewriteHandlerType{Next: n, Paths: p, LoopLimit: 50, RestartAtTop: true}
-	x.MatchReplace = append(x.MatchReplace, MatchReplaceType{Match: h, Replace: v})
-	re, err := regexp.Compile(h)
-	if err != nil {
-		fmt.Printf("Invalid regular expression %s, Error: %s\n", h, err)
-	}
-	x.matchre = append(x.matchre, re)
-	return x
-}
+//func NewRewriteServer(n http.Handler, p []string, h, v string) *RewriteHandlerType {
+//	x := &RewriteHandlerType{Next: n, Paths: p, LoopLimit: 50, RestartAtTop: true}
+//	x.MatchReplace = append(x.MatchReplace, MatchReplaceType{Match: h, Replace: v})
+//	re, err := regexp.Compile(h)
+//	if err != nil {
+//		fmt.Printf("Invalid regular expression %s, Error: %s\n", h, err)
+//	}
+//	x.matchre = append(x.matchre, re)
+//	return x
+//}
 
 func (hdlr RewriteHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	var err error
@@ -177,15 +114,39 @@ func (hdlr RewriteHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 			trx := mid.GetTrx(rw)
 			trx.PathMatched(1, "Rewrite", hdlr.Paths, pn, req.URL.Path)
 
+			ps := rw.Ps
+
 			uu := lib.GenURLFromReq(req)
 			if rewrite_db1 {
 				fmt.Printf("Just before >%s< %s\n", uu, lib.SVarI(req))
 			}
+			matchOccured := false
+			matchList := make([]int, 0, 5)
 			for ii, vv := range hdlr.matchre {
-				ww := vv.ReplaceAllString(uu, hdlr.MatchReplace[ii].Replace)
+				// xyzzy - process And/AndValue at this point - must have this criteria.
+				if hdlr.MatchReplace[ii].And != "" {
+					// xyzzy - check to see if value is set.
+					// px.GetByName(name) -> rv, found
+					if val, found := ps.GetByName(hdlr.MatchReplace[ii].And); !found {
+						fmt.Printf("AT: %s\n", godebug.LF())
+						continue
+					} else {
+						// xyzzy - check to see if AndSet is != ""
+						if hdlr.MatchReplace[ii].AndValue != "" {
+							// xyzzy - check to see if AndSet is same as value
+							if val != hdlr.MatchReplace[ii].AndValue {
+								fmt.Printf("AT: %s\n", godebug.LF())
+								continue
+							}
+						}
+					}
+				}
+				ww := vv.ReplaceAllString(uu, hdlr.MatchReplace[ii].Replace) // This is the match-replace point vv is the compiled RE
 				if rewrite_db1 {
 					fmt.Printf("Just after %d match/replace >%s<, %s\n", ii, ww, godebug.LF())
 				}
+				matchOccured = true
+				matchList = append(matchList, ii)
 				uu = ww
 			}
 			rw.NRewrite++
@@ -196,6 +157,16 @@ func (hdlr RewriteHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 				logrus.Warn(fmt.Sprintf("URL Exceded Rewrite Loop Limit of %d, URL: %s, Original URL: %s, Configuration Line No:%d\n", hdlr.LoopLimit, req.URL.Path, rw.OriginalURL, hdlr.LineNo))
 				www.WriteHeader(http.StatusInternalServerError)
 				return
+			}
+			// xyzzy - If match occured, and if Set/SetTo is set then apply at this point.
+			// goftlmux.AddValueToParams("$session$", session, 'i', goftlmux.FromInject, ps)
+			if matchOccured {
+				for _, ii := range matchList {
+					if hdlr.MatchReplace[ii].Set != "" {
+						fmt.Printf("AT: %s\n", godebug.LF())
+						goftlmux.AddValueToParams(hdlr.MatchReplace[ii].Set, hdlr.MatchReplace[ii].SetTo, 'i', goftlmux.FromInject, &rw.Ps)
+					}
+				}
 			}
 			req.URL, err = url.Parse(uu)
 			if rewrite_db1 {
@@ -245,6 +216,6 @@ func (hdlr RewriteHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 	}
 }
 
-const rewrite_db1 = false
+const rewrite_db1 = true
 
 /* vim: set noai ts=4 sw=4: */

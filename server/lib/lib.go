@@ -60,7 +60,8 @@ func SetMaxCPUs(numCPU int) {
 func IsErrFatal(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s from %s\n", err, LF(2))
-		os.Exit(1)
+		// os.Exit(1)
+		panic("Error is fatal")
 	}
 }
 
@@ -685,20 +686,64 @@ func ExistsIsDir(name string) bool {
 //	return nil, false
 //}
 
+// MatchURLPrefix is a week regular exprssion matcher.  Only 1 patterns are supported.
+// Valid in URL chars are: A-Z, a-z, 0-9, -, ., _, ~, :, /, ?, #, [, ], @, !, $, &, ', (, ), *, +, ,, ;, and =
+// ^ for either / or EOL
+func MatchURLPrefix(APath, Pattern string) bool {
+	// Similar to strings.HasPrefix(APath, Pattern)
+	var pp, cc byte
+	for ii := 0; ii < len(Pattern); ii++ {
+		cc = Pattern[ii]
+		switch cc {
+		case '^':
+			pp = '/'
+			if ii < len(APath) {
+				pp = APath[ii]
+			}
+			if ii == len(APath)-1 || pp == '/' {
+				continue
+			}
+			return false
+		default:
+			if ii < len(APath) {
+				pp = APath[ii]
+				if cc == pp {
+					continue
+				}
+			}
+			return false
+		}
+	}
+	return true
+}
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------------
 func PathsMatch(Paths []string, APath string) bool {
 	if Paths == nil || len(Paths) == 0 {
-		fmt.Printf("PathsMatch: Match Path '' (empty)   :%s\n", MiscLib.ColorMagentaOnWhite, MiscLib.ColorReset, LF(2))
+		fmt.Printf("%sPathsMatch: Match Path '' (empty)   :%s%s\n", MiscLib.ColorMagentaOnWhite, MiscLib.ColorReset, LF(2))
 		return true
 	}
+	fn, pkg := GetPackageName(LF(2))
 	for _, prefix := range Paths {
-		if strings.HasPrefix(APath, prefix) {
-			fn, pkg := GetPackageName(LF(2))
+		// if strings.HasPrefix(APath, prefix) {
+		if MatchURLPrefix(APath, prefix) {
 			fmt.Printf("%sPathsMatch: Match Path '%s' to '%s'   %s : Package:%s %s %s File:%s\n", MiscLib.ColorMagentaOnWhite, APath, prefix, MiscLib.ColorReset,
 				MiscLib.ColorBlueOnWhite, pkg, MiscLib.ColorReset, fn)
 			return true
 		}
 	}
+	fmt.Printf("%sPathsMatch:%s No Match For Path %s'%s' to '%s'   %s : Package:%s %s %s File:%s\n",
+		MiscLib.ColorMagentaOnWhite,
+		MiscLib.ColorRed,
+		MiscLib.ColorMagentaOnWhite,
+		APath,
+		godebug.SVar(Paths),
+		MiscLib.ColorReset,
+		MiscLib.ColorBlueOnWhite,
+		pkg,
+		MiscLib.ColorReset,
+		fn,
+	)
 	return false
 }
 
@@ -709,14 +754,26 @@ func PathsMatchN(Paths []string, APath string) int {
 		fmt.Printf("%sPathsMatchN: Match Path '' (empty)   %s:%s\n", MiscLib.ColorMagentaOnWhite, MiscLib.ColorReset, LF(2))
 		return 0
 	}
+	fn, pkg := GetPackageName(LF(2))
 	for ii, prefix := range Paths {
-		if strings.HasPrefix(APath, prefix) {
-			fn, pkg := GetPackageName(LF(2))
+		if MatchURLPrefix(APath, prefix) {
 			fmt.Printf("%sPathsMatchN: Match Path '%s' to '%s' -- #=%d   %s : Package:%s %s %s File:%s\n", MiscLib.ColorMagentaOnWhite, APath, prefix, ii, MiscLib.ColorReset,
 				MiscLib.ColorBlueOnWhite, pkg, MiscLib.ColorReset, fn)
 			return ii
 		}
 	}
+	fmt.Printf("%sPathsMatchN:%s No Match For Path %s'%s' to '%s'   %s : Package:%s %s %s File:%s\n",
+		MiscLib.ColorMagentaOnWhite,
+		MiscLib.ColorRed,
+		MiscLib.ColorMagentaOnWhite,
+		APath,
+		godebug.SVar(Paths),
+		MiscLib.ColorReset,
+		MiscLib.ColorBlueOnWhite,
+		pkg,
+		MiscLib.ColorReset,
+		fn,
+	)
 	return -1
 }
 
@@ -1282,12 +1339,7 @@ func IntAbs(n int) int {
 
 // ----------------------------------------------------------------------------------------------------------------------------
 /*
-	"github.com/pschlump/gosrp"   // Path: /Users/corwin/go/src/www.2c-why.com/gosrp
-func Sha256(s string) (rv string) {
-	rv = gosrp.Hashstring(s)
-	return
-}
-*/
+ */
 
 /*
 package main

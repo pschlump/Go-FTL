@@ -48,4 +48,93 @@ func Test_GenUrl_1(t *testing.T) {
 
 }
 
+// func MatchURLPrefix(APath, Pattern string) bool {
+func Test_MatchURLPrefix(t *testing.T) {
+
+	tests := []struct {
+		APath          string
+		Pattern        string
+		ExpectedReturn bool
+	}{
+		{
+			APath:          "/q/2",
+			Pattern:        "/q^",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/q/2",
+			Pattern:        "/q/",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/q/2",
+			Pattern:        "/q",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/q",
+			Pattern:        "/q^",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/qwerty",
+			Pattern:        "/q^",
+			ExpectedReturn: false,
+		},
+		{
+			APath:          "/r",
+			Pattern:        "/q^",
+			ExpectedReturn: false,
+		},
+		{
+			APath:          "/r",
+			Pattern:        "/q",
+			ExpectedReturn: false,
+		},
+		{
+			APath:          "/r",
+			Pattern:        "/q/",
+			ExpectedReturn: false,
+		},
+		{
+			APath:          "/r",
+			Pattern:        "/rrr/",
+			ExpectedReturn: false,
+		},
+		{
+			APath:          "/abc/def",
+			Pattern:        "/abcXdef^",
+			ExpectedReturn: false,
+		},
+		{
+			APath:          "/abc/def",
+			Pattern:        "/abc/def^",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/abc/def",
+			Pattern:        "/abc^def^",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/abc/def",
+			Pattern:        "/abc^",
+			ExpectedReturn: true,
+		},
+		{
+			APath:          "/abc/def",
+			Pattern:        "/abc^ghi",
+			ExpectedReturn: false,
+		},
+	}
+
+	for ii, test := range tests {
+		bb := MatchURLPrefix(test.APath, test.Pattern)
+		if bb != test.ExpectedReturn {
+			t.Errorf("Error %2d, Expected: %v, Got %v for pattern [%s] url [%s]\n", ii, test.ExpectedReturn, bb, test.Pattern, test.APath)
+		}
+	}
+
+}
+
 /* vim: set noai ts=4 sw=4: */

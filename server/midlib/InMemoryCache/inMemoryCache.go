@@ -29,7 +29,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/fileserve"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
-	"github.com/pschlump/Go-FTL/server/mid" // Path: /Users/corwin/go/src/www.2c-why.com/gosrp
+	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 )
@@ -259,7 +259,7 @@ func NewInMemoryCacheServer(n http.Handler, p []string, e []string, d int, sl in
 	x.cache = NewTimedInMemoryCache()
 	PeriodicCleanup(x.cache, d)
 	x.PeriodicCleanupDiskFiles()
-	x.gCfg = cfg.ServerGlobal
+	x.gCfg = &cfg.ServerGlobal
 	x.DiskCache = []string{"./cache"} // Save stuff on disk at locations
 	x.DiskSize = []string{"1M"}       // Sizes as strings 1G, 1M converted to values
 	x.DiskSizeLimit = 10 * 1024 * 1024

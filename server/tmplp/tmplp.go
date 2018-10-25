@@ -15,13 +15,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"html/template"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/pschlump/Go-FTL/server/goftlmux" //

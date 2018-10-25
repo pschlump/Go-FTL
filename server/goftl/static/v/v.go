@@ -3,10 +3,8 @@ package main
 import (
 	"fmt"
 
-	// "github.com/garyburd/redigo/redis"
-	// Path: /Users/corwin/go/src/www.2c-why.com/gosrp
 	"pschlump/gosrp"
-	"pschlump/gosrp/big" // "./big" // "math/big"
+	"pschlump/gosrp/big"
 )
 
 func main() {

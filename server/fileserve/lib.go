@@ -90,7 +90,7 @@ var ExtProcessTable []*ExtProcessType
 
 func init() {
 	CommandLocationMap = make(map[string]string)
-	CommandLocationMap["tsc"] = "/usr/local/lib/node_modules/typescript/bin/tsc"
+	// CommandLocationMap["tsc"] = "/usr/local/lib/node_modules/typescript/bin/tsc"
 	CommandLocationMap["uglifyjs"] = "/usr/local/bin/uglifyjs"
 	CommandLocationMap["css-pack"] = "/Users/corwin/bin/css-pack"
 	CommandLocationMap["markdown-cli"] = "/Users/corwin/bin/markdown-cli"
@@ -98,7 +98,7 @@ func init() {
 	CommandLocationMap["make"] = "/usr/bin/make"
 	CommandLocationMap["sass"] = "/usr/local/bin/sass"
 	CommandLocationMap["scss"] = "/usr/local/bin/sass"
-	CommandLocationMap["lessc"] = "/usr/local/bin/lessc"
+	//	CommandLocationMap["lessc"] = "/usr/local/bin/lessc"
 	//	CommandLocationMap["xcat"] = "/usr/local/bin/xcat"
 
 	if db_fileServer {

@@ -1100,7 +1100,7 @@ func ReadJSONDataWithComments(path string) (file []byte, err error) {
 			v := os.Getenv(s)
 			// fmt.Printf("v = [%s]\n", v)
 			if v == "" {
-				fmt.Fprintf(os.Stderr, "Fatal: Invalid environemtn variable setting: %s - returned empty string - not allowed\n", s)
+				fmt.Fprintf(os.Stderr, "Fatal: Invalid environment variable setting: %s - returned empty string - not allowed\n", s)
 				os.Exit(1)
 			}
 			aLine = en.ReplaceAllString(aLine, v)
@@ -1111,7 +1111,8 @@ func ReadJSONDataWithComments(path string) (file []byte, err error) {
 	file = []byte(strings.Join(lines, "\n"))
 
 	if db1099 {
-		fmt.Printf("Results >%s<\n", file)
+		fmt.Printf("%s %s\n", godebug.LF(2), godebug.LF(3))
+		fmt.Printf("After fix of Remove Comments and Set Line Numbers: Results %s >%s<\n", godebug.LF(), file)
 	}
 
 	return file, nil
@@ -1137,8 +1138,6 @@ func DbFprint(db bool, fp io.Writer, format string, arg ...interface{}) {
 		fmt.Fprintf(fp, format, arg...)
 	}
 }
-
-const db1099 = true
 
 const ReturnPacked = true
 
@@ -1186,5 +1185,7 @@ func SlugToUUID(slug string) (uuid string) {
 	fmt.Fprintf(os.Stderr, "slug: ERROR: Cannot decode invalid slug '%v' into a UUID\n", slug) // Xyzzy - logrus
 	return
 }
+
+const db1099 = false
 
 /* vim: set noai ts=4 sw=4: */

@@ -47,7 +47,6 @@ import (
 	"sync"
 
 	JsonX "github.com/pschlump/JSONx"
-	// "www.2c-why.com/h2ppp/lib/H2pppCommon"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"

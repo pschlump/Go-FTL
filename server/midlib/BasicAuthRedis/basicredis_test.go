@@ -151,7 +151,7 @@ func Test_BasicAuthServer(t *testing.T) {
 	bot := mid.NewServer()
 
 	ms := NewBasicAuthServer(bot, []string{"/admin"}, "redis-auth-test", "example.com")
-	ms.gCfg = cfg.ServerGlobal
+	ms.gCfg = &cfg.ServerGlobal
 	var err error
 	lib.SetupTestCreateDirs()
 

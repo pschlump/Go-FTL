@@ -63,3 +63,14 @@ these then use the default file.
 ```
 
 
+xyzzy - Notes
+------------------------
+
+If the  AppRoot ends in /... then a recursive search for `sql-cfg.*.json` files will take place.
+
+```
+	, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis/..."
+```
+
+The "search order is" section above is out of date - code has additional file paths.
+

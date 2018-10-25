@@ -288,7 +288,7 @@ func (fcfg *FileServerType) dirList(www http.ResponseWriter, f File, req *http.R
 							found = true
 						} else {
 							www.WriteHeader(http.StatusNotFound)
-							logrus.Warn(fmt.Sprintf("Template not found in %s", xFn))
+							logrus.Warn(fmt.Sprintf("Template (1) not found in %s", xFn))
 						}
 					} else if chk3(fcfg.ThemeRoot, user, theme, pth_name, rw.DirTemplateFileName) {
 						found = true
@@ -302,7 +302,7 @@ func (fcfg *FileServerType) dirList(www http.ResponseWriter, f File, req *http.R
 						found = true
 					} else {
 						www.WriteHeader(http.StatusNotFound)
-						logrus.Warn(fmt.Sprintf("Template not found in %s", xFn))
+						logrus.Warn(fmt.Sprintf("Template (2) not found in %s", xFn))
 					}
 				} else if theme != "" {
 					pth_name := name[len(Root):]
@@ -311,7 +311,7 @@ func (fcfg *FileServerType) dirList(www http.ResponseWriter, f File, req *http.R
 							found = true
 						} else {
 							www.WriteHeader(http.StatusNotFound)
-							logrus.Warn(fmt.Sprintf("Template not found in %s", xFn))
+							logrus.Warn(fmt.Sprintf("Template (3) not found in %s", xFn))
 						}
 					} else if chk3(fcfg.ThemeRoot, theme, pth_name, rw.DirTemplateFileName) {
 						found = true
@@ -325,7 +325,7 @@ func (fcfg *FileServerType) dirList(www http.ResponseWriter, f File, req *http.R
 						found = true
 					} else {
 						www.WriteHeader(http.StatusNotFound)
-						logrus.Warn(fmt.Sprintf("Template not found in %s", xFn))
+						logrus.Warn(fmt.Sprintf("Template (4) not found in %s", xFn))
 					}
 				} else {
 					if rw.DirTemplateFileName[0] == '/' {
@@ -333,7 +333,7 @@ func (fcfg *FileServerType) dirList(www http.ResponseWriter, f File, req *http.R
 							found = true
 						} else {
 							www.WriteHeader(http.StatusNotFound)
-							logrus.Warn(fmt.Sprintf("Template not found in %s", xFn))
+							logrus.Warn(fmt.Sprintf("Template (5) not found in %s", xFn))
 						}
 					} else if chk3(name, rw.DirTemplateFileName) {
 						found = true
@@ -341,7 +341,7 @@ func (fcfg *FileServerType) dirList(www http.ResponseWriter, f File, req *http.R
 						found = true
 					} else {
 						www.WriteHeader(http.StatusNotFound)
-						logrus.Warn(fmt.Sprintf("Template not found in %s", xFn))
+						logrus.Warn(fmt.Sprintf("Template (6) not found in %s", xFn))
 					}
 				}
 				return

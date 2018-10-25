@@ -353,6 +353,7 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 						}
 						return
 					}
+
 				case "Session":
 					fmt.Fprintf(os.Stderr, "AT: %s\n", godebug.LF())
 					auth_token := hdlr.GetSessionAuth()
@@ -365,6 +366,7 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 						hdlr.Next.ServeHTTP(www, req)
 						return
 					}
+
 				default:
 					fmt.Fprintf(os.Stderr, "AT: %s\n", godebug.LF())
 					logrus.Errorf("Invalid validation method at: %s", godebug.LF())
@@ -698,6 +700,11 @@ func (hdlr *LoginRequiredType) ValidateAuthToken(rw *goftlmux.MidBuffer, www htt
 
 	case "AesSrp":
 		fmt.Fprintf(os.Stderr, "AT: %s\n", godebug.LF())
+		valid = true
+		return
+
+	case "ChallengeResponse":
+		fmt.Fprintf(os.Stderr, "Challenge Response AT: %s\n", godebug.LF())
 		valid = true
 		return
 

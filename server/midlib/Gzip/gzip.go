@@ -35,31 +35,6 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
-//func init() {
-//
-//	// normally identical
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*GzipType)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-//		}
-//		return
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &GzipType{} }
-//
-//	cfg.RegInitItem2("Gzip", initNext, createEmptyType, nil, `{
-//		"Paths":         { "type":["string","filepath"], "isarray":true, "required":true },
-//		"MinLength":     { "type":[ "int" ], "default":"500" },
-//		"LineNo":        { "type":[ "int" ], "default":"1" }
-//		}`)
-//}
-
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
 		x := &GzipType{}

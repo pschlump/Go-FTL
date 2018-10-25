@@ -18,9 +18,6 @@ import (
 	"os"
 	"testing"
 
-	// "www.2c-why.com/sizlib-old"
-	// _ "github.com/lib/pq"
-
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux" //	"encoding/json"
 	"github.com/pschlump/Go-FTL/server/lib"
