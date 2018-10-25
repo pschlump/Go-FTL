@@ -1,0 +1,40 @@
+ { "note:comment": { "f": "Copyright (C) Philip Schlump, 2017.  Name Value Pairs" }
+	,"/api/store/listNVKey": { "query": "select \"name\" from \"s_nv\" order by 1", "p": [ ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "TableList":["s_nv"]
+		, "crud": [ "select" ]
+		, "ReturnMeta":false
+		, "ReturnAsHash":true
+		, "Method":["GET"]
+		}
+	,"/api/store/saveNVKey": { "g": "s_save_nv", "p": [ "name", "value" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "name": 		{ "required":true, "type":"string", "max_len":400, "min_len":1 }
+			,"value": 		{ "required":true, "type":"string" }
+			}
+		}
+	,"/api/store/updNVKey": { "g": "s_upd_nv", "p": [ "name", "value" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "name": 		{ "required":true, "type":"string", "max_len":400, "min_len":1 }
+			,"value": 		{ "required":true, "type":"string" }
+			}
+		}
+	,"/api/store/getNVKey": { "g": "s_get_nv", "p": [ "name" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "name": 		{ "required":true, "type":"string", "max_len":400, "min_len":1 }
+			}
+		}
+	,"/api/store/delNVKey": { "g": "s_del_nv", "p": [ "name" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "name": 		{ "required":true, "type":"string", "max_len":400, "min_len":1 }
+			}
+		}
+}

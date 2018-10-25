@@ -1,0 +1,144 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>ErrorTemplate: Convert Errors to Pages</h1>
+
+<p>Map error codes from lower level calls onto template files.</p>
+
+<p>The following items can be used in the template file, <code>{{.IP}}</code>. For example:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Item</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>IP</code></td>
+<td>Remote IP address</td>
+</tr>
+
+<tr>
+<td align="center"><code>URI</code></td>
+<td>Remote URI</td>
+</tr>
+
+<tr>
+<td align="center"><code>delta_t</code></td>
+<td>How long this has taken to process</td>
+</tr>
+
+<tr>
+<td align="center"><code>host</code></td>
+<td>Host name</td>
+</tr>
+
+<tr>
+<td align="center"><code>ERROR</code></td>
+<td>Text error message if any</td>
+</tr>
+
+<tr>
+<td align="center"><code>method</code></td>
+<td>Request method</td>
+</tr>
+
+<tr>
+<td align="center"><code>now</code></td>
+<td>Current time stamp</td>
+</tr>
+
+<tr>
+<td align="center"><code>path</code></td>
+<td>Path from request</td>
+</tr>
+
+<tr>
+<td align="center"><code>port</code></td>
+<td>Port request was made on</td>
+</tr>
+
+<tr>
+<td align="center"><code>query</code></td>
+<td>The request query string</td>
+</tr>
+
+<tr>
+<td align="center"><code>scheme</code></td>
+<td>http or https</td>
+</tr>
+
+<tr>
+<td align="center"><code>start_time</code></td>
+<td>Time request was started at</td>
+</tr>
+
+<tr>
+<td align="center"><code>StatusCode</code></td>
+<td>Status code, 200 &hellip; 5xx</td>
+</tr>
+
+<tr>
+<td align="center"><code>StatusText</code></td>
+<td>Text description of status code</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Configuration</h2>
+
+<p>You provide a list of errors that you want to have mapped, with a template, onto
+a page.  You can provide a directory where the templates are for custom error
+templates.   If you do not, then the directory <code>./errorTemplates/</code> will be used.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;ErrorTemplate&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Errors&quot;: [ &quot;404&quot;, &quot;500&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;ErrorTemplate&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Errors&quot;: [ &quot;404&quot;, &quot;500&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Wed, Mar 30, 06:03:59 MDT, 2016</p>
+
+<h3>TODO</h3>
+
+<ol>
+<li>Way to configure &ldquo;application&rdquo; or &ldquo;home-page&rdquo; for template.</li>
+<li>Logging of errors.</li>
+<li>Possibility of a &ldquo;form&rdquo; for errors to contact user when error is fixed.</li>
+<li>Contact Support info.</li>
+<li>./errorTempaltes relative to &ldquo;root&rdquo; of application.</li>
+<li>For users that are logged in - a different template that reflects name/time etc for logged in user.</li>
+<li>Match &ldquo;4xx&rdquo; as an error to a 4xx.tmpl file and a 400 error so you don&rsquo;t have to have zillions of files.</li>
+</ol>
+
+{% endblock %}

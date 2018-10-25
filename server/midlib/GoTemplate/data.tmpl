@@ -1,0 +1,18 @@
+{{define "content_type"}}text/html; charset=utf-8{{end}}
+{{define "header"}}<!DOCTYPE html>
+<html lang="en">
+<body>
+	<div> header </div>
+	<ul>
+{{end}}
+{{define "body"}}
+	{{range $ii, $ee := .data}}
+		<li><a href="{{$ee.abc}}">{{$ee.abc}}</a></li>
+	{{end}}
+{{end}}
+{{define "footer"}}
+	</ul>
+	<div> footer </div>
+</body>
+</html>
+{{end}}

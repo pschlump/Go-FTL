@@ -1,0 +1,2953 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>SrpAesAuth: Strong Authentication for RESTful Requests</h1>
+
+<pre><code class="language-JSON">	{
+		&quot;Section&quot;: &quot;Middleware&quot;
+	, 	&quot;MultiSection&quot;:2
+	}
+</code></pre>
+
+<p>$$$code-box-0001$$$</p>
+
+<p>This middleware implements strong authentication based on a key exchange using Secure Remote Password
+<a href="http://srp.stanford.edu/">SRP</a> and once the keys are exchanged every request is
+then encrypted using the Advanced Encryption Standard
+<a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES-256</a>
+256 bit encryption.  Each request is signed and validated using 64 bit Counter with CBC Mac known as
+<a href="https://en.wikipedia.org/wiki/CCM_mode">CCM</a>.<br />
+As a part of the login authentication a two factor authentication is required.</p>
+
+<ol>
+<li>A series of standard, and tested, libraries are used to perform all of this.</li>
+<li>The users password is never transmitted to the server.<br /></li>
+<li>Every request that is protected requires encryption with the unique key that is generated on a per-login basis.<br /></li>
+<li>Examples are provide in AngularJS 1.3, React and React Native, and soon in AngularJS 2.0.</li>
+<li>This has been designed and tested to work across a server farm.</li>
+<li>This can work on top of TLS (HTTPS requests) to provide additional security.</li>
+<li>With React Native this has been tested on iOS (iPhone) and on Android.</li>
+<li>Simple clients for iOS and Android for the two factor authentication (2fa) are provided in source.</li>
+</ol>
+
+<p>A full cycle of user authentication is implemented.</p>
+
+<ol>
+<li>Register with email confirmation.</li>
+<li>Login.</li>
+<li>Logout.</li>
+<li>Automatic Logout based on timeout.</li>
+<li>Password Change.</li>
+<li>Forgotten Password Recover.</li>
+<li>Stay Logged In.</li>
+<li>Administrative password change.</li>
+<li>Account expiration.</li>
+<li>Per-Account privileges.</li>
+<li>Administrative API for setting and updating account attributes.</li>
+</ol>
+
+<p>This integrates directly with the TabServer2 middleware for interaction with a relational or non-relational database.</p>
+
+<p>There is a full section of references at the bottom of this document.</p>
+
+<p>Examples (cookbooks) for AngularJS 1.4+, Angular JS 2.x, React and jQuery
+are included in the source code.</p>
+
+<h2>What is SRP?</h2>
+
+<p>This is taken from
+<a href="http://srp.standord.edu">http://srp.standord.edu</a></p>
+
+<p>&ldquo;SRP is a secure password-based authentication and key-exchange
+protocol. It solves the problem of authenticating clients to servers
+securely, in cases where the user of the client software must
+memorize a small secret (like a password) and carries no other
+secret information, and where the server carries a verifier for
+each user, which allows it to authenticate the client but which,
+if compromised, would not allow the attacker to impersonate the
+client. In addition, SRP exchanges a cryptographically-strong secret
+as a byproduct of successful authentication, which enables the two
+parties to communicate securely.  Many password authentication
+solutions claim to solve this exact problem, and new ones are
+constantly being proposed. Although one can claim security by
+devising a protocol that avoids sending the plaintext password
+unencrypted, it is much more difficult to devise a protocol that
+remains secure when:</p>
+
+<ol>
+<li>Attackers have complete knowledge of the protocol.</li>
+<li>Attackers have access to a large dictionary of commonly used passwords.</li>
+<li>Attackers can eavesdrop on all communications between client and server.</li>
+<li>Attackers can intercept, modify, and forge arbitrary messages between client and server.</li>
+<li>A mutually trusted third party is not available.&rdquo;</li>
+</ol>
+
+<p>&ldquo;The idea behind SRP first appeared on USENET in late 1996, and
+subsequent discussion led to refined proposals in 1997 to address
+these security properties. This lead to the development of one of
+the variants of the protocol still in use today, known as SRP-3,
+which was published in 1998 after several rounds of discussion and
+refinement on cryptography-related newsgroups and mailing lists,
+and has withstood considerable public analysis and scrutiny since
+then. The technology evolved into a newer variant known as SRP-6,
+which maintains the security of SRP-3 but has refinements that make
+it more flexible and easier to incorporate into existing systems.
+Technical details of the actual protocol design are available from
+this site.&rdquo;</p>
+
+<p>&ldquo;SRP is available to commercial and non-commercial users under a
+royalty-free license. The Internet played a significant role in
+SRP&rsquo;s early development; without it, SRP would not have received
+anywhere near the amount of analysis and feedback that it has gotten
+since it was first proposed and refined. It is thus fitting that
+the Internet at large can benefit from the fruits of this endeavor.
+Since SRP is specifically designed to work around existing patents
+in the area, it gives everybody access to strong, unencumbered
+password authentication technology that can be put to a wide variety
+of uses.&rdquo;</p>
+
+<p>&ldquo;The SRP distribution is available under Open Source-friendly
+licensing terms (for the net.savvy reader, it&rsquo;s a &ldquo;BSD-style&rdquo;
+license). More information about the SRP project is available at
+this site, and a reference implementation, which includes versions
+of Telnet and FTP that incorporate SRP support, can be downloaded
+as well. The links page has pointers to a wide range of projects
+and products, both commercial and non-commercial, that use SRP, as
+well as related work and papers that cover strong password
+authentication.&rdquo;</p>
+
+<p>This middleware implements SRP version 6a.</p>
+
+<h2>Configuration</h2>
+
+<p>For the paths that you want to protect and require authentication.</p>
+
+<pre><code>{ &quot;SrpAesAuth&quot;: {
+    &quot;Paths&quot;: [ &quot;/api/&quot;, &quot;/private/&quot; ],
+    More...
+} },
+</code></pre>
+
+<p>There are extensive configuration options - most of which can be ignored - use the default values.  These are:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>UserNameForRegister</code></td>
+<td>bool</td>
+<td>false</td>
+<td>By default the email address is the username.   If this is set to true then a different value can be used for the Username.  Usernames must be 7 characters starting with an alphabetic.</td>
+</tr>
+
+<tr>
+<td align="center"><code>SendStatusOnerror</code></td>
+<td>bool</td>
+<td>false</td>
+<td>By default a 200 status and a JSON message is returned. If true then a non-200 status code (4xx) will be returned on errors.</td>
+</tr>
+
+<tr>
+<td align="center"><code>FailedLoginThreshold</code></td>
+<td>int</td>
+<td>10</td>
+<td>Number of failed logins before a 5 minute delay is inserted between login attempts.  (Delay should be configurable: TODO_4001)</td>
+</tr>
+
+<tr>
+<td align="center"><code>TwoFactorRequired</code></td>
+<td>string</td>
+<td>y</td>
+<td>If &ldquo;y&rdquo;, then two factor authentication (2fa) will be required, else just username/password.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Bits</code></td>
+<td>int</td>
+<td>2048</td>
+<td>Length of the encryption prime numbers.  Legitimate values are 2048, 3072, 4096, 6144 and 8192.</td>
+</tr>
+
+<tr>
+<td align="center"><code>SendEmail</code></td>
+<td>bool</td>
+<td>true</td>
+<td>On registration send email for account confirmation.</td>
+</tr>
+
+<tr>
+<td align="center"><code>NewUserPrivs</code></td>
+<td>string</td>
+<td>user</td>
+<td>The name of the role that a new user will be by default created with.  &ldquo;DeviceId&rdquo; is reserved for internal use.</td>
+</tr>
+
+<tr>
+<td align="center"><code>NGData</code></td>
+<td>hash</td>
+<td>rfc5054 2k values</td>
+<td>Allows setting of &ldquo;N&rdquo;, &ldquo;bits&rdquo; and &ldquo;g&rdquo; values for SRP.</td>
+</tr>
+
+<tr>
+<td align="center"><code>AdminPassword</code></td>
+<td>string</td>
+<td>n/a</td>
+<td>If the server is compiled in test mode, then the is the password for simulating email confirm on accounts.</td>
+</tr>
+
+<tr>
+<td align="center"><code>EmailRelayIP</code></td>
+<td>string</td>
+<td><code>n/a</code></td>
+<td>IP address of an <a href="https://github.com/pschlump/email-relay">email relay</a> to send templated email to a person.</td>
+</tr>
+
+<tr>
+<td align="center"><code>EmailAuthToken</code></td>
+<td>string</td>
+<td><code>n/a</code></td>
+<td>Authorization token for an <a href="https://github.com/pschlump/email-relay">email relay</a> to send templated email to a person.</td>
+</tr>
+
+<tr>
+<td align="center"><code>SupportEmailTo</code></td>
+<td>string</td>
+<td><code>pschlump@gmail.com</code></td>
+<td>Address to send support emails to.</td>
+</tr>
+
+<tr>
+<td align="center"><code>StayLoggedInExpire</code></td>
+<td>int</td>
+<td>86400 seconds</td>
+<td>Amount of time that an account with Stay Logged In is retained.  Default is 1 day.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate1</code></td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-pwrecov1.html</code></td>
+<td>Template used to display message to user when unable to reset password due to timeout.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate2</code></td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-pwrecov2.html</code></td>
+<td>Template used to display message to user when unable to reset password due to other error.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate3</code></td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/#/pwrecov2</code></td>
+<td>Template used to display message to user with link and token for password reset.</td>
+</tr>
+
+<tr>
+<td align="center">`RegTemplate1</td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-register1.html</code></td>
+<td>Error displayed to users.</td>
+</tr>
+
+<tr>
+<td align="center">`RegTemplate2</td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-register2.html</code></td>
+<td>Error displayed to users.</td>
+</tr>
+
+<tr>
+<td align="center">`RegTemplate3</td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-register3.html</code></td>
+<td>Error displayed to users.</td>
+</tr>
+
+<tr>
+<td align="center">`RegTemplate4</td>
+<td>string</td>
+<td><code>{{.HTTPS}}{{.HOST}}/#/login</code></td>
+<td>Successful registration - user login location.</td>
+</tr>
+
+<tr>
+<td align="center">`AllowReregisterDeviceId</td>
+<td>bool</td>
+<td>false</td>
+<td>If true, then 2fa devices can re-register as many times as they want. - True should <em>only</em> be used in test/development mode.</td>
+</tr>
+
+<tr>
+<td align="center"><code>EncReqPaths</code></td>
+<td>string</td>
+<td>&rdquo;/&rdquo;</td>
+<td>Paths that require encrypted login before they are accessable, &ldquo;/api/private&rdquo; for example.</td>
+</tr>
+
+<tr>
+<td align="center"><code>MatchPaths</code></td>
+<td>string</td>
+<td>&rdquo;/&rdquo;</td>
+<td>Paths that will not require any login, static fiels like &ldquo;/js/&rdquo; for example.</td>
+</tr>
+
+<tr>
+<td align="center">`SecurityAccessLevelsName</td>
+<td>hash</td>
+<td>has a default</td>
+<td>See section on Security, Roles and Privileges.</td>
+</tr>
+
+<tr>
+<td align="center">`SecurityPrivilages</td>
+<td>hash</td>
+<td>has a default</td>
+<td>See section on Security, Roles and Privileges.</td>
+</tr>
+
+<tr>
+<td align="center">`SecurityConfig</td>
+<td>hash</td>
+<td>has a default</td>
+<td>See section on Security, Roles and Privileges.</td>
+</tr>
+</tbody>
+</table>
+
+<p>Items that have defaults and you probably will never need to change:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>BackupKeyIter</code></td>
+<td>int</td>
+<td>1000</td>
+<td>Number of iterations for rehash of key.</td>
+</tr>
+
+<tr>
+<td align="center"><code>KeyIter</code></td>
+<td>int</td>
+<td>1000</td>
+<td>Number of iterations for rehash of key.</td>
+</tr>
+
+<tr>
+<td align="center"><code>BackupKeySizeBytes</code></td>
+<td>int</td>
+<td>16</td>
+<td>Key size.</td>
+</tr>
+
+<tr>
+<td align="center"><code>CookieExpireInXDays</code></td>
+<td>int</td>
+<td>1</td>
+<td>Number of days before auth cookies expire.</td>
+</tr>
+
+<tr>
+<td align="center"><code>CookieExpireInXDays2</code></td>
+<td>int</td>
+<td>2</td>
+<td>Number of days before auth cocookies expire.</td>
+</tr>
+
+<tr>
+<td align="center"><code>SessionLife</code></td>
+<td>int</td>
+<td>86400</td>
+<td>Life of a login session in seconds, 1 day = 86,400 seconds.</td>
+</tr>
+
+<tr>
+<td align="center"><code>KeySessionLife</code></td>
+<td>int</td>
+<td>300</td>
+<td>Life of a key.</td>
+</tr>
+
+<tr>
+<td align="center"><code>CookieSessionLife</code></td>
+<td>int</td>
+<td>172800</td>
+<td>Life of a session in seconds, 3 days default.</td>
+</tr>
+
+<tr>
+<td align="center"><code>TwoFactorLife</code></td>
+<td>int</td>
+<td>360</td>
+<td>Life of a two factor key in seconds, 5 minutes + 1 minute grace default.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PreEau</code></td>
+<td>string</td>
+<td>eau:</td>
+<td>Prefix for keys in Redis.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PreKey</code></td>
+<td>string</td>
+<td>ses:</td>
+<td>Prefix for keys in Redis.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PreAuth</code></td>
+<td>string</td>
+<td>aut:</td>
+<td>Prefix for keys in Redis.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Pre2Factor</code></td>
+<td>string</td>
+<td>p2f:</td>
+<td>Prefix for keys in Redis.</td>
+</tr>
+
+<tr>
+<td align="center"><code>TestModeInject</code></td>
+<td>string</td>
+<td>&rdquo;&rdquo;</td>
+<td>If compiled in test mode, a set of error conditions to return when no error exists.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PasswordSV</code></td>
+<td>string</td>
+<td>&rdquo;&rdquo;</td>
+<td>If compiled in test mode, turns on the generation of static simulated accounts in the development sandbox.</td>
+</tr>
+
+<tr>
+<td align="center">`SandBoxExpreTime</td>
+<td>int</td>
+<td>7200</td>
+<td>Duration in seconds that a sandbox will persist before it is deleted.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+    &quot;working_test_for_aes_srp&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://localhost:3118&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;DumpResponse&quot;: { &quot;LineNo&quot;:5, &quot;Msg&quot;:&quot;At Top&quot; } },
+            { &quot;DumpRequest&quot;: { &quot;LineNo&quot;:6, &quot;Msg&quot;:&quot;Request at top At Top&quot;, &quot;Paths&quot;:&quot;/api/status&quot;, &quot;Final&quot;:&quot;yes&quot; } },
+            { &quot;Redirect&quot;: { &quot;LineNo&quot;:7,
+                &quot;Paths&quot;: [ &quot;/api/ios-app&quot;,                    &quot;/app/android-app&quot; ],
+                &quot;To&quot;: [
+                    { &quot;To&quot;:&quot;http://localhost:3118/ios-app.html&quot; },
+                    { &quot;To&quot;:&quot;http://localhost:3118/android-app.html&quot; }
+                ]
+            } },
+            { &quot;JSONp&quot;: { &quot;LineNo&quot;:14, &quot;Paths&quot;:[ &quot;/api/&quot; ] } },
+            { &quot;SrpAesAuth&quot;: { &quot;LineNo&quot;:15,
+                &quot;Paths&quot;: &quot;/api/&quot; ,
+                &quot;MatchPaths&quot;: [ &quot;/&quot; ],
+                &quot;AllowReregisterDeviceId&quot;: true
+                } },
+            { &quot;DumpResponse&quot;: { &quot;LineNo&quot;:19, &quot;Msg&quot;:&quot;After Proxy&quot; } },
+            { &quot;Status&quot;: { &quot;LineNo&quot;:20, &quot;Paths&quot;:&quot;/api/status&quot; } },
+            { &quot;RedisList&quot;: { &quot;LineNo&quot;: 21,
+                &quot;Paths&quot;:             &quot;/api/list/user&quot;,
+                &quot;Prefix&quot;:            &quot;srp:U:&quot;,
+                &quot;UserRoles&quot;:         [ &quot;anon,$key$&quot;, &quot;user,$key$,confirmed&quot;, &quot;admin,$key$,confirmed,disabled&quot;, &quot;root,name,confirmed,disabled,disabled_reason,login_date_time,login_fail_time,n_failed_login,num_login_times,privs,register_date_time&quot; ]
+
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:27, &quot;Root&quot;:&quot;./angular-login-example/build&quot;, &quot;Paths&quot;:&quot;/&quot;  } }
+        ]
+    }
+}
+</code></pre>
+
+<h2>API</h2>
+
+<h3>Overview of process</h3>
+
+<p>Registration of new users is handled by <code>/api/srp_register</code> with email confirmation by sending a
+conformation token to <code>/api/srp_email_confirm.</code> For a hand entered token or
+the pair of <code>/api/confirm-registration</code> and <code>/api/pwrecov2</code> that allow an email, click
+link with an underlying AngularJS single page application to perform the confirmation.</p>
+
+<p>Login has 3 steps due to the SRP-6 implementation.  These are <code>/api/srp_login</code>,
+<code>/api/srp_challenge</code> and <code>/api/srp_validate</code>.</p>
+
+<p>Logout is simple. - It cleans up but is not required.  It is <code>/api/srp_logout</code>.</p>
+
+<p>Password recovery is performed by a pair of calls.  The first one is
+<code>/api/srp_recover_password_pt1.</code> - This sends the password recovery email.  The
+second call is the one that will take the user to a &ldquo;change password&rdquo; screen.
+This is <code>/api/srp_recover_password_pt2</code>.</p>
+
+<p>You can get back version information on this middleware with <code>/api/version</code>.</p>
+
+<p>Once the SRP-6 is complete then AES encryption is used to encrypt every
+request.  All future requests are sent to <code>/api/cipher</code> as POST or GET requests.  It then
+decrypts the request and sends it on to the handler for the request.  Normally this will
+only apply to RESTful requests.</p>
+
+<p>If two factor authentication (2fa) is enabled, then the one time key will be required
+before the login process is completed.  The iOS(iPhone) or Android device with
+the application can be used or one of the pre-arranged one-time keys can be used
+that was generated (and hopefully printed out) during the registration process.
+The Call to get a 2fa &ldquo;key&rdquo; is, <code>/api/get2Factor</code>.
+The client attempting to login then takes the user-supplied key and validates
+it with a call to <code>/api/valid2Factor</code>.  This completes the 2fa login process.</p>
+
+<p>A logged in user can change a password with, <code>/api/srp_change_password</code>.</p>
+
+<p>An administrator with &ldquo;admin&rdquo; privilege can change a password with <code>/api/admin_set_password</code>.
+The administrator can also set other attributes of a user with, <code>/api/admin_set_attrs</code> like
+changing the &ldquo;disabled&rdquo; state of an account or resetting the number of failed login
+attempts.  Any of the non SRP attributes of a user can be set with this.</p>
+
+<p>Once logged in a user can generate a new set of printable one-time keys with a call to
+<code>/api/genTempKeys</code>.  This will erase the previous set of one-time keys.</p>
+
+<p>At registration the user, if 2fa is enabled, can get the unique ID for an Android or iOS
+device with, <code>/api/getDeviceId</code>.   You can have more than one device associated with
+an account.</p>
+
+<p>If &ldquo;stay logged in&rdquo; is used, then a session must be marked with a browser fingerprint
+and a pair of cookies.  This is a weaker form of authentication than a full login
+but it is convenient.  The browser fingerprint is set with <code>/api/markPage</code>.
+An example of this is in the Angular 1.x code.   When login is successful, a call to
+<code>/api/setupStayLoggedIn</code> is made.   This updates and creates the necessary server configuration
+for staying logged in.  The next time the page is loaded a call to <code>/api/resumeSession</code>
+recovers the previous login.   The resumed login is easily identifiable on the
+server side and limited to a set of APIs with the security configuration.  Normally
+a full login would be required before allowing operations requiring a credit card
+or changes to shipping of products.</p>
+
+<p>If you use other than 2k standard random numbers (rfc5054), then you will need to
+set these in your configuration and perform this call at the beginning of your client code
+to get the random numbers.  <code>/api/srp_getNg</code>.  This call will  return the
+SRP &ldquo;N&rdquo; and &ldquo;g&rdquo; values and 2fa on/off  flag.</p>
+
+<h2>/api/cipher - Generate a new set of backup one-time-keys</h2>
+
+<p>This is the central point of the AesSrp authentication.</p>
+
+<p>Lookup the key that was generated via SRP using the <code>t</code> value.  Decrypt the replacement request and replace the current request with
+a decrypted request.</p>
+
+<p>When the request returns, reverse the process and re-encrypt the
+response.</p>
+
+<p>The examples show how to perform the client encryption and decryption for jQuery/AJAX and for AngularJS 1.x.</p>
+
+<p>Each encrypted request is signed and has a random initialization vector added to it.
+This provides a very grantee that:</p>
+
+<ol>
+<li>The request is from the client that it is supposed to be from.</li>
+<li>The request has not been tampered with in the middle.</li>
+<li>The only recipient of the response is the interned client.</li>
+<li>Nobody can listen in to the middle of a set of messages and get anything.</li>
+<li>Nobody can tamper with a message.</li>
+<li>Nobody can replay any messages.</li>
+</ol>
+
+<p>SRP also provides perfect future security since each key from each login is generated at login time.</p>
+
+<h4>Weeknesses</h4>
+
+<ol>
+<li>Cookies and headers are not encrypted.<br /></li>
+<li>This only encrypts the RESTful requests and responses.</li>
+</ol>
+
+<h4>File: aessrp_ext.go Line No: 3089, 528, 3566, 4118</h4>
+
+<pre><code>func respHandlerCipher(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input</h4>
+
+<p>Supports GET and POST.  Post is usually better for this.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>t</code></td>
+<td>Session identifier.</td>
+</tr>
+
+<tr>
+<td align="center"><code>data</code></td>
+<td>The encrypted data.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output</h4>
+
+<p>On Success an encrypted response in JSON.  On an error a non-encrypted
+JSON response with &ldquo;status&rdquo; == &ldquo;error&rdquo;.</p>
+
+<p>Note: You only get errors back from this when the error is at the encryption/decryption level.
+Any errors from a lower level are sent back as an encrypted response.</p>
+
+<h4>Possible Output Errors</h4>
+
+<p>See above. - Output errors are handled with redirect to user supplied pages.</p>
+
+<h3>Example</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/cipher?
+    t=UUID&amp;
+    data=EncryptedData&amp;
+    _ran_=0.12332321123
+</code></pre>
+
+<h2>/api/srp_register - Start Registration Process</h2>
+
+<p>Unencrypted - This is the call to register a new, unverified, user.   This is also the call that is used to
+register a new 2fa device and associate it with an existing verified user.</p>
+
+<h4>File: aessrp_ext.go Line No: 1467, 512, 547</h4>
+
+<pre><code>func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input</h4>
+
+<p>Supports GET and POST</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email</code></td>
+<td>Email address of user. - Used as the username - or <code>DeviceId</code> - one of the 2 is required.</td>
+</tr>
+
+<tr>
+<td align="center"><code>salt</code></td>
+<td>The generated random salt to use with this user.</td>
+</tr>
+
+<tr>
+<td align="center"><code>v</code></td>
+<td>The password verification number generated as a part of the SRP process.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DeviceId</code></td>
+<td>Supplied when registering a 2fa verification device instead of email.  Additional data will be returned to the device.</td>
+</tr>
+
+<tr>
+<td align="center"><code>UserName</code></td>
+<td>Configuration option. - Use this username for login instead of email.  Set <code>UserNameForRegister</code> to true to use.</td>
+</tr>
+
+<tr>
+<td align="center"><code>RealName</code></td>
+<td>Optional. - If supplied then associated with user data.</td>
+</tr>
+
+<tr>
+<td align="center"><code>FirstName</code></td>
+<td>Optional. - If supplied then associated with user data.</td>
+</tr>
+
+<tr>
+<td align="center"><code>MidName</code></td>
+<td>Optional. - If supplied then associated with user data.</td>
+</tr>
+
+<tr>
+<td align="center"><code>LastName</code></td>
+<td>Optional. - If supplied then associated with user data.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output</h4>
+
+<p>For normal user registration with <code>Email</code> as a parameter A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>msg</code></td>
+<td>Only supplied if an error occurs.</td>
+</tr>
+</tbody>
+</table>
+
+<p>The data is saved in Redis for the user.</p>
+
+<p>A confirmation email is sent to the user.  This can be templated.  Please see the section on email templates.</p>
+
+<h4>Possible Output Errors</h4>
+
+<h5>Account Already Exists</h5>
+
+<p>If SendStatusOnerror is true, then Status = 400, Internal server error.
+Else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9001&quot;,&quot;msg&quot;:&quot;Account is already registered with this email but has not been confirmed.  A new email confirmation has been sent.&quot;,
+&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1346&quot;,&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...number...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9003&quot;,&quot;msg&quot;:&quot;Account is already registered with this email.&quot;,
+&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1346&quot;,&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...number...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h5>Invalid Salt</h5>
+
+<p>If SendStatusOnerror is true, then Status = 400, Internal server error.
+Else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9004&quot;,&quot;msg&quot;:&quot;Invalid Salt.&quot;,
+&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1283&quot;,&quot;URI&quot;:&quot;/api/srp_register?email=t3@example.com&amp;salt=1&amp;v=51...big...number...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h5>Invalid &lsquo;v&rsquo; Value</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9005&quot;,&quot;msg&quot;:&quot;Invalid 'v' verifier value.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1288&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;validate=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h5>Invalid Username (When configured to use username.)</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9103&quot;,&quot;msg&quot;:&quot;UserName can not be a UUID.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h5>When a device is registered no Username or Email may be supplied.</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9100&quot;,&quot;msg&quot;: &quot;DeviceId registrations can not have UserName or Email attributes.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h5>When a device is registered no Invalid DeviceId.</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9105&quot;,&quot;msg&quot;: &quot;DeviceId are all 8 digits.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9106&quot;,&quot;msg&quot;: &quot;DeviceId are all digits.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h5>Username Invalid.</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9101&quot;,&quot;msg&quot;: &quot;UserName must be at least 7 characters long.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9102&quot;,&quot;msg&quot;: &quot;UserName must start with a letter, a-z or A-Z.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9104&quot;,&quot;msg&quot;: &quot;UserName can not be used for registration.&quot; ,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;,
+&quot;URI&quot;:&quot;/api/srp_register?email=t1@example.com&amp;UserName=fredFred&amp;salt=42ce852b31aa2beb5e2f89872f944d4b&amp;v=51...big...nnumber...&amp;_ran_=2323232323232323232&quot;}
+</code></pre>
+
+<h4>Example.</h4>
+
+<p>Note: a <code>_ran_</code> catch buster has been appended.  Any additional parameters will be ignored.</p>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/srp_register?    
+    salt=72837283728327328728378273827382738237&amp;
+    email=myEmailAddr@example.com&amp;
+    verifier=343434343434434343434343434343434343433434f23232&amp;
+    _ran_=0.12232321123
+</code></pre>
+
+<p>Currently you will receive a confirmation email from my personal email address - pschlump@gmail.com.
+Soon this will be configurable to other addresses.</p>
+
+<h4>Test.</h4>
+
+<p>Tested On: Mon Mar 21 17:25:28 MDT 2016.</p>
+
+<p>Test: aes_1_test.go</p>
+
+<h2>/api/srp_login - Start Login Process.</h2>
+
+<p>Login has 3 or 5 parts. <code>/api/srp_login</code>, <code>/api/srp_challenge</code>, <code>/api/srp_validate</code>.  This is the first
+part.  If you are using two-factor-authentication (2fa), then the 4th part is <code>/api/get2FactorFromDeviceId</code>
+and it usually is from a different device than the original login process.  This gets the one-time key
+that is then used in the 5th part, <code>/api/valid2Factor</code>.</p>
+
+<p>This is Step 1 of 3 for the login/srp process.</p>
+
+<h4>File: aessrp_ext.go Line No: 2477, 124, 514, 548</h4>
+
+<pre><code>func respHandlerSRPLogin(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST - POST is preferred.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>Email</code></td>
+<td>Use as the Username if Username is not supplied.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Username</code></td>
+<td>The Username to start login process with.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>salt</code></td>
+<td>Numeric salt value from registration.</td>
+</tr>
+
+<tr>
+<td align="center"><code>t</code></td>
+<td>SRP &rsquo;t&rsquo; value - see references on SRP.       See Reference 1, 2.</td>
+</tr>
+
+<tr>
+<td align="center"><code>r</code></td>
+<td>SRP &lsquo;r&rsquo; value - see references on SRP.       See Reference 1, 2.</td>
+</tr>
+
+<tr>
+<td align="center"><code>bits</code></td>
+<td>By default 2048 - but this can be configured to be 3K, 4k, 6k or 8k.</td>
+</tr>
+
+<tr>
+<td align="center"><code>B</code></td>
+<td>SRP &lsquo;B&rsquo; value - see references on SRP.       See Refernece 1, 2.</td>
+</tr>
+
+<tr>
+<td align="center"><code>f2</code></td>
+<td>&ldquo;y&rdquo; If two factor authentication will be required (default), &ldquo;n&rdquo; otherwise.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Inability to generate SRP values &rsquo;t&rsquo; or &lsquo;r&rsquo;.</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 500, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9007&quot;,&quot;msg&quot;:&quot;Internal error - unable to generate 't' key.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9008&quot;,&quot;msg&quot;:&quot;Internal error - unable to generate 'r' key.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<h5>Invalid email address.</h5>
+
+<p>If SendStatusOnerror is true, then Status = 400, Bad request
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;25&quot;,&quot;msg&quot;:&quot;Invalid email address.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<h5>Account has been disabled.</h5>
+
+<p>If SendStatusOnerror is true, then Status = 401, Unauthorized
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9013&quot;,&quot;msg&quot;:&quot;The account has been disabled.  Please contact customer support (call them).&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>or (Only the code and line numbers changed.)</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9015&quot;,&quot;msg&quot;:&quot;The account has been disabled.  Please contact customer support (call them).&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>Code 9015 is caused by exceeding the limit on the number of invalid logins.  The default is 10 and is set by, &ldquo;FailedLoginThreshold&rdquo; configuration parameter.</p>
+
+<p>Code 9013 is caused by a disabled account in the per-user account information.  If the <code>disabled</code> item in the per-user information is other than &ldquo;y&rdquo;, then you get this.</p>
+
+<p>Both of these can be set/changed by an administrator in the user management interface.  The 10 failed attempts, code 9015, will automatically reset after a five
+minute delay.  The delay will be configurable in the next version (item TODO_4001).</p>
+
+<h5>Account not confirmed.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 401, Unauthorized
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9003&quot;,&quot;msg&quot;:&quot;The account has not been confirmed.  Please confirm or register again and get a new confirmation email.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>This indicates that the person has not replied to the email confirmation.</p>
+
+<h3>Example.</h3>
+
+<p>Note: a <code>_ran_</code> catch buster has been appended.  Any additional parameters will be ignored.</p>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/srp_login?   
+    Email=myEmailAddr@example.com&amp;
+    _ran_=0.12232321123
+</code></pre>
+
+<h2>/api/srp_challenge - Start Login Process.</h2>
+
+<p>Step 2 of 3 for the login/srp process.</p>
+
+<h4>File: aessrp_ext.go Line No: 2607, 131, 515, 549</h4>
+
+<pre><code>func respHandlerSRPChallenge(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST - POST is preferred.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>A</code></td>
+<td>SRP &lsquo;A&rsquo; value</td>
+</tr>
+
+<tr>
+<td align="center"><code>r</code></td>
+<td>SRP &lsquo;r&rsquo; value</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:
+    // io.WriteString(www, fmt.Sprintf(<code>{&quot;status&quot;:&quot;success&quot;,&quot;B&quot;:&quot;%s&quot;,&quot;Bits&quot;:%d,&quot;M1&quot;:%q}</code>, sss.XB_s, hdlr.Bits, sss.XM1_s))</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>B</code></td>
+<td>Numeric salt value from calculation.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Bits</code></td>
+<td>Bits in computation.  Same as initialization bits.</td>
+</tr>
+
+<tr>
+<td align="center"><code>M1</code></td>
+<td>SRP &lsquo;M1&rsquo; value - See references on SRP.      See Reference 1, 2.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Temporary data lost.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 500, Internal server error.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9008&quot;,&quot;msg&quot;:&quot;Temporary data lost.  Please try login again.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9009&quot;,&quot;msg&quot;:&quot;Temporary data corrupted.  Please try login again.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>Please look in the AngularJS 1.x, React, React Native or AngularJS 2.x code for an example.</p>
+
+<h2>/api/srp_validate - Start Login Process.</h2>
+
+<p>Step 3 of 3 for the login/srp process.</p>
+
+<p>If this step passes and two-factor-auth (2fa) is enabled, then the user is set to a &ldquo;pending&rdquo; state waiting
+for the 2fa one time key to be validated.   If 2fa is not enabled then the user is logged in.</p>
+
+<p>Some return data is specific to a first login.</p>
+
+<h4>File: aessrp_ext.go Line No: 2682, 132, 141, 152, 516, 550, 933</h4>
+
+<pre><code>func respHandlerSRPValidate(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST - POST is preferred.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>M1</code></td>
+<td>SRP &lsquo;M1&rsquo; value as calculated by the client. - This will be validated by the server now.</td>
+</tr>
+
+<tr>
+<td align="center"><code>r</code></td>
+<td>SRP &lsquo;r&rsquo; value.</td>
+</tr>
+
+<tr>
+<td align="center"><code>stayLoggedIn</code></td>
+<td>True False flag for staying logged in.  True/Flase, <sup>1</sup>&frasl;<sub>0</sub>, y/n etc.   Requries call to /api/setFingerprint to work.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>M2</code></td>
+<td>SRP M2 value. - Calculated.</td>
+</tr>
+
+<tr>
+<td align="center"><code>FirstLogin</code></td>
+<td>Flag if this is the first login that has happed after registration.</td>
+</tr>
+
+<tr>
+<td align="center"><code>MoreBackupKeys</code></td>
+<td>True/False flag. - If the user should get more one-time backup keys.  True when less than 5 keys left.</td>
+</tr>
+
+<tr>
+<td align="center"><code>UserRole</code></td>
+<td>One of the security roles like, &lsquo;user&rsquo;, &lsquo;admin&rsquo; etc.  This is the role for this user.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DeviceId</code></td>
+<td>If first login and two-factor-auth is enabled, then the DeviceId for 2fa.</td>
+</tr>
+
+<tr>
+<td align="center"><code>BackupKeys</code></td>
+<td>One time backup keys to be printed. - If 2fa and first login.</td>
+</tr>
+
+<tr>
+<td align="center"><code>OwnerEmail</code></td>
+<td>Email of the user.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Attrib</code></td>
+<td>Other user attributes that are configured to be returned if any (optional field).</td>
+</tr>
+</tbody>
+</table>
+
+<p>On a successful login the number of failed login attempts is zeroed and the last login time is set to the current time stamp.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Failed to login. - Invalid username/password.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 401, Unauthorized
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9100&quot;,&quot;msg&quot;:&quot;Failed to login.  Incorrect username/email or password.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>Upon failure to login the number of login attempts that have failed is incremented.  Also the last login time is set.
+The first step in this process will check these values and if too many failed login attempts are made it rebuffs any
+new attempts for a pre-determined (5 minute) time period.</p>
+
+<h5>Temporary data lost.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 500, Internal server error
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9010&quot;,&quot;msg&quot;:&quot;Temporary data lost.  Please try login again.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;9011&quot;,&quot;msg&quot;:&quot;Temporary data lost.  Please try login again.&quot;,&quot;LineNo&quot;:0000,&quot;FileName&quot;:&quot;.../aessrp_ext.go&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>Please look in the AngularJS 1.x, React, React Native or AngularJS 2.x code for an example.</p>
+
+<h2>/api/srp_getNg - Initialize - Get SRP <code>n</code>, <code>G</code>, <code>bits</code>, security configuration and two factor enabled.</h2>
+
+<p>At the very beginning of the process you will need to initialize the security model and the SRP
+authentication.  This provides all of the initialization data in 2 formats.  Either as a
+JavaScript file that declares some globals or as a JSON response.</p>
+
+<p>JavaScript is more convenient in a .html file.  For example:</p>
+
+<pre><code>&lt;script type=&quot;text/javascript&quot; src=&quot;http://www.example.com/api/srp_getNg&quot;&gt;&lt;/script&gt;
+</code></pre>
+
+<p>JSON is easier inside a Go or Swift program.</p>
+
+<h4>File: aessrp_ext.go Line No: 1408, 517, 551.</h4>
+
+<pre><code>func respHandlerSRPGetNg(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST - POST is preferred.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>fmt</code></td>
+<td>use <code>js</code> for JavaScript or <code>json</code> for JSON formated output.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>bits</code></td>
+<td>2048 is default, may be, 3072, 4096, 6144, 8192.</td>
+</tr>
+
+<tr>
+<td align="center"><code>g</code></td>
+<td>SRP &lsquo;g&rsquo; value - See references on SRP.        See Reference 1, 2.</td>
+</tr>
+
+<tr>
+<td align="center"><code>N</code></td>
+<td>SRP &lsquo;N&rsquo; value - See references on SRP.        See Reference 1, 2.</td>
+</tr>
+
+<tr>
+<td align="center"><code>TwoFactorRequired</code></td>
+<td>Enabled by default, &lsquo;y&rsquo;.  &lsquo;n&rsquo; if not enabled.</td>
+</tr>
+
+<tr>
+<td align="center"><code>SecurityData</code></td>
+<td>The roles and privileges data model.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<p>None - Service could be down.</p>
+
+<h3>Example.</h3>
+
+<p>Note: a <code>_ran_</code> catch buster has been appended.  Any additional parameters will be ignored.</p>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/srp_getNg?   
+    fmt=JSON&amp;
+    _ran_=0.12332321123
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;TwoFactorRequired&quot;: &quot;y&quot;,
+    &quot;bits&quot;: 2048,
+    &quot;g&quot;: &quot;2&quot;,
+    &quot;N&quot;: &quot;AC6BDB41324A...default...see...rfc5054...&quot;,
+    &quot;SecurityData&quot;: {
+        &quot;AccessLevels&quot;: {
+            &quot;admin&quot;: [ &quot;admin&quot; ],
+            &quot;anon&quot;: [ &quot;public&quot; ],
+            &quot;public&quot;: [ &quot;*&quot; ],
+            &quot;root&quot;: [ &quot;root&quot;, &quot;admin&quot;, &quot;user&quot;, &quot;public&quot; ],
+            &quot;user&quot;: [ &quot;user&quot;, &quot;admin&quot; ]
+        },
+        &quot;MayAccessApi&quot;: {
+            &quot;DeviceId&quot;: [
+                &quot;/api/srp_register&quot;,
+                &quot;/api/srp_login&quot;,
+                &quot;/api/srp_challenge&quot;,
+                &quot;/api/srp_validate&quot;,
+                &quot;/api/srp_getNg&quot;,
+                &quot;/api/send_support_message&quot;,
+                &quot;/api/version&quot;,
+                &quot;/api/srp_logout&quot;,
+                &quot;/api/cipher&quot;,
+                &quot;/api/get2FactorFromDeviceId&quot;
+            ],
+            &quot;admin&quot;:  [ &quot;*&quot; ],
+            &quot;anon&quot;:   [ &quot;*&quot; ],
+            &quot;public&quot;: [ &quot;*&quot; ],
+            &quot;root&quot;:   [ &quot;*&quot; ],
+            &quot;user&quot;:   [ &quot;*&quot; ]
+        },
+        &quot;Privilages&quot;: {
+            &quot;admin&quot;: [ &quot;MayChangeOtherPassword&quot;, &quot;MayCreateAdminAccounts&quot;, &quot;MayChangeOtherAttributes&quot; ]
+        },
+        &quot;Roles&quot;: [ &quot;public&quot;, &quot;user&quot;, &quot;admin&quot;, &quot;root&quot; ]
+    }
+}
+</code></pre>
+
+<p>The <code>bits</code>, <code>N</code> and <code>g</code> values can be set as a part of the AesSrp configuration with <code>NGData</code> option.  You do not need to use
+the values from RFC5054.  You can use a key bigger than 2k.</p>
+
+<h2>/api/version - Return a version string for AesSrp.</h2>
+
+<p>This just returns the version of the code that is implemented as JSON data.</p>
+
+<p>There is an encrypted call to this.  It is useful for checking to see if you are logged in.  It is <code>/api/enc_version</code>.</p>
+
+<h4>File: aessrp_ext.go Line No: 754, 526, 560, 582.</h4>
+
+<pre><code>func respHandlerVersion(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>msg</code></td>
+<td>SRP 6a, AES-256 RESTful encryption (part of Go-FTL 0.5.9)</td>
+</tr>
+
+<tr>
+<td align="center"><code>version</code></td>
+<td>1.0.1</td>
+</tr>
+
+<tr>
+<td align="center"><code>BuildData</code></td>
+<td>Fri Apr  8 08:03:32 MDT 2016</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<p>None - Service could be down.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/version
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;,&quot;msg&quot;:&quot;SRP 6a, AES-256 RESTful encryption (part of Go-FTL 0.5.9)&quot;,&quot;version&quot;:&quot;1.0.1&quot;,&quot;BuildDate&quot;:&quot;Thu Mar 31 14:55:27 MDT 2016&quot;}
+</code></pre>
+
+<h2>/api/enc_version - Return a version string for AesSrp.</h2>
+
+<p>This just returns the version of the code that is implemented as JSON data.</p>
+
+<p>There is a non-encrypted call to this.    It is <code>/api/version</code>.</p>
+
+<h4>File: aessrp_ext.go Line No:</h4>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>msg</code></td>
+<td>SRP 6a, AES-256 RESTful encryption (part of Go-FTL 0.5.9)</td>
+</tr>
+
+<tr>
+<td align="center"><code>version</code></td>
+<td>1.0.1</td>
+</tr>
+
+<tr>
+<td align="center"><code>BuildData</code></td>
+<td>Fri Apr  8 08:03:32 MDT 2016</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<p>None - Service could be down.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/version
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;,&quot;msg&quot;:&quot;SRP 6a, AES-256 RESTful encryption (part of Go-FTL 0.5.9)&quot;,&quot;version&quot;:&quot;1.0.1&quot;,&quot;BuildDate&quot;:&quot;Thu Mar 31 14:55:27 MDT 2016&quot;}
+</code></pre>
+
+<h2>/api/srp_logout - End a login session.</h2>
+
+<p>This is an optional call to indicate that the user has intentionally logged out.</p>
+
+<h4>File: aessrp_ext.go Line No: 2332, 527, 561, 2331.</h4>
+
+<pre><code>func respHandlerSRPLogout(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<p>None - Service could be down.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/srp_logout
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h2>/api/srp_recover_password_pt1 - Start password recovery process.</h2>
+
+<p>This call will send a templated  email to the user to start password recovery.  The email contains
+a link to <code>/api/pwrecov2?auth_token=UUID</code> that will redirect to a configurable destination to show a password recovery
+page.   Also the email should display a <em>token</em> that can be entered to complete the password
+recovery process.  The email can be sent multiple times.  The <em>token</em> lasts for 24 hours.
+<code>/api/srp_recover_password_pt2?...</code> is the second part of the password recovery.  It is what needs
+to be called with a new <code>salt</code> and <code>v</code> to reset the user&rsquo;s password to a new value.</p>
+
+<p>Note: <code>/api/srp_recover_password_pt2</code> also resets all backup one time keys, and creates a new
+<code>DeviceId</code> for two factor authentication.   This means that password recovery invalidates any
+existing devices.</p>
+
+<p>The email template is <code>password-reset.tmpl</code>.  It is passed the users <code>email</code> address and <code>email_auth_token</code>.</p>
+
+<p>This uses the <code>PwResetKey</code> (<code>pwr:</code>) in Redis.</p>
+
+<h3>Overview of process.</h3>
+
+<ol>
+<li>Recovered page is marked with an acceptable token &ldquo;page.&rdquo; - Page token is fetched/generated.
+
+<ol>
+<li>Call /api/getPageToken to get cookie that lasts for 24 hrs. The cookie is used in /api/srp_recover_password_pt1.</li>
+</ol></li>
+<li>Generate token.</li>
+<li>Mark account with token and timestamp of recovery start.</li>
+<li>On request to /api/srp_recover-password_pt1 - Save the &ldquo;page&rdquo; cookie, associate the cookie with the email address.</li>
+<li>Save &lsquo;prw:&lsquo;||token with &ldquo;email&rdquo; and a 24hr timeout to d.b.</li>
+<li>Send Email with <code>auth_token</code>.
+
+<ol>
+<li>If user clicks on link,
+
+<ol>
+<li>Link directs to /api/pwrecov2 that will do a server-temporary (307) redirect to page to enter Password.</li>
+<li>A &ldquo;link&rdquo; cookey is created in the response as hash(Salt:Email:Token) - This will get checked later.</li>
+<li>Creates a data-pass &ldquo;cookie&rdquo; that passes the email/username to the client for display in form. &ndash; Add in other user values (Full Name etc.)</li>
+<li>Client displays form - and deletes data-pass cookie cookie.</li>
+<li>User enters new password + token. - Hits submit.</li>
+</ol></li>
+<li>If user re-enters token into form,  - the form already has email from the request to reset password. -
+
+<ol>
+<li>User enters new password + token. - Hits submit.</li>
+</ol></li>
+<li>Call is made with Token/Usernmae=email/Salt/V + cookies to /api/srp_recover_password_pt2. - This will allow setting of password for user.
+
+<ol>
+<li>Email is sent (optionally PwSendEmailOnRecoverPw) to user to notify them.</li>
+<li>Verify either the &ldquo;page&rdquo; token or the more secure &ldquo;link&rdquo; token.</li>
+<li>New salt/v for verifying paswords.</li>
+<li>Resets invalid login count and last login dates.</li>
+<li>Create new DeviceId, one-timekeys - and returns these to user.</li>
+</ol></li>
+</ol></li>
+<li>Happy user logged in. - Enters new DeviceId into 2fa device.  Probably clicks <em>get one time key</em> key button.
+
+<ol>
+<li>On next click of <em>get one time key</em> button - When device is connected to network.
+
+<ol>
+<li>Will know that device is not registed.</li>
+<li>Will register and login.</li>
+<li>Will get new backup offline one time keys.<br /></li>
+<li>Will get a one-time-key for the user to login.</li>
+</ol></li>
+</ol></li>
+</ol>
+
+<h4>File: aessrp_ext.go Line No: 1924, 518, 552.</h4>
+
+<pre><code>func respHandlerRecoverPasswordPt1(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+
+
+func respHandlerRecoverPasswordPt1(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Configuration Options.</h4>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>PwResetKey</code></td>
+<td>Prefix used in Redis for temporary storage of auth_token.  Temporary is determined by value in seconds of <code>PwExpireIn</code> and defaults to one day (86400 seconds).</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwExpireIn</code></td>
+<td>Temporary key is saved for this amount of time in seconds. Defaults to one day (86400 seconds).</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwSendEmailOnRecoverPw</code></td>
+<td>If &lsquo;y&rsquo; then send email to user when attempt is made to reset password.  Email is &lsquo;pw-reset-attempt.tmpl.&rsquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate1</code></td>
+<td>Used in /api/pwrecov2.  Default: <code>{{.HTTPS}}{{.HOST}}/unable-to-pwrecov1.html</code>   Error message to user for invalid email.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate2</code></td>
+<td>Used in /api/pwrecov2.  Default: <code>{{.HTTPS}}{{.HOST}}/unable-to-pwrecov2.html</code>   Error message to user for invalid email.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate3</code></td>
+<td>Used in /api/pwrecov2.  Default: <code>{{.HTTPS}}{{.HOST}}/#/pwrecov2</code>  Success redirect link.  Client page to display to user collect new password.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.  Requires a valid email address and valid email configuration.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<p>None - Service could be down.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://www.example.com/api/srp_recover_password_pt1
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h3>TODO / In Progress Now.</h3>
+
+<ol>
+<li>This needs to be passed other selected user attributes so the email can put in the persons real name.  See: /api/set_user_attrs and /api/get_user_attrs.</li>
+<li>Need to create token to map to user email and other info. - Instead of &ldquo;cookie&rdquo; pass redirect process.</li>
+<li>Add ability to send email to user that an attempt was made to reset password on account.</li>
+<li>muxEnc.HandleFunc(&ldquo;/api/confirm-registration&rdquo;, respHandlerConfirmRegistration).Method(&ldquo;GET&rdquo;)            // Redirect-Link: To 1st Login /#/login, confirmed &lt;- &lsquo;y&rsquo;  &ndash; Needs to have templates.</li>
+</ol>
+
+<h2>/api/srp_recover_password_pt2 - Start password recovery process.</h2>
+
+<p>This resets the users password and authentication inform ant.
+/api/srp_recover_password_pt1 needs to be called first to create an <code>auth_token</code>.</p>
+
+<p>The <em>auth_token</em> lasts for 24 hours.
+/api/srp_recover_password_pt2 is the second part of the password recovery.  It is what needs
+to be called with a new <code>salt</code> and <code>v</code> to reset the users password to a new value.</p>
+
+<p>Note: /api/srp_recover_password_pt2 also resets all backup one time keys, and creates a new
+<code>DeviceId</code> for two factor authentication.   This means that password recovery invalidates any
+existing devices.</p>
+
+<h4>File: aessrp_ext.go Line No: 1980, 121, 519, 553.</h4>
+
+<pre><code>func respHandlerRecoverPasswordPt2(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Configuration Options.</h4>
+
+<p>See <code>/api/srp_recover_password_pt1.</code></p>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.  Requires a valid email address and valid email configuration.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>salt</code></td>
+<td>Salt for creating new password. - If empty then this will set a cookie and return.</td>
+</tr>
+
+<tr>
+<td align="center"><code>v</code></td>
+<td>Vector for creating new password. - If empty then this will set a cookie and return.</td>
+</tr>
+
+<tr>
+<td align="center"><code>email_auth_token</code></td>
+<td>Token from email that allows for password recovery.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>DeviceId</code></td>
+<td>A new DeviceId to be entered into the 2fa device.</td>
+</tr>
+
+<tr>
+<td align="center"><code>BackupKeys</code></td>
+<td>A set of one-time backup keys that the user should print out and save.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Invalid token.</h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Bad Request.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;8001&quot;,&quot;msg&quot;:&quot;Invalid token.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid token or email.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;8002&quot;,&quot;msg&quot;:&quot;Invalid token or email.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid token.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;8003&quot;,&quot;msg&quot;:&quot;Invalid token.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid salt.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;8004&quot;,&quot;msg&quot;:&quot;Invalid salt.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid &lsquo;v&rsquo; verifier value.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;8005&quot;,&quot;msg&quot;:&quot;Invalid 'v' verifier value.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://www.example.com/api/srp_recover_password_pt1?via=link&amp;
+    email_auth_token=UUID&amp;
+    email=pschlump@example.com
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h2>/api/valid2Factor - Validate a two factor (2fa) one time key.</h2>
+
+<p>If two factor authentication is enabled then a 2fa key will be required to complete
+the login process.  This key is generated/retrieved using one of the 2fa client
+programs.  The key is then passed to this <code>/api</code> call to validate it.   The
+account that is being logged into is in a &ldquo;pending&rdquo; state until validation
+occurs and the set of <code>/api</code> calls that it will allow is limited to:</p>
+
+<pre><code>&quot;/api/1x1.gif&quot;
+&quot;/api/cipher&quot;
+&quot;/api/confirm-registration&quot;
+&quot;/api/enc_version&quot;
+&quot;/api/get2FactorFromDeviceId&quot;
+&quot;/api/getPageToken&quot;
+&quot;/api/pwrecov2&quot;
+&quot;/api/send_support_message&quot;
+&quot;/api/srp_challenge&quot;
+&quot;/api/srp_email_confirm&quot;
+&quot;/api/srp_getNg&quot;
+&quot;/api/srp_login&quot;
+&quot;/api/srp_logout&quot;
+&quot;/api/srp_recover_password_pt1&quot;
+&quot;/api/srp_recover_password_pt2&quot;
+&quot;/api/srp_register&quot;
+&quot;/api/srp_simulate_email_confirm&quot;
+&quot;/api/srp_validate&quot;
+&quot;/api/valid2Factor&quot;
+&quot;/api/version&quot;
+</code></pre>
+
+<h4>File: aessrp_ext.go Line No: 969, 570, 2846.</h4>
+
+<pre><code>func respHandlerValid2Factor(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.  Requires prior Aes/Srp login to complete successfully.  This
+call can only be accessed via an encrypted call.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Invalid one time key.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request.
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;68&quot;,&quot;msg&quot;:&quot;Invalid one time key&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://www.example.com/api/valid2Factor?OneTime=8121412
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h2>/api/get2FactorFromDeviceId - Use DeviceId to fetch a two factor (2fa) one time key.</h2>
+
+<p>If two factor authentication is enabled then a 2fa key will be required to complete
+the login process.  This call is used to retrieve a key from the server using the
+DeviceId.  The key is then passed to this <code>/api/valid2Factor</code> call to validate it.</p>
+
+<p>The account that is being logged into is in a &ldquo;pending&rdquo; state until validation
+occurs and the set of <code>/api</code> calls that it will allow is limited to:</p>
+
+<pre><code>&quot;/api/1x1.gif&quot;
+&quot;/api/cipher&quot;
+&quot;/api/confirm-registration&quot;
+&quot;/api/enc_version&quot;
+&quot;/api/get2FactorFromDeviceId&quot;
+&quot;/api/getPageToken&quot;
+&quot;/api/pwrecov2&quot;
+&quot;/api/send_support_message&quot;
+&quot;/api/srp_challenge&quot;
+&quot;/api/srp_email_confirm&quot;
+&quot;/api/srp_getNg&quot;
+&quot;/api/srp_login&quot;
+&quot;/api/srp_logout&quot;
+&quot;/api/srp_recover_password_pt1&quot;
+&quot;/api/srp_recover_password_pt2&quot;
+&quot;/api/srp_register&quot;
+&quot;/api/srp_simulate_email_confirm&quot;
+&quot;/api/srp_validate&quot;
+&quot;/api/get2FactorFromDeviceId&quot;
+&quot;/api/version&quot;
+</code></pre>
+
+<h4>File: aessrp_ext.go Line No: 859, 533, 577, 876, 2845.</h4>
+
+<pre><code>func respHandlerGet2FactorFromDeviceId(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.  Requires prior Aes/Srp login to complete successfully.  This
+call can only be accessed via an encrypted call.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with (these values were correct the day this document was written):</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Invalid one time key.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;68&quot;,&quot;msg&quot;:&quot;Invalid one time key&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid one time key.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;68&quot;,&quot;msg&quot;:&quot;Invalid one time key&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>fmt.sprintf(&ldquo;unable to find account with email &lsquo;%s&rsquo;.&rdquo;, email)).</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;63&quot;,&quot;msg&quot;:&quot;fmt.Sprintf(&quot;Unable to find account with email '%s'.&quot;, email))&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>fmt.sprintf(&ldquo;secuirty error: not a legitimae end point for a %s type account\n\n&rdquo;, mdata[&ldquo;acct_type&rdquo;])).</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;463&quot;,&quot;msg&quot;:&quot;fmt.Sprintf(&quot;Secuirty Error: not a legitimae end point for a %s type account\n\n&quot;, mdata[&quot;acct_type&quot;]))&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5><code>Unable to retrieve a key based on this deviceid.</code></h5>
+
+<p>If SendStatusOnerror is true then,  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;84&quot;,&quot;msg&quot;:&quot;`Unable to retrieve a key based on this DeviceId`)&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://www.example.com/api/get2FactorFromDeviceId?DeviceId=8121412
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;,&quot;version&quot;:1,&quot;OneTimeKey&quot;:&quot;82112121&quot;}
+</code></pre>
+
+<h2>/api/send_support_message - Use DeviceId to fetch a two factor (2fa) one time key.</h2>
+
+<p>This is used to send an email to the configured email support address.  The email
+support address is set in the web site configuration with the <code>SupportEmailTo</code>
+option.</p>
+
+<p>This is basically so that people can tell me if there is a problem.</p>
+
+<h4>File: aessrp_ext.go Line No: 811, 525, 559, 809.</h4>
+
+<pre><code>func respHandlerSendSupportMessage(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.  Requires prior Aes/Srp login to complete successfully.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email_fr</code></td>
+<td>Address that the email is from.  Must be non-blank and an email address.</td>
+</tr>
+
+<tr>
+<td align="center"><code>subject</code></td>
+<td>Subject of the message.</td>
+</tr>
+
+<tr>
+<td align="center"><code>body</code></td>
+<td>The body.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Invalid input email.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;251&quot;,&quot;msg&quot;:&quot;Invalid input email.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid input email body.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;253&quot;,&quot;msg&quot;:&quot;Invalid input email body.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid input email body.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;253&quot;,&quot;msg&quot;:&quot;Invalid input email body.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://www.example.com/api/send_support_message?email_fr=me@example.com&amp;subject=not+working&amp;body=please+help
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h2>/api/pwrecov2 - Intermediary in click-link password recovery.</h2>
+
+<p>This is an intermediary step in the password recovery process.  When an email is sent
+to a user with a recovery <code>auth_token</code> in it the user can re-enter the token in the
+original form.  That bypasses this entirely.   If on the other hand they want to
+click on a link, then that link needs to bring up the application with the correct
+page for resetting the password.  This is the <code>/api</code> to do that.   It checks a
+number of chunks of data and then redirects (307) to a client page that should
+prompt the user for the new password and new password again.</p>
+
+<p>The client page then calls <code>/api/srp_recover_password_pt2</code> to complete the password reset process.</p>
+
+<p>This is configured with 3 go templates:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Configuration Item</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>PwRecoverTemplate1</code></td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-pwrecov1.html</code></td>
+<td>Error when auth_token is invalid because it is not a correct token.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate2</code></td>
+<td><code>{{.HTTPS}}{{.HOST}}/unable-to-pwrecov2.html</code></td>
+<td>Error when auth_token is invalid because it has expired or never existed.</td>
+</tr>
+
+<tr>
+<td align="center"><code>PwRecoverTemplate3</code></td>
+<td><code>{{.HTTPS}}{{.HOST}}/#/pwrecov2</code></td>
+<td>Client page to redirect to on success. - Default matches with AngularJS 1.x demo.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>File: aessrp_ext.go Line No: 1237, 119, 164, 524, 558.</h4>
+
+<pre><code>func respHandlerRecoverPw2(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.  Requires prior Aes/Srp login to complete successfully.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>auth_token</code></td>
+<td>The token from the email address.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success a 307 redirect to the password reset page.  Also a cookie is set marking this as
+an acceptable source for resetting this user&rsquo;s password.</p>
+
+<p>On error redirects to other error appropriate pages.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<p>See Above.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://www.example.com/api/pwrecov2?email_auth=UUID
+</code></pre>
+
+<h2>/api/getDeviceId - Get a new DeviceId.</h2>
+
+<p>Get a new DeviceId - and update the DeviceId in the users configuration.</p>
+
+<p>This is normally called from a user&rsquo;s client page when they want to register a new device.
+The client may have used the old device to login or a backup one-time-key or they may have
+already been logged in.</p>
+
+<p>If you need to recover from a lost device, then the normal password recovery process will create
+and return to you a new DeviceId and a new set of backup one-time-keys.</p>
+
+<h4>File: aessrp_ext.go Line No: 650, 572.</h4>
+
+<pre><code>func respHandlerGetDeviceId(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>You must be successfully logged in to a &ldquo;user&rdquo; account with AesSrp encryption to make this call.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>DeviceId</code></td>
+<td>The new id.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Invalid input data.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;35&quot;,&quot;msg&quot;:&quot;Invalid input data.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Failed to find user. Invalid input email.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;36&quot;,&quot;msg&quot;:&quot;Failed to find user. Invalid input email.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>fmt.sprintf(<code>Unable to find account with email '%s</code>, email))</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;37&quot;,&quot;msg&quot;:&quot;fmt.Sprintf(`Unable to find account with email '%s`, email))&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/getDeviceId? 
+    fmt=JSON&amp;
+    _ran_=0.12332321123
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;,&quot;DeviceId&quot;:&quot;8121223&quot;}
+</code></pre>
+
+<h2>/api/srp_change_password - Allow a user to change a password.</h2>
+
+<p>This is the normal <code>/api</code> call to change the user&rsquo;s password.   A new &lsquo;salt&rsquo; and a new &lsquo;v&rsquo; are generated
+from the password on the client side.</p>
+
+<p>You must be successfully logged in to a &ldquo;user&rdquo; or &ldquo;admin&rdquo; account with AesSrp encryption to make this call.</p>
+
+<h4>File: aessrp_ext.go Line No: 1771, 120, 569.</h4>
+
+<pre><code>func respHandlerChangePassword(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email</code></td>
+<td>The users email address.</td>
+</tr>
+
+<tr>
+<td align="center"><code>salt</code></td>
+<td>The new &lsquo;salt&rsquo; value.</td>
+</tr>
+
+<tr>
+<td align="center"><code>v</code></td>
+<td>The new verifier.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5><code>Invalid input data.</code>)</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;18&quot;,&quot;msg&quot;:&quot;`Invalid input data`)&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>fmt.sprintf(&ldquo;Fatal error - Did not get passed a bufferhtml.midbuffer - at: %s\n&rdquo;, godebug.lf()))</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 500, Internal Server Error,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;5&quot;,&quot;msg&quot;:&quot;fmt.Sprintf(&quot;Fatal Error - Did not get passed a bufferhtml.MidBuffer - AT: %s\n&quot;, godebug.LF()))&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Unable to find account with specified email.  If SendStatusOnerror is true, then  Status = 400, Bad Request.  else Status = 200 and JSON response is: {&ldquo;status&rdquo;:&ldquo;error&rdquo;,&ldquo;code&rdquo;:&ldquo;21&rdquo;,&ldquo;msg&rdquo;:&ldquo;Unable to find account with specified email.&rdquo;,&ldquo;LineFile&rdquo;:&ldquo;File: /&hellip;/aessrp_ext.go LineNo:1248&rdquo;}</h5>
+
+<h5>Invalid &lsquo;v&rsquo; verifier value.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;20&quot;,&quot;msg&quot;:&quot;Invalid 'v' verifier value.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Unable to find account with specified email.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;21&quot;,&quot;msg&quot;:&quot;Unable to find account with specified email.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/srp_change_password? 
+    email=me@example.com&amp;
+    salt=32232323232323232323232323232323223&amp;
+    v=444444444444444...big.number...4444444444444444&amp;
+    _ran_=0.12332321123
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h3>TODO.</h3>
+
+<ol>
+<li>Require that the page have a pageMarker cookie that is set and current.</li>
+</ol>
+
+<h2>/api/genTempKeys - Generate a new set of backup one-time-keys.</h2>
+
+<p>Upon login the user is presented with a set of backup one-time-keys.  These are generated
+as a part of the user&rsquo;s first login.    After they have used up 75% of these keys (usually 15)
+the sample application will prompt them with a new set of 20 more backup keys.  This is
+the underlying call that generates these keys.</p>
+
+<p>You must be logged into with AesSrp to make this call.</p>
+
+<p>If this is called from the 2fa device on a DeviceId account, then the backup keys are
+for the device to work off-line.</p>
+
+<p>The current DeviceId is also returned.  This may be removed in the future.</p>
+
+<h4>File: aessrp_ext.go Line No: 764, 571, 760.</h4>
+
+<pre><code>func respHandlerGenTempKeys(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<p>No input required.</p>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+
+<tr>
+<td align="center"><code>BackupKeys</code></td>
+<td>The set of backup keys - usually 20 of them.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>Invalid input data.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;38&quot;,&quot;msg&quot;:&quot;Invalid input data.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Failed to find user. Invalid input email.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;39&quot;,&quot;msg&quot;:&quot;Failed to find user. Invalid input email.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>fmt.sprintf(<code>unable to find account with email '%s</code>, email))</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;58&quot;,&quot;msg&quot;:&quot;fmt.Sprintf(`Unable to find account with email '%s`, email))&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/genTempKeys?
+    _ran_=0.12332321123
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;,&quot;BackupKeys&quot;:&quot;...&quot;,&quot;DeviceId&quot;:&quot;92112121&quot;}
+</code></pre>
+
+<h2>/api/srp_email_confirm - Generate a new set of backup one-time-keys.</h2>
+
+<p>Finish the registration process by authorizing the account.   Upon registration
+the user is sent an email with an authorization token in it.   This is the call
+to finish the registration.</p>
+
+<h4>File: aessrp_ext.go Line No: 1721, 522, 556.</h4>
+
+<pre><code>func respHandlerEmailConfirm(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email_auth_token</code></td>
+<td>The authorization token from the email that was sent to the user.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>On Success A JSON hash with:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>status</code></td>
+<td>&ldquo;Success&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Possible Output Errors.</h4>
+
+<h5>fmt.sprintf(&ldquo;Fatal error. - Did not get passed a bufferhtml.midbuffer - at: %s\n&rdquo;, godebug.lf()))</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 500, Internal Server Error,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;5&quot;,&quot;msg&quot;:&quot;fmt.Sprintf(&quot;Fatal Error. - Did not get passed a bufferhtml.MidBuffer - AT: %s\n&quot;, godebug.LF()))&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid email address.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;16&quot;,&quot;msg&quot;:&quot;Invalid email address.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h5>Invalid auth_token address.</h5>
+
+<p>If SendStatusOnerror is true, then  Status = 400, Bad Request,
+else Status = 200 and JSON response is:</p>
+
+<pre><code>{&quot;status&quot;:&quot;error&quot;,&quot;code&quot;:&quot;17&quot;,&quot;msg&quot;:&quot;Invalid auth_token address.&quot;,&quot;LineFile&quot;:&quot;File: /.../aessrp_ext.go LineNo:1248&quot;}
+</code></pre>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/srp_email_confirm?
+    email_auth_token=UUID&amp;
+    _ran_=0.12332321123
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{&quot;status&quot;:&quot;success&quot;}
+</code></pre>
+
+<h2>/api/get_user_attrs - Get user attributes associated with a logged in user.</h2>
+
+<p>Get the user attributes for the currently logged in user.</p>
+
+<h4>File: aessrp_ext.go Line No: 3751, 566.</h4>
+
+<pre><code>func respHandlerGetUserAttrs(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<p>Requires an encrypted login.</p>
+
+<h4>Output.</h4>
+
+<p>Varies.  This depends on what user attributes have been set.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<p>If logged in - probably none.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/get_user_attrs?
+    _ran_=0.12332321123
+</code></pre>
+
+<h2>/api/admin_get_user_attrs - Get user attributes associated with a specified user.</h2>
+
+<p>Get the user attributes for another user.  Only an admin can do this.</p>
+
+<p>You can not get the attributes on another &lsquo;admin&rsquo; user. - To do that requires the &lsquo;root&rsquo; account.</p>
+
+<h4>File: aessrp_ext.go Line No: 3918, 568.</h4>
+
+<pre><code>func respHandlerAdminGetUserAttrs(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<p>Requires an encrypted login to an admin acount.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email</code></td>
+<td>The user to get the attributes for.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>Varies.  This depends on what user attributes have been set.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<p>If logged in - probably none.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/admin_get_user_attrs?
+    _ran_=0.12332321123
+</code></pre>
+
+<h2>/api/set_user_attrs - Get user attributes associated with a user.</h2>
+
+<p>Sets the user attributes for the currently logged in user.</p>
+
+<h4>File: aessrp_ext.go Line No: 3673, 565.</h4>
+
+<pre><code>func respHandlerSetUserAttrs(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<p>Requires an encrypted login to an admin account.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>attribute</code></td>
+<td>A specified attribute that you want to set.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>Success if this is a valid user and this is a valid admin logged in.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<p>If logged in - probably none.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/set_user_attrs?
+    _ran_=0.12332321123
+</code></pre>
+
+<h2>/api/admin_set_user_attrs - Get user attributes associated with a specified user.</h2>
+
+<p>Sets the user attributes for another user.  Only an admin can do this.</p>
+
+<p>You can not set the attributes on another &lsquo;admin&rsquo; user. - To do that requires the &lsquo;root&rsquo; account.</p>
+
+<h4>File: aessrp_ext.go Line No: 2240, 123, 579, 580.</h4>
+
+<pre><code>func respHandlerAdminSetAttributes(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<p>Requires an encrypted login to an admin acount.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email</code></td>
+<td>The user to get the attributes for.</td>
+</tr>
+
+<tr>
+<td align="center"><code>attribute</code></td>
+<td>A specified attribute that you want to set.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>Sucess if this is a valid user and this is a valid admin logged in.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<p>If logged in - probably none.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/admin_set_user_attrs?
+    _ran_=0.12332321123
+</code></pre>
+
+<h2>/api/admin_set_password - Set the password for another user.</h2>
+
+<p>Sets the password, &lsquo;salt&rsquo;, &lsquo;v&rsquo; for some other user.</p>
+
+<p>You can not set the password on another &lsquo;admin&rsquo; user. - To do that requires the &lsquo;root&rsquo; account.</p>
+
+<h4>File: aessrp_ext.go Line No: 2149, 122, 578.</h4>
+
+<pre><code>func respHandlerAdminSetPassword(www http.ResponseWriter, req *http.Request) {
+    ...
+}
+</code></pre>
+
+<h4>Input.</h4>
+
+<p>Supports GET and POST.</p>
+
+<p>Requires an encrypted login to an admin account.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>email</code></td>
+<td>The user to set the password on.</td>
+</tr>
+
+<tr>
+<td align="center"><code>salt</code></td>
+<td>Salt for creating new password. - If empty, then this will set a cookie and return.</td>
+</tr>
+
+<tr>
+<td align="center"><code>v</code></td>
+<td>Vector for creating new password. - If empty, then this will set a cookie and return.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Output.</h4>
+
+<p>Success if this is a valid user and this is a valid admin logged in.</p>
+
+<h4>Possible Output Errors.</h4>
+
+<p>If logged in - probably none.</p>
+
+<h3>Example.</h3>
+
+<p>As a GET Request - Split on Multiple Lines:</p>
+
+<pre><code> http://localhost:8000/api/admin_set_password?
+    _ran_=0.12332321123
+</code></pre>
+
+<h3>TODO - Document.</h3>
+
+<h4>Delayed due to re-write of Stay Logged In feature.</h4>
+
+<pre><code>muxEnc.HandleFunc(&quot;/api/resumeSession&quot;, respHandlerResumeSession).Method(&quot;GET&quot;, &quot;POST&quot;)       // ENC:   Allow for resumption of a session.
+</code></pre>
+
+<h3>Tested.</h3>
+
+<p>Tested On: Thu Dec 17 14:24:25 MST 2015, Version 0.5.8 of Go-FTL.</p>
+
+<p>Tested With: Redis 2.8 and PostgreSQL 9.4.</p>
+
+<p>Tested With: Redis 2.8 and PostgreSQL 9.5.</p>
+
+<p>Tested On: Wed Mar 30 09:48:28 MDT 2016 &ndash; AngularJS 1.x test + unit tests ./aes_1_test.go. &ndash; Passed.</p>
+
+<p>Tested On: Fri Apr  6 06:22:08 MDT 2016 with a React 0.14 and React 15 front end. Passed.</p>
+
+<p>Tested On: Fri Apr  8 08:09:43 MDT 2016 with a jQuery and jQuery mobile front end. Passed.</p>
+
+<p>Tested On: Mon Apr 18 14:03:15 MDT 2016 with a ReactNative iOS front end. Passed.</p>
+
+<h3>TODO.</h3>
+
+<ol>
+<li>Configurable time delay.  TODO_4001 - &ldquo;TimeDelayForInvalidLogin&rdquo; to be added.</li>
+<li>/api/resumeSession, /api/setupStayLoggedIn.</li>
+<li>Implement for Socket.IO.</li>
+</ol>
+
+<h2>References.</h2>
+
+<ol>
+<li><a href="http://www.ietf.org/rfc/rfc5054.txt">SRP Standard, RFC 5054</a></li>
+<li><a href="http://srp.stanford.edu/">Standford STP library and information</a></li>
+</ol>
+
+{% endblock %}

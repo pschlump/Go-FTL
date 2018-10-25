@@ -1,0 +1,75 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RejectIPAddress: Ban Certain IP Address</h1>
+
+<p>Allows for the banning of specific IP addresses.  If a matching IP address is found, then a
+HTTP Status Forbidden (403) error will be returned.</p>
+
+<p>Planned:  Adding ability to match ranges and sets of IP addresses.</p>
+
+<p>Also you can block based on geographic location using geoIPFilter.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of IP addresses, either IPv4 or IPv6 addresses.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RejectIPAddress&quot;: { 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;IPAddrs&quot;: [ &quot;206.22.41.8&quot;, &quot;206.22.41.9&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<p>or you can provide a Redis prefix where a successful lookup will result in a
+HTTP Status Forbidden (403) error.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RejectIPAddress&quot;: { 
+                &quot;Paths&quot;:            &quot;/api&quot;,
+                &quot;RedisPrefix&quot;:      &quot;reject-ip|&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<p>If both IPAddrs and RedisPrefix are provided, then an error will be logged and the RedisPrefix will be used.<br />
+To apply to all paths use a &ldquo;Paths&rdquo; of &ldquo;/&rdquo;.</p>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RejectIPAddress&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;IPAddrs&quot;: [ &quot;206.22.41.8&quot;, &quot;206.22.41.9&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Thu Feb 25 12:37:05 MST 2016</p>
+
+<h3>TODO</h3>
+
+<p>Add IP Ranges/Patterns: see /Users/corwin/Projects/IP/ip.go</p>
+
+{% endblock %}

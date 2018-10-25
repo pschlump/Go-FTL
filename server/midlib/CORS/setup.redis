@@ -1,0 +1,8 @@
+auth lLJSmkccYJiVEwskr1RM4MWIaBM
+keys vorig:*
+set "vorig:http://dev2.test1.com:9011" "{\"Valid\":\"yes\"}"
+set "vorig:http://localhost:3000"      "{\"Valid\":\"yes\"}"
+set "vorig:http://localhost:3002"      "{\"Valid\":\"yes\"}"
+set "vorig:http://192.168.0.157:3000"  "{\"Valid\":\"yes\"}"
+keys vorig:*
+quit

@@ -1,0 +1,47 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RewriteProxy: Rewrite Reqeust and Proxy It to a Different Server</h1>
+
+<p>A single combed rewrite and proxy that allows access to a different server.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of extensions that when matched will return a HTTP Not Found (404) error.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RewriteProxy&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;: [ &quot;.cfg&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RewriteProxy&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;: [ &quot;.cfg&quot;, &quot;.password_db&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Thu, Mar 10, 19:42:36 MST, 2016</p>
+
+{% endblock %}

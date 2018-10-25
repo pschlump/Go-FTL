@@ -1,0 +1,68 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Redirect: Redirect One Request to Another Location</h1>
+
+<p>Redirect provides the ability to redirect a client to a new location on this or other servers.  If you do
+not specify a HTTP status, then 307 temporary redirect will be used.   It is highly recommended that you
+avoid 301 redirects.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of paths that you want to redirect.  These will get 307 temporary redirects.
+This will take <code>/api.v2/getData</code> and redirect it to <a href="http://www.example.com/api/getData">http://www.example.com/api/getData</a>.
+<code>{{.THE_REST}}</code> is defined to be any remaining content from the request URI after the Paths match.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Redirect&quot;: { 
+                &quot;Paths&quot;:  [ &quot;/api.v2&quot;, &quot;/v1.api&quot; ],
+                &quot;To&quot;:  [
+                    { &quot;To&quot;: &quot;http://www.example.com/api{{.THE_REST}}&quot;, &quot;Code&quot;: &quot;MovedTemporary&quot; },
+                    { &quot;To&quot;: &quot;http://www.example.com/api{{.THE_REST}}&quot;, &quot;Code&quot;: &quot;MovedPermanent&quot; },
+                }
+                &quot;TemplateFileName&quot;: &quot;moved.tmpl&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Redirect&quot;: { &quot;LineNo&quot;:5, 
+                &quot;To&quot;:  [
+                    { &quot;To&quot;:&quot;http://www.zepher.com:3210/api{{.THE_REST}}&quot; }
+                ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Sat Feb 27 18:26:02 MST 2016</p>
+
+<ol>
+<li>Tested with simple redirect. - Done.</li>
+<li>Test with template.</li>
+<li>Test with invalid configuration.</li>
+<li>Test with invalid template.</li>
+<li>Test with missing template.</li>
+</ol>
+
+<h3>TODO</h3>
+
+<p>What happens with post/del etc.</p>
+
+{% endblock %}

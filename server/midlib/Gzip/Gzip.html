@@ -1,0 +1,53 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Gzip: Ban Certain IP Addresses</h1>
+
+<p>Gzip allows for compression of return data.  It may pose a security risk if used in
+combination with HTTPS.  The security risk is a timing attack. It is mitigated
+by using caching that causes the gzip compression to only run when the file
+changes.</p>
+
+<p>The default is to compress anything that is larger than 500 bytes.</p>
+
+<h2>Configuration</h2>
+
+<p>Gizp any data that is larger than 1,000 bytes and is from the /static directory.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Gzip&quot;: { 
+                &quot;Paths&quot;:   &quot;/static&quot;,
+                &quot;MinLength&quot;: 1000
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Gzip&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/static&quot;,
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Sat Feb 27 08:04:50 MST 2016</p>
+
+<p>Tue May  3 09:14:29 MDT 2016 &ndash; After changes to work with caching.</p>
+
+{% endblock %}

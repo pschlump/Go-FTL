@@ -1,0 +1,6 @@
+auth "lLJSmkccYJiVEwskr1RM4MWIaBM"
+set "htci:localhost:16040" "1"
+set "htci:www.go-ftl.com" "2"
+set "htci:www.qr-today.com" "3"
+set "htci:--default--" "1"
+quit

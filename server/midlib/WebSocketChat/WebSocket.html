@@ -1,0 +1,56 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>LoginRequired: Middleware After this Require Login</h1>
+
+<p>Each of the middleware after this in the processing stack will require a login via AesSrp.
+This middleware also works with the BasicAuth, BasicAuthRedis, BasicAuthPgSQL.</p>
+
+<p>This tests to verify if a successful login has been passed at a previous point in the
+processing.  The top level of the processing reserves a set of parameters like <code>$is_logged_in$</code>.
+During login, if the login is successful, then this parameter will be set to <code>y</code>.  That gets
+checked by this middleware.</p>
+
+<p>If &ldquo;StrongLoginReq&rdquo; is set to  &ldquo;yes&rdquo; then the parameter <code>$is_full_login$</code> is also checked to
+be a <code>y</code>.  This is set to <code>y</code> when login has happened and if configured for it, two factor
+authentication has taken place.</p>
+
+<h2>Why this works</h2>
+
+<p>At the top level the server (top) will remove the parameters $is_logged_in$ and $is_full_login$.  If the parameters
+are found then they will get converted into &ldquo;user_param::$is_logged_in$&rdquo; and &ldquo;user_param::$is_full_login$&ldquo;.
+Then if login occurs it can set the params and this can see them.</p>
+
+<h2>Configuration</h2>
+
+<p>For the paths that you want to protect with this turn on basic auth, or use the AesSrp
+authentication.  In the server configuration file:</p>
+
+<pre><code>{ &quot;LoginRequired&quot;: {
+    &quot;Paths&quot;: [ &quot;/PrivateStuff&quot; ],
+    &quot;StrongLoginReq&quot;:  &quot;yes&quot;
+} },
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;LoginRequired&quot;: {
+                &quot;Paths&quot;: [ &quot;/private1&quot;, &quot;/private2&quot; ],
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>As a part of the AesSrp login process.</p>
+
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Logging: Output a Log Message for Every Request</h1>
+
+<p>Log all requests to the logger.</p>
+
+<p>This is one of a set of tools for looking into the middleware stack.
+These include:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Middleware</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>DumpResponse</code></td>
+<td>Look at output from a request.  Can be placed at different points in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DumpReq</code></td>
+<td>Look at what is in the request.  Can be placed at different points in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Status</code></td>
+<td>Send back to the client what was in the request.  It returns for all matched paths so it is normally used only once for each path.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Echo</code></td>
+<td>Echo a message to standard output when you reach this point in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Logging</code></td>
+<td>Log what the request/response are at this point in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Else</code></td>
+<td>A catch all for handing requests that do not have any name resolution.  It will, by default, list all of the available sites on a server by name.</td>
+</tr>
+</tbody>
+</table>
+
+<p>The format can substitute any of these items:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Item</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>IP</code></td>
+<td>IP address of remote client</td>
+</tr>
+
+<tr>
+<td align="center"><code>URI</code></td>
+<td>URI</td>
+</tr>
+
+<tr>
+<td align="center"><code>delta_t</code></td>
+<td>How long the request has taken</td>
+</tr>
+
+<tr>
+<td align="center"><code>host</code></td>
+<td>Host name</td>
+</tr>
+
+<tr>
+<td align="center"><code>ERROR</code></td>
+<td>Error message that is returned by lower level middleware</td>
+</tr>
+
+<tr>
+<td align="center"><code>method</code></td>
+<td>Request Method</td>
+</tr>
+
+<tr>
+<td align="center"><code>now</code></td>
+<td>Current Time</td>
+</tr>
+
+<tr>
+<td align="center"><code>path</code></td>
+<td>Request Path</td>
+</tr>
+
+<tr>
+<td align="center"><code>port</code></td>
+<td>Port Number</td>
+</tr>
+
+<tr>
+<td align="center"><code>query</code></td>
+<td>Query String</td>
+</tr>
+
+<tr>
+<td align="center"><code>scheme</code></td>
+<td>HTTP or HTTPS</td>
+</tr>
+
+<tr>
+<td align="center"><code>start_time</code></td>
+<td>Start time of request</td>
+</tr>
+
+<tr>
+<td align="center"><code>status_code</code></td>
+<td>Numeric status code</td>
+</tr>
+
+<tr>
+<td align="center"><code>StatusCode</code></td>
+<td>Numeric status code</td>
+</tr>
+
+<tr>
+<td align="center"><code>StatusText</code></td>
+<td>Numeric status converted to a description</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Configuration</h2>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Logging&quot;: { 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;Format&quot;: &quot;IP: {{.IP}} METHOD: {{.method}}&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Logging&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;Format&quot;: &quot;IP: {{.IP}} METHOD: {{.method}}&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Wed, Mar 2, 15:18:12 MST, 2016</p>
+
+{% endblock %}

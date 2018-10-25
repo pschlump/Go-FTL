@@ -1,0 +1,49 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>LimitExtensionTo: Limit Requests Based on File Extension</h1>
+
+<p>Limit serving of files to the specified set of extensions.  If the file is not one of the specified
+extensions, then reject the request.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of extensions that when matched will be served.
+All other extensions return a HTTP Not Found (404) error.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;LimitExtensionTo&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;: [ &quot;.html&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;LimitExtensionTo&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;: [ &quot;.html&quot;, &quot;.json&quot;, &quot;.css&quot;, &quot;.js&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Fri Feb 26 10:48:45 MST 2016</p>
+
+{% endblock %}

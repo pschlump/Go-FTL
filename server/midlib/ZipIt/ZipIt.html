@@ -1,0 +1,49 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>ZipIt: Return GZIP file for a set of paths</h1>
+
+<pre><code class="language-JSON">	{
+		&quot;Section&quot;: &quot;Middleware&quot;
+	,	&quot;SubSection&quot;: &quot;ZipIt Send Gziped File&quot;
+	,	&quot;SubSectionGroup&quot;: &quot;Performance&quot;
+	,	&quot;SubSectionTitle&quot;: &quot;ZipIt Return specified Gzip Compressed File&quot; 
+	,	&quot;SubSectionTooltip&quot;: &quot;ZipIt returnes a specified file that is already gziped&quot;
+	, 	&quot;MultiSection&quot;:2
+	}
+</code></pre>
+
+<p>ZipIt allows you to return a zip-bom.  I am tired of getting poked on my static
+site for Wordpress /admin directories.   The configuration examples is to return
+a 10G gzip compressed file for all /adnim requests.</p>
+
+<p>Amazing how the script-kiddies quit poking my sites after I started doing this.</p>
+
+<h2>Configuration</h2>
+
+<p>Gizp any data that is larger than 1,000 bytes and is from the /static directory.</p>
+
+<pre><code class="language-JSON">	{
+		&quot;servername&quot;: { 
+			&quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+			&quot;plugins&quot;:[
+			...
+				{ &quot;ZipIt&quot;: { 
+					&quot;Paths&quot;:   &quot;/admin&quot;,
+					&quot;FileName&quot;: &quot;10G.gzip&quot;
+				} },
+			...
+	}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code class="language-JSON">	{
+		... TBD ...
+	}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Thu Jul  6 11:57:11 MDT 2017</p>
+
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Prefix: Allows configuration of a &ldquo;prefix&rdquo; before JSON responses</h1>
+
+<pre><code class="language-JSON">	{
+		&quot;Section&quot;: &quot;Middleware&quot;
+	,	&quot;SubSection&quot;: &quot;Handle Prefix&quot;
+	,	&quot;SubSectionGroup&quot;: &quot;Request Processing&quot;
+	,	&quot;SubSectionTitle&quot;: &quot;Handle Prefix requests&quot;
+	,	&quot;SubSectionTooltip&quot;: &quot;Transorm get reqeusts into Prefix if they have a callback parameter&quot;
+	, 	&quot;MultiSection&quot;:2
+	}
+</code></pre>
+
+<p>Adding a prefix (like Google or Facebook) helps to prevent the direct execution of JSON
+code.  AngularJS supports <code>)]}',\n</code> as a prefix by default.</p>
+
+<pre><code class="language-json">
+	where(1);{&quot;json&quot;:&quot;code&quot;}
+
+</code></pre>
+
+<p>or</p>
+
+<pre><code class="language-json">
+	)]};{&quot;json&quot;:&quot;code&quot;}
+
+</code></pre>
+
+<p>This addresses <a href="http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx/">a known JSON security vulnerability</a>.</p>
+
+<p>Both server and the client must cooperate in order to eliminate these threats.
+This implements the server side for mitigating this attack.
+Angular comes pre-configured with strategies that address this issue, but for this to work backend server cooperation is required.
+Other front end packages will use a different prefix.  You can set the prefix, but the default is for Angular.</p>
+
+<h2>JSON Vulnerability Protection</h2>
+
+<p>A JSON vulnerability allows third party website to turn your JSON resource URL into JSONP request under some conditions.
+To counter this your server can prefix all JSON requests with following string &ldquo;)]}&lsquo;,\n&rdquo;.
+The Client must automatically strip the prefix before processing it as JSON.</p>
+
+<p>For example if your server needs to return:</p>
+
+<pre><code class="language-json">
+	['one','two']
+
+</code></pre>
+
+<p>which is vulnerable to attack, your server can return:</p>
+
+<pre><code class="language-json">
+	)]}',
+	['one','two']
+
+</code></pre>
+
+<h2>Configuration</h2>
+
+<pre><code class="language-JSON">	{
+		&quot;servername&quot;: { 
+			&quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+			&quot;plugins&quot;:[
+			...
+				{ &quot;Prefix&quot;: { 
+					&quot;Paths&quot;:  &quot;/api&quot;,
+					&quot;Prefix&quot;: &quot;)]}',\n&quot;
+				} },
+			...
+	}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code class="language-JSON">	{
+		 &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+			&quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+			&quot;plugins&quot;:[
+				{ &quot;Prefix&quot;: { &quot;LineNo&quot;:5, 
+					&quot;Paths&quot;:   &quot;/api&quot;,
+				} },
+				{ &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+					&quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+					&quot;Paths&quot;:&quot;/&quot;
+				} }
+			]
+		}
+	}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Tue Jun 21 08:26:53 MDT 2016</p>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Cookie: Set/Delete Cookies</h1>
+
+<p>Create headers to set or delete cookies.</p>
+
+<h2>Configuration</h2>
+
+<p>Name and Value are required.  Other configuration options for the cookie are optional.  Normally Domain will
+also need to be set.  If you want your cookie to be available to <code>www.example.com</code> and <code>cdn.example.com,</code> then use
+<code>.example.com</code>.</p>
+
+<p>Use only one of <code>MaxAge</code> and <code>Expires</code>.  To delete a cookie set the value to an empty <code>Value</code>, <code>&quot;&quot;</code> and <code>MaxAge</code> to <code>-1</code>.</p>
+
+<p>In this example the path <code>/somepath</code> will get a cookie named <code>testcookie</code> with a value of <code>1234</code>.  The cookie
+expires in a very confusing <code>12001</code> seconds or in 2018 (not good, but this is an example).  This is not
+a secure cookie.</p>
+
+<p>Secure cookies can only be set when using HTTPS.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Cookie&quot;: { 
+                &quot;Paths&quot;:    &quot;/somepath&quot;,
+                &quot;Name&quot;:     &quot;testcookie&quot;,
+                &quot;Value&quot;:    &quot;1234&quot;,
+                &quot;Domain&quot;:   &quot;www.example.com&quot;,
+                &quot;Expires&quot;:  &quot;Thu, 18 Dec 2018 12:00:00 UTC&quot;,
+                &quot;MaxAge&quot;:   &quot;12001&quot;,
+                &quot;Secure&quot;:   false,
+                &quot;HttpOnly&quot;: false
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Cookie&quot;: { 
+                &quot;Paths&quot;:    &quot;/somepath&quot;,
+                &quot;Name&quot;:     &quot;testcookie&quot;,
+                &quot;Value&quot;:    &quot;1234&quot;,
+                &quot;Domain&quot;:   &quot;.zepher.com&quot;,
+                &quot;Expires&quot;:  &quot;Thu, 18 Dec 2018 12:00:00 UTC&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Thu, Mar 10, 13:11:43 MST, 2016</p>
+
+<h3>TODO</h3>
+
+<p>Use template substitution on the cookie name and value.</p>
+
+<p>Add a &ldquo;Delete&rdquo; flag that correctly sets the values for a delete with a single flag.</p>
+
+{% endblock %}

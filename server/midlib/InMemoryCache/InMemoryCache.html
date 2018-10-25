@@ -1,0 +1,133 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>InMemoryCache: Ban Certain IP Address</h1>
+
+<p>This is primarily intended as an in-memory cache.  It will also, if configured, cache files to disk.
+The cleanup time on disk cached items is by default 1 hour.</p>
+
+<h2>Configuration</h2>
+
+<p>Lots of configuration items.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Item</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>Extensions</code></td>
+<td>no-default</td>
+<td>The set of file extensions that will be cached.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Duration</code></td>
+<td>60</td>
+<td>How long, in seconds, to cache in memory.</td>
+</tr>
+
+<tr>
+<td align="center"><code>IgnoreUrls</code></td>
+<td>no-default</td>
+<td>Paths to be ignored - and not cached.  For example &ldquo;/api/&rdquo;.</td>
+</tr>
+
+<tr>
+<td align="center"><code>SizeLimit</code></td>
+<td>500000</td>
+<td>Limit on size of items to be cached in memory.  Size in bytes.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DiskCache</code></td>
+<td>no-default</td>
+<td>Set of disk locations to place on-disk cached files.  Used round-robin.  If this item is empty then no disk caching will take place.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DiskSize</code></td>
+<td>200000000</td>
+<td>Maximum amount of disk space to use for on-disk cached files.</td>
+</tr>
+
+<tr>
+<td align="center"><code>RedisPrefix</code></td>
+<td>&ldquo;cache:&rdquo;</td>
+<td>The prefix used in Redis for data stored and updated by this middleware.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DiskSizeLimit</code></td>
+<td>2000000</td>
+<td>The maximum size for disk-cached items.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DiskCleanupFreq</code></td>
+<td>3600</td>
+<td>How long to keep items in the disk cache.  They are discarded after this number of seconds.</td>
+</tr>
+</tbody>
+</table>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;InMemoryCache&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;:       [ &quot;.js&quot;, &quot;.css&quot;, &quot;.html&quot; ],
+                &quot;Duration&quot;:         60,
+                &quot;IgnoreUrls&quot;:       [ &quot;/api/&quot; ],
+                &quot;SizeLimit&quot;:        500000,
+                &quot;DiskCache&quot;:        [ &quot;./cache/&quot; ],
+                &quot;DiskSize&quot;:         200000000,
+                &quot;RedisPrefix&quot;:      &quot;cache:&quot;,
+                &quot;DiskSizeLimit&quot;:    2000000,
+                &quot;DiskCleanupFreq&quot;:  3600
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;InMemoryCache&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;Extensions&quot;:       [ &quot;.js&quot;, &quot;.css&quot;, &quot;.html&quot; ],
+                &quot;IgnoreUrls&quot;:       [ &quot;/api/&quot; ],
+                &quot;DiskCache&quot;:        [ &quot;./cache/&quot; ],
+                &quot;DiskSize&quot;:         200000000
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Fri, Mar 11, 09:22:36 MST, 2016</p>
+
+<h3>TODO</h3>
+
+<ol>
+<li>Extensive testing with multiple components and the InMemoryCache at the same time.  For example verify that TabServer2 can/will correctly set cache timeout when used with this component.</li>
+<li>Add the set of mime types to cache - instead of file extensions.</li>
+<li>Make the file extensions consistent across the Go-FTL system.   In other places the extension <code>.js</code> is just <code>js</code>.</li>
+</ol>
+
+{% endblock %}

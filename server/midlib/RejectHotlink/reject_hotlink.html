@@ -1,0 +1,66 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RejectHotlink: Reject requests based on invalid referer header</h1>
+
+<p>For matching paths, if the file extension for the request matches then only allow the specified set of
+<code>Referer</code> headers.   This is primarily used to prevent hot linking of images and JavaScript across sites.</p>
+
+<p>Process:</p>
+
+<p>If the path starts with one of the selected paths then:</p>
+
+<p>If the host is in the list of ignored hosts then just pass this request on to the next handler.</p>
+
+<p>If the request has one of the extensions then check the <code>referer</code> header. If the header is valid then pass this on.</p>
+
+<p>If the tests fail to pass then either return an error (ReturnError is true) or return an empty clear 1px by 1px GIF image.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of paths to match.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RejectHotlink&quot;: { 
+                &quot;Paths&quot;:           [ &quot;/js/&quot;, &quot;/css/&quot;, &quot;/img/&quot; ],
+                &quot;AllowedReferer&quot;:  [ &quot;www.example.com&quot;, &quot;example.com&quot; ],
+                &quot;FileExtensions&quot;:  [ &quot;.js&quot;, &quot;.css&quot;, &quot;.gif&quot;, &quot;.png&quot;, &quot;.ico&quot;, &quot;.jpg&quot;, &quot;.jpeg&quot; ],
+                &quot;AlloweEmpty&quot;:     &quot;false&quot;,
+                &quot;IgnoreHosts&quot;:     [ &quot;localhost&quot;, &quot;127.0.0.1&quot; ],
+                &quot;ReturnError&quot;:     &quot;yes&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RejectHotlink&quot;: { 
+                &quot;Paths&quot;:           [ &quot;/js/&quot;, &quot;/css/&quot;, &quot;/img/&quot; ],
+                &quot;AllowedReferer&quot;:  [ &quot;www.zepher.com&quot;, &quot;zepher.com&quot;, &quot;cdn0.zepher.com&quot;, &quot;cdn1.zepher.com&quot;, &quot;img.zepher.com&quot; ],
+                &quot;FileExtensions&quot;:  [ &quot;.js&quot;, &quot;.css&quot;, &quot;.gif&quot;, &quot;.png&quot;, &quot;.ico&quot;, &quot;.jpg&quot;, &quot;.jpeg&quot;, &quot;.otf&quot;, &quot;.eot&quot;, &quot;.svg&quot;, &quot;.xml&quot;, &quot;.ttf&quot;, &quot;.woff&quot;, &quot;.woff2&quot;, &quot;.less&quot;, &quot;.sccs&quot;, &quot;.csv&quot;, &quot;.pdf&quot; ],
+                &quot;AlloweEmpty&quot;:     &quot;false&quot;,
+                &quot;IgnoreHosts&quot;:     [ &quot;localhost&quot;, &quot;127.0.0.1&quot;, &quot;[::1]&quot; ],
+                &quot;ReturnError&quot;:     &quot;no&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Fri Apr 22 12:46:06 MDT 2016 &ndash; Tested only as a part of an entire server.  The automated test is still in the works.</p>
+
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Echo: Output a Message When End Point Reached</h1>
+
+<p>This is a simple middleware that allows echoing of a message.</p>
+
+<p>This can be used as an end-point to test other items.</p>
+
+<p>This is one of a set of tools for looking into the middleware stack.
+These include:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Middleware</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>DumpResponse</code></td>
+<td>Look at output from a request.  Can be placed at different points in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>DumpReq</code></td>
+<td>Look at what is in the request.  Can be placed at different points in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Status</code></td>
+<td>Send back to the client what was in the request.  It returns for all matched paths. So it is normally used only once for each path.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Echo</code></td>
+<td>Echo a message to standard output when you reach this point in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Logging</code></td>
+<td>Log what the requests/responses are at this point in the stack.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Else</code></td>
+<td>A catch all for handing requests that do not have any name resolution.  It will, by default, list all of the available sites on a server by name.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Configuration</h2>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Echo&quot;: { 
+                &quot;Paths&quot;:   &quot;/api/echo&quot;,
+                &quot;Msg&quot;: &quot;Yes I reaced this point&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Echo&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/api/echo&quot;,
+                &quot;Msg&quot;: &quot;Yes I reaced this point&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Wed Mar  2 15:11:25 MST 2016</p>
+
+{% endblock %}

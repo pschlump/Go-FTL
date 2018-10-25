@@ -1,0 +1,37 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Else: Return a Page for a Failed Virtual Host Name or SNI Match</h1>
+
+<p>It is possible that a server will receive requests that do not match any name or IP address.
+An example would be a new, or unconfigured DNS name, that maps to the current IP address of
+the Go-FTL server.  If an <code>Else</code> middleware is used, then a list of resolvable names
+will be displayed to the user and the user can click on one of the links.</p>
+
+<p>There is only 1 <code>Else</code> for all named servers.  Usually it is placed at the bottom of the
+configuration file.</p>
+
+<h2>Configuration</h2>
+
+<p>Not much configuration.  The only option is to have a message that displays before the
+list of configured servers.</p>
+
+<pre><code>{
+    ...
+    ...
+    ...
+    ...
+    &quot;elseServer&quot;: { 
+        &quot;listen_to&quot;:[ &quot;*&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Else&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Msg&quot;: &quot;&lt;h1&gt; This is the Go-FTL server for: &lt;/h1&gt;&quot;
+            } }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Fri Mar 11 07:46:02 MST 2016</p>
+
+{% endblock %}

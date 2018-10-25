@@ -1,0 +1,45 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RejectRePath: Reject Requests Based on a Regular Expression Path Match</h1>
+
+<p>If the path matches - using a regular expression - then reject the requests.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of paths to match.  Each match returns a HTTP Not Found (404) error.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RejectRePath&quot;: { 
+                &quot;Paths&quot;:   [ &quot;/.*/config&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RejectRePath&quot;: { 
+                &quot;Paths&quot;:   [ &quot;^/.*/config$&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Fri Feb 26 11:26:41 MST 2016</p>
+
+{% endblock %}

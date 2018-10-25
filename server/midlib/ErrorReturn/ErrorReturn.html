@@ -1,0 +1,51 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>JSONp: Implement JSONp requests</h1>
+
+<p>JSONP allows for remotely accessing an API that is cross domain.  This implements
+JSONP for an existing API.  For example if &ldquo;callback=Func9999&rdquo; is provide on the URL and the JSON
+returned is {&ldquo;josn&rdquo;:&ldquo;code&rdquo;}, will be wrapped in:</p>
+
+<pre><code>Func9999({&quot;json&quot;:&quot;code&quot;});
+</code></pre>
+
+<p>This converts the original JSON to a JavaScript callback function.   This can be used
+from jQuery with a request type of &ldquo;jsonp&rdquo;.</p>
+
+<h2>Configuration</h2>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;JSONp&quot;: { 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;JSONp&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/api/status&quot;,
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Wed Mar  2 10:36:09 MST 2016</p>
+
+{% endblock %}

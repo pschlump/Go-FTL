@@ -1,0 +1,67 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Rewrite: Rewrite One Request to Another Location</h1>
+
+<p>Rewrite provides the ability to rewrite a URL with a new URL for later processing.</p>
+
+<p>The rewrite uses a regular expression match for the URL.   The replacement allows substitution
+of matched items into the resulting URL.</p>
+
+<p>If RestartAtTop is true, then the set of middleware is restarted from the very top with a re-parse
+of parameters and rerunning of each of the middleware that preceded the Rewrite.  If it is false,
+the processing continues with the next middleware.</p>
+
+<p>A loop with RestartAtTop is limited to LoopLimit rewrites before it fails.  If RestartAtTop is
+true, then the rewritten URL should not match the regular expression.</p>
+
+<p>Either way query parameters are re-parsed after the rewrite.</p>
+
+<h2>Configuration</h2>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot;, &quot;http://localhost:8204/&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Rewrite&quot;: { 
+                &quot;Paths&quot;:  [ &quot;/api&quot; ],
+                &quot;MatchReplace&quot;: [
+                    { &quot;Match&quot;: &quot;http://(example.com)/(.*)\\?(.*)&quot;,
+                      &quot;Replace&quot;: &quot;http://example.com/rw/process?${2}&amp;name=${1}&amp;${3}&quot;
+                    }
+                ]
+                &quot;LoopLimit&quot;:     50, 
+                &quot;RestartAtTop&quot;:  true
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+    &quot;localhost-13004&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://localhost:13004&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;DumpRequest&quot;: { &quot;LineNo&quot;:6, &quot;Msg&quot;:&quot;Request Before Rewrite&quot;, &quot;Paths&quot;:&quot;/&quot;, &quot;Final&quot;:&quot;no&quot; } },
+            { &quot;Rewrite&quot;: { &quot;LineNo&quot;:6, &quot;Paths&quot;:&quot;/&quot;,
+                    &quot;MatchReplace&quot;: [
+                        { &quot;Match&quot;: &quot;http://(localhost:[^/]*)/(.*)\\?(.*)&quot;,
+                          &quot;Replace&quot;: &quot;http://localhost:13004/rw/${2}?rewriten_from=${1}&amp;${3}&quot;
+                        }
+                    ]
+            } },
+            { &quot;DumpRequest&quot;: { &quot;LineNo&quot;:10, &quot;Msg&quot;:&quot;Request After Rewrite&quot;, &quot;Paths&quot;:&quot;/&quot;, &quot;Final&quot;:&quot;no&quot; } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:11, &quot;Root&quot;:&quot;./www.test1.com&quot;, &quot;Paths&quot;:&quot;/&quot;  } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Thu, Mar 10, 06:31:05 MST, 2016</p>
+
+<p>Tested On: Sun, Mar 27, 11:48:58 MDT, 2016</p>
+
+{% endblock %}

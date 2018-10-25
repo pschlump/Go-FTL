@@ -1,0 +1,56 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RedisListRaw: Return Data from Redis</h1>
+
+<p>This allows for retrieving data from Redis that has a common prefix.</p>
+
+<p>The data is returned as &ldquo;raw&rdquo; table data - it has not been converted into JSON or other text.   Pre-converted text can be had with RedisList.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of IP addresses, either IPv4 or IPv6 addresses.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RedisListRaw&quot;: { 
+                &quot;Paths&quot;:           &quot;/api&quot;,
+                &quot;Prefix&quot;:          &quot;pf3:&quot;,
+                &quot;UserRoles&quot;:       [ &quot;anon,$key$&quot;, &quot;user,$key$,confirmed&quot;, &quot;admin,$key$,confirmed,disabled&quot;, &quot;root,name,confirmed,disabled,disabled_reason,login_date_time,login_fail_time,n_failed_login,num_login_times,privs,register_date_time&quot; ]
+                &quot;UserRolesReject&quot;: [ &quot;anon-user&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RedisListRaw&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;Prefix&quot;:          &quot;pf3:&quot;,
+                &quot;UserRoles&quot;:       [ &quot;anon,$key$&quot;, &quot;user,$key$,confirmed&quot;, &quot;admin,$key$,confirmed,disabled&quot;, &quot;root,name,confirmed,disabled,disabled_reason,login_date_time,login_fail_time,n_failed_login,num_login_times,privs,register_date_time&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Sat Apr  9 13:08:03 MDT 2016</p>
+
+<h3>TODO</h3>
+
+<p>Allow for other Redis types. - Currently only allows for name/value key pair.</p>
+
+{% endblock %}

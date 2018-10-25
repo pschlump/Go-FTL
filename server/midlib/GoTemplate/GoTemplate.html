@@ -1,0 +1,263 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>GoTemplate: Template using Go&rsquo;s Buit in Templates</h1>
+
+<p>GoTemplate implements a middleware that combines templates with underlying data.</p>
+
+<p>Basic usage of Go templates is also supported.  You can build a page with a header
+template, a footer template and a body template.</p>
+
+<p>A more powerful way to use this is to combine data with templates to render a
+final text.  Examples of each of these will show how this can be used.</p>
+
+<h2>Configuration</h2>
+
+<p>Specify a path for templates and the location of the template library.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center"><code>TemplateParamName</code></td>
+<td>The name on the URL of the template that is to be rendered with this data.</td>
+</tr>
+
+<tr>
+<td align="center"><code>TemplateName</code></td>
+<td>The name of the template if <strong>template</strong> has an empty value.</td>
+</tr>
+
+<tr>
+<td align="center"><code>TemplateLibraryName</code></td>
+<td>An array of file names or a single file that has the set of templates for rendering the page.</td>
+</tr>
+
+<tr>
+<td align="center"><code>TemplateRoot</code></td>
+<td>The path to search for the template libraries.  If this is not specified, then it will be searched for in <code>Root</code>.</td>
+</tr>
+
+<tr>
+<td align="center"><code>Root</code></td>
+<td>The root for the set of web pages.  It should be the same root as the <code>file_server</code> <code>Root</code>.</td>
+</tr>
+</tbody>
+</table>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;GoTemplate&quot;: { 
+                &quot;Paths&quot;: [ &quot;/data&quot; ],
+                &quot;TemplateParamName&quot;:     &quot;__template__&quot;,
+                &quot;TemplateName&quot;:          &quot;render_body&quot;,
+                &quot;TemplateLibraryName&quot;:   &quot;common_library.tmpl&quot;,
+                &quot;TemplateRoot&quot;:          &quot;./tmpl&quot;,
+                &quot;Root&quot;:                  &quot;&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Example 1: Simple Page Composition</h2>
+
+<p>You have a website with a common header, footer and each body is different.</p>
+
+<p>The Go-FTL configuration file is:</p>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;GoTemplate&quot;: { 
+                &quot;Paths&quot;: [ &quot;/twww&quot; ],
+                &quot;TemplateParamName&quot;:     &quot;__template__&quot;,
+                &quot;TemplateName&quot;:          &quot;body&quot;,
+                &quot;TemplateLibraryName&quot;:   [ &quot;common_library.tmpl&quot;, &quot;{{.__tempalte__}}.tmpl&quot; ]
+                &quot;TemplateRoot&quot;:          &quot;./tmpl&quot;,
+                &quot;Root&quot;:                  &quot;&quot;
+            } },
+            { &quot;Echo&quot;: { 
+                &quot;Paths&quot;: [ &quot;/twww&quot; ],
+                &quot;Msg&quot;: &quot;&quot;
+            } }
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<p>In ./tmpl/common_library.tmpl you have</p>
+
+<pre><code>{{define &quot;content_type&quot;}}text/html; charset=utf-8{{end}}
+{{define &quot;header&quot;}}&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;body&gt;
+    &lt;div&gt; header &lt;/div&gt;
+{{end}}
+{{define &quot;footer&quot;}}
+    &lt;div&gt; footer &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+{{end}}
+{{define &quot;body&quot;}}
+    {{header .}}
+    &lt;div&gt; this is my default body - it is a good body 1 &lt;/div&gt;
+    &lt;div&gt; this is my default body - it is a good body 2 &lt;/div&gt;
+    {{footer .}}
+{{end}}
+</code></pre>
+
+<p>In ./tmpl/main.tmpl you have</p>
+
+<pre><code>{{define &quot;main&quot;}}
+    {{header .}}
+    &lt;div&gt; this is my main body &lt;/div&gt;
+    {{footer .}}
+{{end}}
+</code></pre>
+
+<p>A request for <code>http://www.zepher.com:3210/twww?__template__=main</code> will do the following:</p>
+
+<ol>
+<li>GoTemplate sees the url <code>/twww</code> and calls the next function down the stack.</li>
+<li>Echo sees the url <code>/twww</code> and matches - It returns the Msg string as the results.  An empty string.</li>
+<li>GoTemplate uses the returning data from Echo.  This is actually an empty string.   It reads in the template files in order, common_library.tmpl then substituting the parameter, main.tmpl.  It then calls the template &ldquo;main&rdquo; witch calls the &ldquo;header&rdquo; and &ldquo;footer&rdquo; templates to render.</li>
+</ol>
+
+<p>The returned data is transformed into (with a couple of extra blank lines suppressed)</p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;body&gt;
+    &lt;div&gt; header &lt;/div&gt;
+    &lt;div&gt; this is my main body &lt;/div&gt;
+    &lt;div&gt; footer &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>If <strong>template</strong> had not been specified, then the template &ldquo;body&rdquo; would have been called.  It acts as a default body in this case.</p>
+
+<p>The <code>content_type</code> template is used to generate the content type for the page.  You can use this to generate XML or SVG, or to transform data
+and return it in other mime types.</p>
+
+<p>In this example you may want to use Rewrite first to generate the ugly URL: <code>http://www.zepher.com:3210/twww?__template__=main</code></p>
+
+<p>The documentation for this tool is generated in this fashion.  It is actually a little bit more complicated.  The files are in Markdown (.md) and processed from .md to
+.html, then written into templates, .tmpl and combined with headers and footers.</p>
+
+<h2>Example 2: Page Composition with Data</h2>
+
+<p>Combining data with templates is incredibly powerful.  For this example we will combine some static data in a .json file with templates to render it.
+You can also use this with the RedisListRaw to pull data out of Redis and combine it with templates to render it.   This turns the templates into a
+simple report writer tool.  Complete access to a relational database is also available with the <code>TabServer2</code> middleware.  This has been tested with
+PostgreSQL, MySQL, Oracle, and Microsoft MS-SQL.</p>
+
+<p>The Go-FTL configuration file is:</p>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;GoTemplate&quot;: { 
+                &quot;Paths&quot;: [ &quot;/data/&quot; ],
+                &quot;TemplateParamName&quot;:     &quot;__template__&quot;,
+                &quot;TemplateName&quot;:          &quot;body&quot;,
+                &quot;TemplateLibraryName&quot;:   [ &quot;data_library.tmpl&quot; ]
+                &quot;TemplateRoot&quot;:          &quot;./tmpl&quot;,
+                &quot;Root&quot;:                  &quot;&quot;
+            } },
+            { &quot;JSONToTable&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/data/&quot;,
+                &quot;ConvertRowTo1LongTable&quot;: true
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<p>In ./tmpl/data_library.tmpl you have</p>
+
+<pre><code>{{define &quot;content_type&quot;}}text/html; charset=utf-8{{end}}
+{{define &quot;header&quot;}}&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;body&gt;
+    &lt;div&gt; header &lt;/div&gt;
+    &lt;ul&gt;
+{{end}}
+{{define &quot;data_render_body&quot;}}
+    {{range $ii, $ee := .data}}
+        &lt;li&gt;&lt;a href=&quot;/{{$ee.abc}}.html&quot;&gt; {{$ee.abc}} id:{{$ee.myId}} &lt;/a&gt;&lt;/li&gt;
+    {{end}}
+{{end}}
+{{define &quot;footer&quot;}}
+    &lt;/ul&gt;
+    &lt;div&gt; footer &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+{{end}}
+</code></pre>
+
+<p>With data served by the file server in ./data/some_data.json</p>
+
+<pre><code>[
+    { &quot;abc&quot;: &quot;page-1&quot;, &quot;myId&quot;: 101 },
+    { &quot;abc&quot;: &quot;page-2&quot;, &quot;myId&quot;: 102 },
+    { &quot;abc&quot;: &quot;page-3&quot;, &quot;myId&quot;: 103 }
+]
+</code></pre>
+
+<p>A request for <code>http://www.zepher.com:3210/data/some_data.json?__template__=data_render_body</code>
+will do the following:</p>
+
+<ol>
+<li>The request works its way down to the <code>file_server</code>.</li>
+<li>JSONToTable converts the returning text to table data internally.</li>
+<li>GoTemplate takes the table data and applies the templates.  <code>data_render_body</code> creates a header, then iterates over the set of rows, then adds the footer.</li>
+</ol>
+
+<p>The url: <code>http://www.zepher.com:3210/data/some_data.json?__template__=data_render_body</code> will produce the following:</p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;body&gt;
+    &lt;div&gt; header &lt;/div&gt;
+    &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&quot;/page-1.html&quot;&gt; page-1.html id:101 &lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;/page-2.html&quot;&gt; page-1.html id:102 &lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;/page-3.html&quot;&gt; page-1.html id:103 &lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;div&gt; footer &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>In this case any source of table data or a row of data can then be rendered into a final output form.</p>
+
+<h3>Tested</h3>
+
+<p>Tested On: Wed Mar  2 10:01:28 MST 2016 - Unit Tests</p>
+
+<p>Tested On: Wed Mar  3 12:40:48 MST 2016 - End to End Tests of Templates.</p>
+
+<h3>TODO</h3>
+
+<p>TODO - Have links to Go templates and how to use them.</p>
+
+{% endblock %}

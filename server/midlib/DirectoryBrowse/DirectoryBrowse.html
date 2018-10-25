@@ -1,0 +1,80 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>DirectoryBrowse: Use Template for Directory Browsing</h1>
+
+<p>Implements templated directory browsing.</p>
+
+<p>You provide a template, (see example below), and place that in one of the directories specified by &ldquo;Root&rdquo; option.
+If a <em>directory</em> is browsed inside the set of &ldquo;Paths,&rdquo; then the template will be applied to the file names.</p>
+
+<p>If the template fails to parse, or if no template is supplied, then this is logged to the log file.
+An error will be returned.</p>
+
+<p>If the tempalte root is not specified, then the root directory for serving files will be searched
+for the specified template name.</p>
+
+<p>This is implemeted inside the &ldquo;file_serve&rdquo; - this middlware just sets configuration for
+&ldquo;file_serve&rdquo;.</p>
+
+<h2>Configuration</h2>
+
+<p>Specify template name and the location to find it.  The default template name is &ldquo;index.tmpl&rdquo;.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;DirectoryBrowse&quot;: { 
+                &quot;Paths&quot;: [ &quot;/static&quot;, &quot;/www&quot; ],
+                &quot;TemplateName&quot;: &quot;dir-template.tmpl&quot;,
+                &quot;Root&quot;: [ &quot;/static/tmpl&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;DirectoryBrowse&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/static&quot;,
+                &quot;TemplateName&quot;: &quot;index.tmpl&quot;
+            } },
+            { &quot;DirectoryLimit&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/static&quot;,
+                &quot;Disalow&quot;: [ &quot;/static/templates&quot; ],
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<p>Example template, Put in index.tmpl</p>
+
+<pre><code>{{define &quot;content_type&quot;}}text/html; charset=utf-8{{end}}
+{{define &quot;page&quot;}}&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;body&gt;
+    &lt;ul&gt;
+    {{range $ii, $ee := .files}}
+        &lt;li&gt;&lt;a href=&quot;{{$ee.name}}&quot;&gt;{{$ee.name}}&lt;/a&gt;&lt;/li&gt;
+    {{end}}
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+{{end}}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Wed, Mar 2, 10:05:04 MST, 2016</p>
+
+{% endblock %}

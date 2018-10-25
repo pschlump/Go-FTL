@@ -1,0 +1,59 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Minify: Compress/Minify Files Before Serving Them</h1>
+
+<p>This provides on-the-fly compression and minimization of a number of different file types.  Currently all the files are
+text based.</p>
+
+<p>If used in combination with InMemoryCache the files will be cached.  The cache will automatically flush if the original
+source file is changed.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of IP addresses, either IPv4 or IPv6 addresses.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Minify&quot;: { 
+                &quot;Paths&quot;:   &quot;/api&quot;,
+                &quot;FileTypes&quot;: [ &quot;html&quot;, &quot;css&quot;, &quot;js&quot;, &quot;svg&quot;, &quot;json&quot;, &quot;xml&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Minify&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   [ &quot;/www/&quot;, &quot;/static/&quot; ],
+                &quot;FileTypes&quot;: [ &quot;css&quot;, &quot;js&quot;, &quot;svg&quot;, &quot;json&quot;, &quot;xml&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tesed On: Fri Mar 11 09:05:10 MST 2016</p>
+
+<h3>TODO and Notes/Caveats</h3>
+
+<ol>
+<li>Using the node/npm UglifyJS middleware produces better results for minifying JavaScript than the internal Go code in this middleware.  Consider using that (accessible via the file_server middleware) instead of this.</li>
+<li>Compression of images.</li>
+<li>Compression of HTML will remove the <code>&lt;body&gt;</code> tag.  This can cause some client side JavaScript to break.</li>
+</ol>
+
+{% endblock %}

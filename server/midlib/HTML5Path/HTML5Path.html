@@ -1,0 +1,58 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>HTML5Path: Redirect 404 Errors to Index.html for AngularJS Router</h1>
+
+<p>AngularJS 2.0 and AngularJS 1.x have an interesting default routing.  They change the current path.
+For example, <code>http://myapp.com/</code> becomes <code>http://myapp.com/dashboard</code>  and then <code>http://myapp.com/productList</code>.
+When a person bookmarks or refreshes one of these URLs the server has no clue what a &ldquo;/dashboard&rdquo; is and returns
+a 404 error.</p>
+
+<p>What should happen is that all of these should be mapped to the single page application.  By default this
+is <code>index.html</code>.  You can change this with the <code>ReplaceWith</code> option.</p>
+
+<p>After the file server returns a 404 you can limit the set of paths with the <code>LimitTo</code> set of options.
+If <code>LimitTo</code> is not specified, then all 404 errors will be returned as index.html.</p>
+
+<h2>Configuration</h2>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;HTML5Path&quot;: { &quot;LineNo&quot;:7,
+                &quot;Paths&quot;:&quot;/&quot;,
+                &quot;ReplaceWith&quot;:&quot;myApp.html&quot;,
+                &quot;LimitTo&quot;: [ &quot;/dashboard&quot;, &quot;/list&quot;, &quot;/item/&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;HTML5Path&quot;: { &quot;LineNo&quot;:7, &quot;Paths&quot;:&quot;/&quot; } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Sun Apr 17 19:34:03 MDT 2016 (Note - Tested by using it in an AngularJS 2.0 application)  An automated test is in-the-works.</p>
+
+<h3>TODO</h3>
+
+<ol>
+<li>A better name for this middleware.   As soon as I can figure out what to call it.</li>
+</ol>
+
+{% endblock %}

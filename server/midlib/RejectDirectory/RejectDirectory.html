@@ -1,0 +1,57 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RejectDirectory: Prevent Browsing of a Set of Directories</h1>
+
+<p>RejectDirectory allows for a set of directories to be un-browsable.   Files from the directories
+can still be served - but the directories themselves would not be browsable.</p>
+
+<p>If you do not want anything served from the directory, then use &ldquo;LimitRePath&rdquo;.</p>
+
+<p>This is implemeted inside the &ldquo;file_serve.&rdquo; - This middlware just sets configuration for
+&ldquo;file_serve&rdquo;.</p>
+
+<h2>Configuration</h2>
+
+<p>Specify a path and a set of specific directory to not be browsable.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RejectDirectory&quot;: { 
+                &quot;Paths&quot;: [ &quot;/static&quot; ],
+                &quot;Disalow&quot;: [ &quot;/static/templates&quot; ],
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RejectDirectory&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/static&quot;,
+                &quot;Disalow&quot;: [ &quot;/static/templates&quot; ],
+            } },
+            { &quot;DirectoryBrowse&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/static&quot;,
+                &quot;TemplateName&quot;: &quot;index.tmpl&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Wed, Mar 2, 10:01:28 MST, 2016</p>
+
+{% endblock %}

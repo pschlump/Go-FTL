@@ -1,0 +1,14 @@
+output/
+x/
+cookies.txt
+cert.pem
+corp-server.linux
+data-prod/
+dot206-prod.json
+go-ftl-todo.md
+go-ftl.linux
+key.pem
+output
+t1.go
+t1/
+test-key/

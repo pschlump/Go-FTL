@@ -1,0 +1,48 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>RejectExtension: Reject Requests Based on File Extension</h1>
+
+<p>Based on file extension reject requests.  For example, you may want to prevent anybody
+accessing any file ending in <code>*.cfg</code>.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of extensions that when matched will return a HTTP Not Found (404) error.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;RejectExtension&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;: [ &quot;.cfg&quot; ]
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;RejectExtension&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Extensions&quot;: [ &quot;.cfg&quot;, &quot;.password_db&quot; ]
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Fri Feb 26 11:03:27 MST 2016</p>
+
+{% endblock %}

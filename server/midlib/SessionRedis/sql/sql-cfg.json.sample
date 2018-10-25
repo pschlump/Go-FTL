@@ -1,0 +1,147 @@
+ { "note:comment": { "f": "(C) Philip Schlump, 2009-2014." }
+	,"/api/test/login": { "g": "test_login", "p": [ "username", "password", "$ip$", "csrf_token", "$host$" ], "nokey":true
+		, "LineNo":"379"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban","t_host_to_customer"]
+		, "SetCookie":{"cookie_csrf_token":false,"XSRF-TOKEN":false,"auth_token":true}
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"csrf_token": 	{ "required":true, "type":"string", "max_len":80, "min_len":2 }
+			,"$host$": 		{ "required":true, "type":"string", "max_len":40, "min_len":8 }
+			}
+		, "CallAfter": ["CacheEUser"]
+		}
+	,"/api/test/logout": { "g": "test_logout", "p": [ "auth_token", "$ip$" ], "nokey":true
+		, "LineNo":"393"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "auth_token": 			{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":4 }
+			,"csrf_token": 			{ "optional":true, "type":"string", "max_len":80, "min_len":2 }
+			,"cookie_csrf_token": 	{ "optional":true, "type":"string", "max_len":80, "min_len":2 }
+			,"callback": 			{ "optional":true }
+			}
+		, "CallAfter": ["DeCacheEUser"]
+		}
+	,"/api/test/register_new_user": { "g": "test_register_new_user", "p": [ "username", "password", "$ip$", "email", "real_name", "$url$", "csrf_token", "site", "name" ], "nokey":true
+		, "LineNo":"405"
+		, "Method":["GET","POST"]
+		, "TableList":["t_csrf_token", "t_user","t_email_q"]
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"email": 		{ "required":true, "type":"string" }
+			,"real_name":	{ "required":true, "type":"string" }
+			,"$url$":		{ "required":true, "type":"string" }
+			,"csrf_token": 	{ "required":true, "type":"string", "max_len":80, "min_len":2 }
+			,"site":	 	{ "required":true, "type":"string", "max_len":80, "min_len":2, "UrlEncode":true }
+			,"name": 		{ "required":true, "type":"string", "max_len":80, "min_len":2, "UrlEncode":true }
+			}
+		, "CallAfter": ["PubEMailToSend"]
+		}
+	,"/api/test/monitor_it_happened": { "g": "test_monitor_it_happened", "p": [ "item_name" ], "nokey":true
+		, "LineNo":"421"
+		, "Method":["GET","POST"]
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "item_name": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			}
+		}
+	,"/api/table/get_monitor_data": {
+		  "query": "select * from prep_info5 ( )"
+		, "LineNo":"430"
+		, "p": [ ], "nokey":false
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "auth_token": 		{ "required":true, "type":"uuid" }
+			,"callback": 		{ "optional":true }
+			}
+		}
+	,"/api/test/confirm_email": { "g": "test_confirm_email", "p": [ "auth_token","$ip$" ], "nokey":true
+		, "LineNo":"439"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "auth_token": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/test/change_password": { "g": "test_change_password", "p": [ "password", "again", "token","$ip$" ], "nokey":true
+		, "LineNo":"448"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again":	 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"token": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		, "CallAfter": ["CacheEUser"]
+		}
+	,"/api/test/password_reset": { "g": "test_password_reset", "p": [ "username", "auth_token", "email","$ip$", "$url$", "$top$" ], "nokey":true
+		, "LineNo":"460"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "username": 	{ "optional":true, "type":"string", "max_len":80, "min_len":4, "default":"" }
+			,"auth_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"email":	 	{ "optional":true, "type":"string", "max_len":250, "min_len":3, "default":"" }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			,"$top$": 		{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			}
+		}
+	,"/api/status_db": { "g": "status_db", "p": [ "$ip$" ], "nokey":true
+		, "LineNo":"473"
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/status_db2": { "g": "status_db", "p": [ "$ip$" ]
+		, "LineNo":"479"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 				{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"user": 				{ "required":true, "type":"string" }
+			,"auth_token": 			{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			}
+		}
+	,"/api/test/change_others_password": { "g": "test_change_others_password", "p": [ "username", "$user_id$", "password", "again", "$ip$" ]
+		, "nokey":false
+		, "LineNo":"1086"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban","t_user_auth"]
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again":	 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$user_id$": 	{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		, "CallAfter": ["CacheEUser"]
+		}
+	,"/api/test/extendlogin": { "g": "test_extendlogin", "p": [ "username", "auth_token", "$ip$", "csrf_token" ], "nokey":true
+		, "LineNo":"591"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"auth_token": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"csrf_token": 	{ "required":true, "type":"string", "max_len":80, "min_len":2 }
+			}
+		, "CallAfter": ["CacheEUserExt"]
+		}
+	,"/api/test/stayLoggedIn": { "g": "test_stayLoggedIn()", "p": [ ], "nokey":false
+		, "LineNo":"1040"
+		, "Method":["GET"]
+		, "TableList":["t_ip_ban"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$host$": 		{ "required":true, "type":"string", "max_len":40, "min_len":8 }
+			}
+		}
+}

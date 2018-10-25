@@ -1,0 +1,241 @@
+ { "note:comment": { "f": "Copyright (C) Philip Schlump, 2009-2017." }
+	,"/api/session/login": { "g": "s_login", "p": [ "username", "password", "$ip$", "$host$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban","t_auth_token","t_customer"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$host$": 		{ "required":true, "type":"string", "max_len":40, "min_len":8 }
+			}
+		, "CallAfter": ["CreateJWTToken"]
+		}
+	,"/api/session/logout": { "g": "s_logout", "p": [ "auth_token", "$ip$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_user","t_auth_token"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "auth_token": 			{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":4 }
+			,"callback": 			{ "optional":true }
+			}
+		}
+	,"/api/admin/logout": { "g": "s_logout", "p": [ "auth_token", "$ip$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_user","t_auth_token"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "auth_token": 			{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":4 }
+			,"callback": 			{ "optional":true }
+			}
+		}
+	,"/api/session/register_new_user": { "g": "s_register_new_user", "p": [ "username", "password", "again", "$ip$", "email", "real_name", "$url$", "app" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again": 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"email": 		{ "required":true, "type":"string" }
+			,"real_name":	{ "required":true, "type":"string" }
+			,"$url$":		{ "required":true, "type":"string" }
+			,"app":		 	{ "required":true, "type":"string", "max_len":80, "min_len":2, "UrlEncode":true }
+			}
+		, "CallAfter": ["SendEmailMessage"]
+		}
+	,"/api/session/simulate_email": { "g": "s_simulate_email", "p": [ "tn", "email_token", "$ip$", "$url$", "app", "kp" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_ip_ban"]
+		, "valid": {
+			 "tn":		 	{ "required":true, "type":"string", "max_len":20, "min_len":2 }
+			,"kp":		 	{ "required":true, "type":"string", "max_len":10, "min_len":1 }
+			,"email_token":	{                  "type":"string", "max_len":40, "min_len":2 }
+			,"app":		 	{                  "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$":		{ "required":true, "type":"string" }
+			}
+		, "CallAfter": ["SendEmailMessage"]
+		}
+	,"/api/session/confirm_email": { "g": "s_confirm_email", "p": [ "auth_token", "$ip$", "$url$", "$method$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "auth_token": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$":		{ "required":true, "type":"string" }
+			,"$method$":	{ "required":true, "type":"string" }
+			}
+		, "CallAfter": ["CreateJWTToken", "RedirectTo"]
+		}
+	,"/api/session/change_password": { "g": "s_change_password", "p": [ "password", "again", "old_password", "auth_token", "$ip$", "$url$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban","t_auth_token","t_config"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "password": 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again":	 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"old_password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"auth_token": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			}
+		, "CallAfter": ["SendEmailMessage","CreateJWTToken"]
+		}
+	,"/api/admin/change_password": { "g": "s_change_password", "p": [ "password", "again", "old_password", "auth_token", "$ip$", "$url$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban","t_auth_token","t_config"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "password": 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again":	 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"old_password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"auth_token": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			}
+		, "CallAfter": ["SendEmailMessage","CreateJWTToken"]
+		}
+	,"/api/session/password_reset": { "g": "s_password_reset", "p": [ "username", "auth_token", "email","$ip$", "$url$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "username": 	{ "optional":true, "type":"string", "max_len":80, "min_len":4, "default":"" }
+			,"auth_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"email":	 	{ "optional":true, "type":"string", "max_len":250, "min_len":3, "default":"" }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			}
+		, "CallAfter": ["SendEmailMessage"]
+		}
+	,"/api/session/password_reset_pt2": { "g": "s_password_reset_pt2", "p": [ "recovery_token", "$ip$", "$url$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "valid": {
+			 "recovery_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			}
+		, "CallAfter": ["RedirectTo"]
+		}
+	,"/api/session/password_reset_pt3": { "g": "s_password_reset_pt3", "p": [ "password", "again", "recovery_token", "$ip$", "$url$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "password": 		{ "optional":true, "type":"string", "max_len":80, "min_len":4, "default":"" }
+			,"again":	 		{ "optional":true, "type":"string", "max_len":80, "min_len":4 }
+			,"recovery_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
+			}
+		, "CallAfter": ["SendEmailMessage","CreateJWTToken"]
+		}
+	,"/api/session/status_db1": { "g": "status_db", "p": [ "$ip$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/session/status_db2": { "g": "status_db", "p": [ "$ip$" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/admin/status_db2": { "g": "status_db", "p": [ "$ip$" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/session/missing_param_test": { "g": "s_missing_param_test", "p": [ "abc" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "abc": 		{ "required":true, "type":"string", "max_len":400, "min_len":2 }
+			}
+		}
+	,"/api/session/echo_builtin": { "g": "s_echo_builtin", "p": [ "$ip$", "$url$", "$host$", "$top$", "$session$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			,"$top$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			,"$host$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			,"$session$": 	{ "required":true, "type":"string", "max_len":40000, "min_len":4 }
+			}
+		}
+	,"/api/admin/echo_builtin": { "g": "s_echo_builtin", "p": [ "$ip$", "$url$", "$host$", "$top$", "$session$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			,"$top$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			,"$host$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			,"$session$": 	{ "required":true, "type":"string", "max_len":40000, "min_len":4 }
+			}
+		}
+	,"/api/admin/login_required": { "g": "s_validate_auth_token", "p": [ "auth_token", "$url$" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST","PUT","DELETE"]
+		, "valid": {
+			 "auth_token": 	{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			}
+		}
+	,"/api/session/validate_auth_token": { "g": "s_validate_auth_token", "p": [ "auth_token", "$url$" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST","PUT"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "auth_token": 	{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			}
+		}
+	,"/api/session/get_username_from_email": { "g": "s_get_username_from_email", "p": [ "email", "$ip$", "$url$" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "email": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
+			}
+		, "CallAfter": ["Sleep"]
+		}
+	,"/api/session/is_pw_pwned": { "g": "s_chk_passwd_not_pwned", "p": [ "pw_sha1" ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "pw_sha1": 		{ "required":true, "type":"string", "max_len":40, "min_len":30 }
+			}
+		}
+	,"/api/table/pet_save_data": { "crud": [ "select", "insert"  ]
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "p": [ ]
+		, "nokey": true
+		, "Method":["GET","POST"]
+		, "cols": [
+				  { "colName": "id" 		, "colType":"s"	,"isPk":true, "insert":true								, "autoGen":true	}
+				, { "colName": "data" 		, "colType":"s"				, "insert":true	, "update":true									}
+			]
+		}
+}

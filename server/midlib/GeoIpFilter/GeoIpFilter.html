@@ -1,0 +1,68 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>GeoIpFilter: Filer Requests Based on Geographic Mapping of IP Address</h1>
+
+<p>Limit serving of content to geographic regions based on mapping of IP addresses to these regions.
+This works on a per-country basis most of the time.  The data is not 100% accurate.</p>
+
+<p>The data is based on the freely available GetLite2 database.  You need to download your own copy
+of this data - the data that is in the ./cfg directory is terribly out of date and should only
+be used for testing of this middleware.</p>
+
+<p>Also note: The data changes periodically.   Hopefully one day this module will automatically
+update the data - but for the moment you have to update it by hand.</p>
+
+<h2>Configuration</h2>
+
+<p>You can provide a simple list of IP addresses, either IPv4 or IPv6 addresses.</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;GeoIpFilter&quot;: { 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Action&quot;:  &quot;reject&quot;,
+                &quot;CountryCodes&quot;:  [ &quot;JP&quot;, &quot;VN&quot; ],
+                &quot;DBFileName&quot;:    &quot;./cfg/GeoLite2-Country.mmdb&quot;,
+                &quot;PageIfBlocked&quot;: &quot;not-avaiable-in-your-country.html&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;GeoIpFilter&quot;: { &quot;LineNo&quot;:5, 
+                &quot;Paths&quot;:   &quot;/&quot;,
+                &quot;Action&quot;:  &quot;reject&quot;,
+                &quot;CountryCodes&quot;:  [ &quot;JP&quot;, &quot;VN&quot;, &quot;CN&quot; ],
+                &quot;DBFileName&quot;:    &quot;./cfg/GeoLite2-Country.mmdb&quot;,
+                &quot;PageIfBlocked&quot;: &quot;not-avaiable-in-your-country.html&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Fri, Mar 11, 09:15:38 MST, 2016</p>
+
+<h3>TODO</h3>
+
+<ol>
+<li>Add automatic update of underlying data.</li>
+<li>Improve data quality.</li>
+</ol>
+
+{% endblock %}

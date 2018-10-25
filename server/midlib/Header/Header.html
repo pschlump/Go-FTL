@@ -1,0 +1,73 @@
+{% extend "go_ftl_docs.html" %}
+{% block doc_body %}
+<h1>Header: Set Headers</h1>
+
+<p>See a header in the response to a request, or delete a header if it exists.</p>
+
+<h2>Configuration</h2>
+
+<p>Create a header.  If you want to set a cookie it is probably better to use <code>Cookie</code> middleware instead.
+If the header <code>Name</code> starts with &lsquo;-&rsquo; then delete the header if it exists.</p>
+
+<p>Create a header</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Header&quot;: { 
+                &quot;Paths&quot;:    &quot;/somepath&quot;,
+                &quot;Name&quot;:     &quot;X-Header&quot;,
+                &quot;Value&quot;:    &quot;1234&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<p>Delete a header</p>
+
+<pre><code>{
+    &quot;servername&quot;: { 
+        &quot;listen_to&quot;:[ &quot;http://www.example.com&quot; ],
+        &quot;plugins&quot;:[
+        ...
+            { &quot;Header&quot;: { 
+                &quot;Paths&quot;:    &quot;/somepath&quot;,
+                &quot;Name&quot;:     &quot;-X-bad-header&quot;
+            } },
+        ...
+}
+</code></pre>
+
+<h2>Full Example</h2>
+
+<pre><code>{
+     &quot;www.zepher.com&quot;: { &quot;LineNo&quot;:2,
+        &quot;listen_to&quot;:[ &quot;http://www.zepher.com:3210/&quot; ],
+        &quot;plugins&quot;:[
+            { &quot;Header&quot;: { 
+                &quot;Paths&quot;:    &quot;/somepath&quot;,
+                &quot;Name&quot;:     &quot;X-Test-Header1&quot;,
+                &quot;Value&quot;:    &quot;1234&quot;
+            } },
+            { &quot;file_server&quot;: { &quot;LineNo&quot;:9,
+                &quot;Root&quot;:&quot;./www.zepher.com__3210&quot;,
+                &quot;Paths&quot;:&quot;/&quot;
+            } }
+        ]
+    }
+}
+</code></pre>
+
+<h3>Tested</h3>
+
+<p>Tested On: Sat Feb 27 08:02:47 MST 2016</p>
+
+<h3>TODO</h3>
+
+<ol>
+<li>Use template to allow substitution of header name and values.</li>
+</ol>
+
+{% endblock %}
