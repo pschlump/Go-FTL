@@ -61,14 +61,18 @@ func RedisClient() (client *redis.Client, conFlag bool) {
 	client, err = redis.Dial("tcp", cfg.ServerGlobal.RedisConnectHost+":"+cfg.ServerGlobal.RedisConnectPort)
 	if err != nil {
 		// log.Fatal(err)
-		fmt.Printf("Error on connec to redis:%s, fatal\n", err)
-		panic("Fatal Error")
+		fmt.Printf("Error on connect to redis:%s, fatal\n", err)
+		fmt.Fprintf(os.Stderr, "%s\n\n\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\nError on connect to redis:%s, fatal\n", MiscLib.ColorRed, err)
+		fmt.Fprintf(os.Stderr, "Config Data: %s\n", godebug.SVarI(cfg.ServerGlobal))
+		fmt.Fprintf(os.Stderr, "\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n%s", MiscLib.ColorReset)
+		os.Exit(1)
 	}
 	if cfg.ServerGlobal.RedisConnectAuth != "" {
 		err = client.Cmd("AUTH", cfg.ServerGlobal.RedisConnectAuth).Err
 		if err != nil {
-			fmt.Printf("Error on connec to redis:%s, fatal\n", err)
-			panic("Fatal Error")
+			fmt.Printf("Error on connect to Redis --- Invalid authentication:%s, fatal\n", err)
+			fmt.Fprintf(os.Stderr, "%s\nError on connect to Redis --- Invalid authentication:%s, fatal%s\n\n", MiscLib.ColorRed, err, MiscLib.ColorReset)
+			os.Exit(1)
 		} else {
 			conFlag = true
 		}

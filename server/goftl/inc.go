@@ -12,9 +12,7 @@
 package main
 
 import (
-
-	// _ "github.com/pschlump/Go-FTL/server/midlib/AesSrp"
-
+	_ "github.com/pschlump/Go-FTL/server/midlib/AesSrp"
 	_ "github.com/pschlump/Go-FTL/server/midlib/BasicAuth"
 	_ "github.com/pschlump/Go-FTL/server/midlib/BasicAuthPgSQL"
 	_ "github.com/pschlump/Go-FTL/server/midlib/BasicAuthRedis"
@@ -74,5 +72,3 @@ import (
 	// Modules that are not in the midlib deirectory
 	_ "github.com/pschlump/Go-FTL/server/fileserve"
 )
-
-// _ "github.com/pschlump/Go-FTL/server/midlib/Else"
