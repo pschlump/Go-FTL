@@ -1,5 +1,5 @@
 //
-// Go-FTL
+// Go-FTL - Module
 //
 // Copyright (C) Philip Schlump, 2018-2019.
 //
@@ -35,8 +35,8 @@ func init() {
 		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
 		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"dip:" },
 		"InputPath":  	     { "type":[ "string" ], "required":false, "default":"./image" },
-		"OutputPath":  	     { "type":[ "string" ], "required":false, "default":"./img-final" },
-		"OutputURL":  	     { "type":[ "string" ], "required":false, "default":"/img-final/" },
+		"OutputPath":  	     { "type":[ "string" ], "required":false, "default":"./qr-final" },
+		"OutputURL":  	     { "type":[ "string" ], "required":false, "default":"/qr-final/" },
 		"ArchiveURL":  	     { "type":[ "string" ], "required":false, "default":"/archive/" },
 		"IsProd":  	         { "type":[ "string" ], "required":false, "default":"test" },
 		"RedisQ":  	     	 { "type":[ "string" ], "required":false, "default":"geth:queue:" },
@@ -48,6 +48,25 @@ func init() {
 		"LineNo":       	 { "type":[ "int" ], "default":"1" }
 		}`)
 }
+
+//
+// Used by /api/acb1/generateQrFor
+// 		OutputURL -	/qr-final
+// 		OutputPath - path for generation of .png/.svg QR Codes
+//
+// Not Used Yet -- or -- will be removed from old code:
+//		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"dip:" },
+//		"InputPath":  	     { "type":[ "string" ], "required":false, "default":"./image" },
+//		"ArchiveURL":  	     { "type":[ "string" ], "required":false, "default":"/archive/" },
+//		"IsProd":  	         { "type":[ "string" ], "required":false, "default":"test" },
+//		"RedisQ":  	     	 { "type":[ "string" ], "required":false, "default":"geth:queue:" },
+//		"RedisGetQ":  	     { "type":[ "string" ], "required":false, "default":"get:queue:" },
+//		"GetEventURL": 	     { "type":[ "string" ], "required":false, "default":"http://www.2c-why.com/" },
+//		"RedisID": 	     	 { "type":[ "string" ], "required":false, "default":"doc:ID:" },
+//		"SingedOnceAddr":  	 { "type":[ "string" ], "required":false, "default":"" },
+//		"AppID":  	         { "type":[ "string" ], "required":false, "default":"100" },
+//
+//
 
 func (hdlr *Acb1Type) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
@@ -153,6 +172,7 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 
 			if true {
+				hdlr.SetupServer()
 
 				fx, ok := dispatch[req.URL.Path]
 				if !ok {
