@@ -20,7 +20,6 @@ import (
 	_ "github.com/pschlump/Go-FTL/server/midlib/Cookie"
 	_ "github.com/pschlump/Go-FTL/server/midlib/CorpRegV01"
 	_ "github.com/pschlump/Go-FTL/server/midlib/DirectoryBrowse"
-	_ "github.com/pschlump/Go-FTL/server/midlib/DocImageProc" // acb
 	_ "github.com/pschlump/Go-FTL/server/midlib/DumpRequest"
 	_ "github.com/pschlump/Go-FTL/server/midlib/DumpResponse"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Echo"
@@ -67,8 +66,13 @@ import (
 
 	// _ "github.com/pschlump/m6"
 
+	_ "github.com/pschlump/Go-FTL/server/midlib/DocImageProc" // acb
+	_ "github.com/pschlump/Go-FTL/server/midlib/acb1"         // acb
+
 	_ "github.com/pschlump/mon-alive/middleware"
 
 	// Modules that are not in the midlib deirectory
 	_ "github.com/pschlump/Go-FTL/server/fileserve"
+
+	_ "github.com/pschlump/Go-FTL/server/midlib/Monitor"
 )

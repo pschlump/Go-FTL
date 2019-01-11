@@ -20,8 +20,6 @@ import (
 	"strings"
 	"time"
 
-	JsonX "github.com/pschlump/JSONx"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -29,6 +27,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/tmplp"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/Go-FTL/server/urlpath"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/uuid"
@@ -100,20 +99,28 @@ func ReadConfigFile2(fn string) {
 
 	RawConfig := make(map[string]interface{})
 
-	fmt.Printf("\n\n%sAt: %s%s\n\n", MiscLib.ColorGreen, lib.LF(), MiscLib.ColorReset)
+	if midDb1 {
+		fmt.Printf("\n\n%sTop of ReadConfig2, At: %s%s\n\n", MiscLib.ColorGreen, lib.LF(), MiscLib.ColorReset)
+	}
 	meta, err := JsonX.UnmarshalFile(fn, &RawConfig)
 	_ = meta
 	lib.IsErrFatal(err) // all errors are fatal, print, exit if error
 
-	fmt.Printf("At: %s\n", godebug.LF())
+	if midDb1 {
+		fmt.Printf("At: %s\n", godebug.LF())
+	}
 
 	if cfg.ServerGlobal.Config == nil {
 		cfg.ServerGlobal.Config = make(map[string]cfg.PerServerConfigType)
 	}
 
-	fmt.Printf("At: %s\n", godebug.LF())
-	for name, v := range RawConfig {
+	if midDb1 {
 		fmt.Printf("At: %s\n", godebug.LF())
+	}
+	for name, v := range RawConfig {
+		if midDb1 {
+			fmt.Printf("At: %s\n", godebug.LF())
+		}
 
 		vv := v.(map[string]interface{}) // vv is a map[string]interface{}
 		if db_g1 {
@@ -139,7 +146,7 @@ func ReadConfigFile2(fn string) {
 
 		perServerConfig.LineNo = 1
 		if tt, ok := vv["LineNo"]; ok {
-			fmt.Printf("tt=%v\n", tt)
+			fmt.Printf("tt=%v, AT:%s\n", tt, godebug.LF())
 			if tt == nil {
 				fmt.Printf("%sInfo: LineNo not set - %s - probably old config file / nil value%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
 			} else {
@@ -157,7 +164,7 @@ func ReadConfigFile2(fn string) {
 		}
 		perServerConfig.FileName = fn
 		if tt, ok := vv["FileName"]; ok {
-			fmt.Printf("tt=%v\n", tt)
+			fmt.Printf("tt=%v, AT:%s\n", tt, godebug.LF())
 			if tt == nil {
 				fmt.Printf("%sInfo: FileName not set - %s - probably old config file / nil value%s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
 			} else {
@@ -186,7 +193,7 @@ func ReadConfigFile2(fn string) {
 		//fmt.Printf("At: %s\n", lib.LF())
 		if tt, ok := vv["listen_to"]; ok {
 			if db_g1 {
-				fmt.Printf("\tlisten_to typeof = %T, %+v\n", tt, tt)
+				fmt.Printf("\tlisten_to typeof = %T, %+v, AT:%s\n", tt, tt, godebug.LF())
 			}
 			if ss, yep := tt.(string); yep {
 				perServerConfig.ListenTo = append(perServerConfig.ListenTo, ss)
@@ -492,7 +499,8 @@ func GetTrx1(rw *goftlmux.MidBuffer) (ptr *tr.Trx) {
 	panic(fmt.Sprintf("Invalid Type - Should have has a *tr.Trx, %s\n", godebug.LF(2)))
 }
 
-const db_g1 = true
+const db_g1 = false
 const dbTop = false
+const midDb1 = false
 
 /* vim: set noai ts=4 sw=4: */

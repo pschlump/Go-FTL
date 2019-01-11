@@ -9,6 +9,7 @@ package HostToCustomerId
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	JsonX "github.com/pschlump/JSONx"
 
@@ -80,6 +81,7 @@ func (hdlr *HostToCustomerIdType) ServeHTTP(www http.ResponseWriter, req *http.R
 			customer_id := hdlr.redisGetCustomerId(www, rw, req)
 			goftlmux.AddValueToParams("$customer_id$", customer_id, 'i', goftlmux.FromInject, ps)
 			goftlmux.AddValueToParams("$host$", req.Host, 'i', goftlmux.FromInject, ps)
+
 		}
 	}
 
@@ -92,6 +94,7 @@ func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw
 
 	if db4 {
 		fmt.Printf("redisGetCustomerId: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+		fmt.Fprintf(os.Stderr, "redisGetCustomerId: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
 	}
 
 	conn, err := hdlr.gCfg.RedisPool.Get()
@@ -113,6 +116,10 @@ func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw
 		}
 	}
 
+	if db4 {
+		fmt.Printf("redisGetCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
+		fmt.Fprintf(os.Stderr, "redisGetCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
+	}
 	customer_id = v
 	return
 

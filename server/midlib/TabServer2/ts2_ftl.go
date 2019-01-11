@@ -24,11 +24,10 @@ import (
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/Go-FTL/server/tmplp"
-	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/godebug"
-
 	JsonX "github.com/pschlump/JSONx"
+	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/SqlEr"
+	"github.com/pschlump/godebug"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -333,6 +332,7 @@ func (hdlr *TabServer2Type) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgDat
 
 	if sqlCfgFN, ok := sizlib.SearchPathApp(hdlr.SQLCfgFN, hdlr.AppName, hdlr.SearchPath); ok {
 		fmt.Printf("TabServer2: sql config: %s, %s\n", sqlCfgFN, godebug.LF())
+		fmt.Fprintf(os.Stderr, "TabServer2: sql config: %s, %s\n", sqlCfgFN, godebug.LF())
 		SQLCfg, err := readInSQLConfig(sqlCfgFN)
 		hdlr.SQLCfg = SQLCfg
 		if err != nil {
@@ -375,6 +375,7 @@ func (hdlr *TabServer2Type) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgDat
 			for _, v := range fList {
 				n_files_loaded++
 				fmt.Printf("TabServer2: Reading in additional SQLCfg: %s\n", v)
+				// fmt.Fprintf(os.Stderr, "TabServer2: Reading in additional SQLCfg: %s\n", v)
 				// if hdlr.gCfg.DbOn("*", "TabServer2", "list-cfg-fiels") {
 				if db_list_cfg_fiels {
 					fmt.Fprintf(os.Stderr, "%sTabServer2: Reading in additional SQLCfg: %s%s\n", MiscLib.ColorGreen, v, MiscLib.ColorReset)
@@ -1041,6 +1042,6 @@ const db3 = true
 const db83 = true // table validation and columns
 const db84 = true // function validation with parameters
 
-const db_list_cfg_fiels = false
+const db_list_cfg_fiels = true
 
 /* vim: set noai ts=4 sw=4: */

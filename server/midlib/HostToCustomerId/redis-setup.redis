@@ -2,5 +2,6 @@ auth "lLJSmkccYJiVEwskr1RM4MWIaBM"
 set "htci:localhost:16040" "1"
 set "htci:www.go-ftl.com" "2"
 set "htci:www.qr-today.com" "3"
+set "htci:127.0.0.1:9019" "10"
 set "htci:--default--" "1"
 quit

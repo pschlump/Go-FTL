@@ -1,6 +1,6 @@
 package sizlib
 
-// (C) Copyright Philip Schlump, 2013-2014
+// (C) Copyright Philip Schlump, 2013-2018
 
 // _ "github.com/mattn/go-oci8"			// OCI
 
@@ -13,18 +13,18 @@ import (
 
 	// "github.com/jackc/pgx" //  https://github.com/jackc/pgx
 
+	"database/sql"
 	"encoding/json"
+	"fmt"
+	"os"
 	"runtime"
 	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/pschlump/Go-FTL/server/tr"
+	"github.com/pschlump/MiscLib"
+	"github.com/pschlump/godebug"
 	"github.com/pschlump/uuid"
-
-	"database/sql"
-
-	"fmt"
-	"os"
 	//	"encoding/json"
 )
 
@@ -276,6 +276,8 @@ func RowsToInterface(rows *sql.Rows) ([]map[string]interface{}, string, int) {
 				oneRow[columns[i]] = (value.(time.Time)).Format(ISO8601output)
 
 			default:
+				fmt.Printf("%s--- In default Case [%s] - %T %s\n", MiscLib.ColorRed, godebug.LF(), value, MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "%s--- In default Case [%s] - %T %s\n", MiscLib.ColorRed, godebug.LF(), value, MiscLib.ColorReset)
 				// fmt.Printf ( "default, yes it is a... , i=%d, %T\n", i, value, godebug.LF() )
 				// fmt.Println("r", columns[i], ": ", value)
 				if columns[i] == "id" && j == 0 {

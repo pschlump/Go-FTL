@@ -12,22 +12,21 @@
 package cfg
 
 import (
-	"path/filepath"
-
-	_ "github.com/lib/pq"
-
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	_ "github.com/lib/pq"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/sizlib" //
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"       //
 	"github.com/pschlump/radix.v2/pool" // Modified pool to have NewAuth for authorized connections
-
-	JsonX "github.com/pschlump/JSONx"
 )
 
 var ServerName = "Go-FTL"
@@ -88,14 +87,31 @@ func ResolvLocalFile(fn string) (outFn string) {
 
 func ReadGlobalConfigFile(fn string) {
 
-	meta, err := JsonX.UnmarshalFile(fn, &ServerGlobal)
-	_ = meta
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: Error returned from JsonX.UnmarshalFile: %s\n", "Go-FTL", err)
-		logrus.Errorf("Error: Invalid JsonX for %s Error:\n%s\n", fn, err)
-		lib.IsErrFatal(err)
-		panic("wow")
-		os.Exit(1)
+	if false {
+
+		data, err := ioutil.ReadFile(fn)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to open %s, err=%s\n", fn, err)
+			os.Exit(1)
+		}
+		err = json.Unmarshal(data, &ServerGlobal)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to parse %s, err=%s\n", fn, err)
+			fmt.Fprintf(os.Stderr, "->%s<-\n", data)
+			os.Exit(1)
+		}
+
+	} else {
+
+		meta, err := JsonX.UnmarshalFile(fn, &ServerGlobal)
+		_ = meta
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: Error returned from JsonX.UnmarshalFile: %s, %s\n", "Go-FTL", err, godebug.SVarI(meta))
+			logrus.Errorf("Error: Invalid JsonX for %s Error:\n%s\n", fn, err)
+			lib.IsErrFatal(err)
+			panic("wow")
+			os.Exit(1)
+		}
 	}
 
 	if db_g2 {

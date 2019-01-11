@@ -147,6 +147,6 @@ func (hdlr HardcodeRewriteHandlerType) ServeHTTP(www http.ResponseWriter, req *h
 	}
 }
 
-const rr_db1 = true
+const rr_db1 = false
 
 /* vim: set noai ts=4 sw=4: */
