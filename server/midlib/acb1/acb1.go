@@ -153,10 +153,12 @@ func (hdlr *Acb1Type) SetupValidEvents() {
 }
 
 func (hdlr *Acb1Type) InsertTrackAdd(tag string) error {
-	stmt := "insert into \"track_animal\" ( \"tag\" ) values ( $1 )"
+	stmt := "insert into \"v1_trackAdd\" ( \"tag\" ) values ( $1 )"
 	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, tag)
 	if err != nil {
 		return err
+	} else {
+		fmt.Printf("Success: %s data[%s]\n", stmt, tag)
 	}
 	return nil
 }
@@ -218,7 +220,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 	for ii, rr := range bulkData.Row {
 		if rv.Detail[ii].ItemStatus == "success" {
 			if rr.Tag == "" && rr.SubId != "" {
-				// xyzzy - pull out Tag id or error -- If error set ItemStatus to...
+				// xyzzy100 - pull out Tag id or error -- If error set ItemStatus to...
 				// xyzzy - Call convSiteIDToTagId ( site_id, sub_id ) -> tagId, err
 				// xyzzy - if error ...
 			}
