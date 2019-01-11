@@ -30,7 +30,7 @@ func init() {
 	}
 	mid.RegInitItem3("Acb1", CreateEmpty, `{
 		"Paths":        	 { "type":["string","filepath"], "isarray":true, "required":true },
-		"AuthKey":  	     { "type":[ "string" ], "required":false, "default":"" },
+		"AuthKey":  	     { "type":[ "string" ], "required":false, "default":"kip.philip" },
 		"InputPath":  	     { "type":[ "string" ], "required":false, "default":"./image" },
 		"OutputPath":  	     { "type":[ "string" ], "required":false, "default":"./qr-final" },
 		"OutputURL":  	     { "type":[ "string" ], "required":false, "default":"/qr-final/" },
@@ -148,6 +148,8 @@ func (hdlr *Acb1Type) SetupValidEvents() {
 	if hdlr.validEvent == nil {
 		hdlr.validEvent = make(map[string]bool)
 		hdlr.validEvent["Init"] = true
+		hdlr.validEvent["Create-Event"] = true
+		hdlr.validEvent["Delete-Event"] = true
 		hdlr.validEvent["Update"] = true
 	}
 }
@@ -159,6 +161,7 @@ func (hdlr *Acb1Type) InsertTrackAdd(tag string) error {
 		return err
 	} else {
 		fmt.Printf("Success: %s data[%s]\n", stmt, tag)
+		fmt.Fprintf(os.Stderr, "Success: %s data[%s]\n", stmt, tag)
 	}
 	return nil
 }
@@ -170,10 +173,15 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 	ps := &rw.Ps
 
 	bulk := ps.ByNameDflt("bulk", "")
+	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Printf("bulk: ->%s<-\n", bulk)
 	var bulkData bulkDataType
 	var err error
 
-	if bulk == "" {
+	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	if bulk != "" {
 		err = json.Unmarshal([]byte(bulk), &bulkData)
 	} else {
 		err = nil
@@ -187,13 +195,39 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 			Date:  ps.ByNameDflt("Date", ""),
 		})
 	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
+		fmt.Fprintf(os.Stdout, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
 
-	if err != nil && hdlr.AuthKey != "" && bulkData.Auth == hdlr.AuthKey {
-		err = fmt.Errorf("Invalid auth key")
+		fmt.Fprintf(www, "%s", godebug.SVarI(bulkRvType{
+			Status: "failed",
+			Msg:    fmt.Sprintf("error - falied to supply needed data for processing [%s].", err),
+		}))
+		return
 	}
 
+	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	if hdlr.AuthKey != "" && bulkData.Auth != hdlr.AuthKey {
+		err = fmt.Errorf("Invalid auth key")
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
+		fmt.Fprintf(os.Stdout, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
+
+		fmt.Fprintf(www, "%s", godebug.SVarI(bulkRvType{
+			Status: "failed",
+			Msg:    fmt.Sprintf("error - falied to supply needed data for processing [%s].", err),
+		}))
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 	var rv bulkRvType
 	statusVal := "success"
+
+	fmt.Printf("Processing ->%s<-\n", godebug.SVarI(bulkData))
 
 	hdlr.SetupValidEvents()
 	for _, rr := range bulkData.Row {
@@ -203,7 +237,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 				SiteId:     bulkData.SiteId,
 				SubId:      rr.SubId,
 				ItemStatus: "error",
-				Msg:        "Invalid Event Type",
+				Msg:        fmt.Sprintf("Invalid Event Type [%s]", rr.Event),
 			})
 			statusVal = "partial"
 			err = nil
@@ -212,13 +246,20 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 				Tag:        rr.Tag,
 				SiteId:     bulkData.SiteId,
 				SubId:      rr.SubId,
-				ItemStatus: "sucess",
+				ItemStatus: "success",
 			})
 		}
 	}
 
+	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	fmt.Fprintf(os.Stdout, "rv = %s\n", godebug.SVarI(rv))
 	for ii, rr := range bulkData.Row {
+		fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+		fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 		if rv.Detail[ii].ItemStatus == "success" {
+			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 			if rr.Tag == "" && rr.SubId != "" {
 				// xyzzy100 - pull out Tag id or error -- If error set ItemStatus to...
 				// xyzzy - Call convSiteIDToTagId ( site_id, sub_id ) -> tagId, err
@@ -226,6 +267,8 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 			}
 		}
 		if rv.Detail[ii].ItemStatus == "success" {
+			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 			err = hdlr.InsertTrackAdd(rr.Tag) // xyzzy - other params to pass!
 			if err != nil {
 				statusVal = "partial"
