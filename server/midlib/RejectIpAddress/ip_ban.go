@@ -164,11 +164,11 @@ func (hdlr *RejectIPAddressType) redisValidIpAddr(ip string, rw *goftlmux.MidBuf
 
 	hdlr.gCfg.RedisPool.Put(conn)
 
-	godebug.Printf(db44, "Error on redis - get(%s): %s %s\n", key, v, err)
+	godebug.Db2Printf(db44, "Error on redis - get(%s): %s %s\n", key, v, err)
 
 	ipIsGood = (v == "" || err != nil)
 
-	godebug.Printf(db44, "Return value: isIpGood=%v\n", ipIsGood)
+	godebug.Db2Printf(db44, "Return value: isIpGood=%v\n", ipIsGood)
 
 	return
 }

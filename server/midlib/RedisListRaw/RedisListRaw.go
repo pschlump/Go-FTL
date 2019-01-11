@@ -109,7 +109,7 @@ import (
 //			} else {
 //				hh.filter = []*lib.FilterType{}
 //			}
-//			godebug.Printf(db2, "Filter: end of postInit, hh.filter=%s, %s\n", godebug.SVarI(hh.filter), godebug.LF())
+//			godebug.Db2Printf(db2, "Filter: end of postInit, hh.filter=%s, %s\n", godebug.SVarI(hh.filter), godebug.LF())
 //		}
 //
 //		return nil
@@ -167,7 +167,7 @@ func (hdlr *RedisListRawHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigTyp
 	} else {
 		hdlr.filter = []*lib.FilterType{}
 	}
-	godebug.Printf(db2, "Filter: end of postInit, hdlr.filter=%s, %s\n", godebug.SVarI(hdlr.filter), godebug.LF())
+	godebug.Db2Printf(db2, "Filter: end of postInit, hdlr.filter=%s, %s\n", godebug.SVarI(hdlr.filter), godebug.LF())
 	return
 }
 

@@ -796,7 +796,7 @@ func (hdlr *TabServer2Type) CheckSqlCfgValid() (isOk bool) {
 			}})
 		}
 		if vv.G != "" {
-			// godebug.Printf(db84, "Top Loop Function [%s], params %s %s\n", vv.G, vv.P, godebug.LF())
+			// godebug.Db2Printf(db84, "Top Loop Function [%s], params %s %s\n", vv.G, vv.P, godebug.LF())
 			fmt.Printf("\n-----------------------------------------------------------------------\n")
 			fmt.Printf("Checking Function/Procedure [%s] for endpoint: %s, params %s\n", vv.G, endPointName, vv.P)
 			/*
@@ -830,7 +830,7 @@ func (hdlr *TabServer2Type) CheckSqlCfgValid() (isOk bool) {
 						}
 					}
 					if !ok {
-						godebug.Printf(db84, "%sAt: %s Valid is wrong - endpoint[%s] missing[%s] at pos=%d in .P[], %s\n", MiscLib.ColorRed, godebug.LF(),
+						godebug.Db2Printf(db84, "%sAt: %s Valid is wrong - endpoint[%s] missing[%s] at pos=%d in .P[], %s\n", MiscLib.ColorRed, godebug.LF(),
 							EndPoint, pp, ii, MiscLib.ColorReset)
 						fmt.Fprintf(os.Stderr, "%sMessage (41990): Valid is wrong - endpoint[%s] missing[%s] at pos=%d in .P[], %s\n", MiscLib.ColorRed,
 							EndPoint, pp, ii, MiscLib.ColorReset)
@@ -844,7 +844,7 @@ func (hdlr *TabServer2Type) CheckSqlCfgValid() (isOk bool) {
 					}
 				}
 				if len(TheParams) != len(FunctionInfo.DbColumns) {
-					godebug.Printf(db84, "%sAt: %s Mismatch in number of params for function, expected %d(db) have %d, %s\n", MiscLib.ColorRed, godebug.LF(),
+					godebug.Db2Printf(db84, "%sAt: %s Mismatch in number of params for function, expected %d(db) have %d, %s\n", MiscLib.ColorRed, godebug.LF(),
 						len(TheParams), len(FunctionInfo.DbColumns), MiscLib.ColorReset)
 					fmt.Fprintf(os.Stderr, "%sMessage (81407): EndPoint [%s] Function [%s] number of columns mismatch config(JsonX) expected %d PostresSQL has %d\n%s", MiscLib.ColorRed,
 						EndPoint, FunctionName, len(TheParams), len(FunctionInfo.DbColumns), MiscLib.ColorReset)
@@ -886,14 +886,14 @@ func (hdlr *TabServer2Type) CreateMissingTable(conn *sizlib.MyDb, tn string) (er
 	mdata := make(map[string]string)
 	mdata["TableName"] = tn
 	fn := tmplp.ExecuteATemplate(hdlr.DbCreateScript, mdata)
-	godebug.Printf(db83, "%sAt: %s - check exists on fn:%s%s\n", MiscLib.ColorCyan, godebug.LF(), fn, MiscLib.ColorReset)
+	godebug.Db2Printf(db83, "%sAt: %s - check exists on fn:%s%s\n", MiscLib.ColorCyan, godebug.LF(), fn, MiscLib.ColorReset)
 	// fn := fmt.Sprintf(hdlr.DbCreateScript, tn) // - replace with template call!!!
 	// should be a single file - with multiple tables in it
 	if sizlib.Exists(fn) {
-		godebug.Printf(db83, "%sAt: %s - found exists on fn:%s%s\n", MiscLib.ColorCyan, godebug.LF(), fn, MiscLib.ColorReset)
+		godebug.Db2Printf(db83, "%sAt: %s - found exists on fn:%s%s\n", MiscLib.ColorCyan, godebug.LF(), fn, MiscLib.ColorReset)
 		se := SqlEr.ValidateInstallModel(fn)
 		sub, ok := searchSub(se, tn)
-		godebug.Printf(db83, "%sAt: %s - searchSub = ok=%v, data=%s%s\n", MiscLib.ColorCyan, godebug.LF(), ok, JsonX.SVarI(sub), MiscLib.ColorReset)
+		godebug.Db2Printf(db83, "%sAt: %s - searchSub = ok=%v, data=%s%s\n", MiscLib.ColorCyan, godebug.LF(), ok, JsonX.SVarI(sub), MiscLib.ColorReset)
 		if ok {
 			se.RunSliceOfSQLCommands(conn, se.Sql.Tables[sub].DDL) // [ array -lookup subscript- ]
 		} else {
@@ -915,7 +915,7 @@ func (hdlr *TabServer2Type) CreateMissingTable(conn *sizlib.MyDb, tn string) (er
 	ORDER BY routines.routine_name, parameters.ordinal_position;
 */
 func (hdlr *TabServer2Type) GetFunctionInformationSchema(conn *sizlib.MyDb, FunctionName string, Params []string) (rv DbTableType, err error) {
-	godebug.Printf(db84, "Validateing Function [%s], params %s %s\n", FunctionName, Params, godebug.LF())
+	godebug.Db2Printf(db84, "Validateing Function [%s], params %s %s\n", FunctionName, Params, godebug.LF())
 
 	// check that the function exists
 
@@ -962,12 +962,12 @@ func (hdlr *TabServer2Type) GetFunctionInformationSchema(conn *sizlib.MyDb, Func
 			TypeCode:   GetTypeCode(vv["data_type"].(string)),
 		})
 	}
-	godebug.Printf(db84, "rv=%s\n", lib.SVarI(rv))
+	godebug.Db2Printf(db84, "rv=%s\n", lib.SVarI(rv))
 	return
 }
 
 func (hdlr *TabServer2Type) GetTableInformationSchema(conn *sizlib.MyDb, TableName string) (rv DbTableType, err error) {
-	godebug.Printf(db83, "Validateing [%s], %s\n", TableName, godebug.LF())
+	godebug.Db2Printf(db83, "Validateing [%s], %s\n", TableName, godebug.LF())
 	qry := `SELECT * FROM information_schema.tables WHERE table_schema = $1 and table_name = $2`
 	data := sizlib.SelData(conn.Db, qry, hdlr.DbSchema, TableName)
 	if data == nil || len(data) == 0 {
@@ -997,7 +997,7 @@ func (hdlr *TabServer2Type) GetTableInformationSchema(conn *sizlib.MyDb, TableNa
 			TypeCode:   GetTypeCode(vv["data_type"].(string)),
 		})
 	}
-	godebug.Printf(db83, "rv=%s\n", lib.SVarI(rv))
+	godebug.Db2Printf(db83, "rv=%s\n", lib.SVarI(rv))
 	return
 }
 

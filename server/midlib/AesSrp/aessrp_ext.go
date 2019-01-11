@@ -1783,7 +1783,7 @@ func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
 	}
 	ps := rw.Ps
 
-	godebug.Printf(dbRespHandlerSrpRegister, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(dbRespHandlerSrpRegister, "AT: %s\n", godebug.LF())
 	email := ps.ByNameDflt("email", "")               // this is 'I', unless "username" is provided.
 	UserName := ps.ByNameDflt("UserName", "")         // this is 'I', in preference to email
 	DeviceID := ps.ByNameDflt("DeviceID", "")         // this is 'I', for regestering of devices
@@ -1818,7 +1818,7 @@ func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
 	if hdlr.UserNameForRegister {
 		// Check for correct combination of email, username, DeviceID
 		if UserName != "" {
-			godebug.Printf(dbRespHandlerSrpRegister, "AT: %s, UserName [%s]\n", godebug.LF(), UserName)
+			godebug.Db2Printf(dbRespHandlerSrpRegister, "AT: %s, UserName [%s]\n", godebug.LF(), UserName)
 
 			if len(UserName) <= 6 {
 				AnError(hdlr, www, req, 400, 1050, "UserName must be atleast 7 characters long")
@@ -1861,7 +1861,7 @@ func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
 			return
 		}
 		UserName = DeviceID
-		godebug.Printf(dbRespHandlerSrpRegister, "DeviceID registration! --------- DeviceID [%s]\n", DeviceID)
+		godebug.Db2Printf(dbRespHandlerSrpRegister, "DeviceID registration! --------- DeviceID [%s]\n", DeviceID)
 	}
 
 	// Set the username
@@ -1888,7 +1888,7 @@ func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
 	mdata := make(map[string]string)
 	// xdata := make(map[string]string)
 
-	godebug.Printf(dbRespHandlerSrpRegister, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(dbRespHandlerSrpRegister, "AT: %s\n", godebug.LF())
 
 	SetSaltV(hdlr, www, req, mdata, salt, v) // Encrypt Salt,V if encryption is enabled
 
@@ -1962,7 +1962,7 @@ func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
 		mdata["LastName"] = email  //
 	}
 
-	godebug.Printf(dbRespHandlerSrpRegister, "Len v, salt = %d %d SandBoxPrefix [%s] email [%s], UserName [%s], DeviceID [%s] --- settting value at this point \n", len(ps.ByNameDflt("v", "")), len(ps.ByNameDflt("salt", "")), SandBoxPrefix, email, UserName, DeviceID)
+	godebug.Db2Printf(dbRespHandlerSrpRegister, "Len v, salt = %d %d SandBoxPrefix [%s] email [%s], UserName [%s], DeviceID [%s] --- settting value at this point \n", len(ps.ByNameDflt("v", "")), len(ps.ByNameDflt("salt", "")), SandBoxPrefix, email, UserName, DeviceID)
 
 	email_auth_token := GenerateEmailAuthKey()
 
@@ -2002,7 +2002,7 @@ func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
 	// Else if configured to send email then do so.
 	if isSpecialUsername {
 	} else if hdlr.SendEmail && DeviceID == "" {
-		godebug.Printf(dbRespHandlerSrpRegister, "\n\n%s\nEmail/Email: %s, %s, %s Auth Token: %s\n%s\n\n\n", strings.Repeat("-=- ", 30), email, UserName, DeviceID, email_auth_token, strings.Repeat("-=- ", 30))
+		godebug.Db2Printf(dbRespHandlerSrpRegister, "\n\n%s\nEmail/Email: %s, %s, %s Auth Token: %s\n%s\n\n\n", strings.Repeat("-=- ", 30), email, UserName, DeviceID, email_auth_token, strings.Repeat("-=- ", 30))
 		go SendEmailViaAWS(hdlr, email, hdlr.EmailApp, "reg-new-user.tmpl", "", email_auth_token)
 		SaveEmailAuth(hdlr, rw, email, SandBoxPrefix, email_auth_token)
 	}
@@ -2205,16 +2205,16 @@ func respHandlerEmailConfirm(www http.ResponseWriter, req *http.Request) {
 	ps := rw.Ps
 	_ = hdlr
 
-	godebug.Printf(dbRespHandlerSrpRegister, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(dbRespHandlerSrpRegister, "AT: %s\n", godebug.LF())
 	email := ""
 	SandBoxPrefix := ps.ByNameDflt("GOFTL_Sandbox", "")
 	email_auth_token := ps.ByNameDflt("email_auth_token", "")
-	godebug.Printf(dbRespHandlerSrpRegister, "email_auth_token: %s, %s\n", email_auth_token, godebug.LF())
+	godebug.Db2Printf(dbRespHandlerSrpRegister, "email_auth_token: %s, %s\n", email_auth_token, godebug.LF())
 	if email_auth_token != "" {
 		email, ok = GetEmailAuth(hdlr, rw, email_auth_token, SandBoxPrefix) // func GetEmailAuth(email_auth_token string) (email string, ok bool) {
 		if !ok {
 			AnError(hdlr, www, req, 400, 1071, "Invalid email address.")
-			godebug.Printf(dbRespHandlerSrpRegister, "Error code=0016 Token Looked Up:%s, %s\n", email_auth_token, godebug.LF())
+			godebug.Db2Printf(dbRespHandlerSrpRegister, "Error code=0016 Token Looked Up:%s, %s\n", email_auth_token, godebug.LF())
 			return
 		}
 	} else {
@@ -3138,7 +3138,7 @@ func respHandlerSRPLogin(www http.ResponseWriter, req *http.Request) {
 	}
 	ps := rw.Ps
 
-	godebug.Printf(dbSRP, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(dbSRP, "AT: %s\n", godebug.LF())
 
 	// Determine 'I' the user identifier.  This can be email or DeviceID parameters.
 	// Note: "username" can also be used if configured to do so.  // Add alternative of Username if configured to use Username instead of Email for 'I'
@@ -3149,7 +3149,7 @@ func respHandlerSRPLogin(www http.ResponseWriter, req *http.Request) {
 		email = ps.ByNameDflt("username", "") // Configured to use username
 		UserName = email
 		if UserName != "" {
-			godebug.Printf(dbRespHandlerSrpRegister, "AT: %s, UserName [%s]\n", godebug.LF(), UserName)
+			godebug.Db2Printf(dbRespHandlerSrpRegister, "AT: %s, UserName [%s]\n", godebug.LF(), UserName)
 
 			if len(UserName) <= 6 {
 				AnError(hdlr, www, req, 400, 1124, "UserName must be atleast 7 characters long")
@@ -3376,7 +3376,7 @@ func respHandlerSRPChallenge(www http.ResponseWriter, req *http.Request) {
 	mdata["state"] = "3"
 	mdata["HAMK"] = sss.XHAMK_s
 
-	godebug.Printf(dbSRP, "\nSESSION KEY - Resume Login: K <critical> <critical> %s type=%T len=%d\n\n", sss.Key_s, sss.Key_s, len(sss.Key_s))
+	godebug.Db2Printf(dbSRP, "\nSESSION KEY - Resume Login: K <critical> <critical> %s type=%T len=%d\n\n", sss.Key_s, sss.Key_s, len(sss.Key_s))
 
 	dataStore.RUpdValue(hdlr, rw, SandBoxKey("srp:V:", SandBoxPrefix, s3), mdata)
 
@@ -4055,7 +4055,7 @@ func respHandlerCipher(www http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			godebug.Printf(dbDumpURL, "\n%s\nURL: %s, %s\n\n%s\n\n", strings.Repeat("-=- ", 20), newPath, godebug.LF(), strings.Repeat("-=- ", 20))
+			godebug.Db2Printf(dbDumpURL, "\n%s\nURL: %s, %s\n\n%s\n\n", strings.Repeat("-=- ", 20), newPath, godebug.LF(), strings.Repeat("-=- ", 20))
 			// fmt.Printf("\n\nURL Problem: URL = ---[%s]---, %s\n\n", newPath, godebug.LF())
 
 			parsedPath, err := url.Parse(newPath)
@@ -4402,7 +4402,7 @@ func respHandlerCipher(www http.ResponseWriter, req *http.Request) {
 	//		nlen := aesccm.CalculateNonceLengthFromMessageLength(len(plaintext))
 	//		nonce := IV[0:nlen]
 	//
-	//		godebug.Printf(db_respHandlerCipher_1, "Nonce Length = %d\n", nlen)
+	//		godebug.Db2Printf(db_respHandlerCipher_1, "Nonce Length = %d\n", nlen)
 	//
 	//		cb, err := aes.NewCipher(key) // var cb cipher.Block
 	//		if err != nil {
@@ -4849,7 +4849,7 @@ func respHandler1x1Gif(www http.ResponseWriter, req *http.Request) {
 	}
 	ps = rw.Ps
 
-	godebug.Printf(db_etag, "Top of func 1x1.gif AT: %s\n", godebug.LF())
+	godebug.Db2Printf(db_etag, "Top of func 1x1.gif AT: %s\n", godebug.LF())
 	// Fingerprint is a Username - but not unique
 	// id0==Etag is a Password - and it is unique
 
@@ -4861,14 +4861,14 @@ func respHandler1x1Gif(www http.ResponseWriter, req *http.Request) {
 
 	tt = ps.ByNameDflt("t", "")
 	if tt == "" {
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 		key = SandBoxKey("1xF:", SandBoxPrefix, fingerprint)
 		email, err = DbGetString(hdlr, rw, key)
 		if err != nil {
 			goto NeverLoggedIn
 		}
 	} else {
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 		email, err = UserGetEmail(hdlr, rw, tt, SandBoxPrefix)
 		if err != nil { // check user exists
 			goto NeverLoggedIn
@@ -4878,22 +4878,22 @@ func respHandler1x1Gif(www http.ResponseWriter, req *http.Request) {
 	// If have logged in previously then have email address at this point.
 
 	if mdata, ok = dataStore.RGetValue(hdlr, rw, SandBoxKey("srp:U:", SandBoxPrefix, email)); !ok {
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 		goto NeverLoggedIn
 	}
 
-	godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 	// etag := req.Header.Get("Etag")
 	inm = req.Header.Get("If-None-Match")
 	id0 = ""
 
 	if inm != "" { // Ok supposedly we have seen this before
 		id0 = inm
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 
 		// xyzzy - at this point inm should match the mdata[user_etag] --
 		if inm != mdata["user_etag"] {
-			godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+			godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 			goto NeverLoggedIn
 		}
 
@@ -4905,16 +4905,16 @@ func respHandler1x1Gif(www http.ResponseWriter, req *http.Request) {
 		key = SandBoxKey("1x1:", SandBoxPrefix, fingerprint)
 		err = DbSetExpire(hdlr, rw, key, val, 60) // Give them 1 minute to get the request issued.
 		if err != nil {
-			godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+			godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 			goto NeverLoggedIn
 		}
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 
 		// save with id0 into Redis
 		key = SandBoxKey("1x1:", SandBoxPrefix, id0)
 		err = DbSetExpire(hdlr, rw, key, val, 60) // Give them 1 minute to get the request issued.
 		if err != nil {
-			godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+			godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 			goto NeverLoggedIn
 		}
 
@@ -4922,13 +4922,13 @@ func respHandler1x1Gif(www http.ResponseWriter, req *http.Request) {
 		id0 = getUUIDAsString()
 	}
 
-	godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 	mdata["user_etag"] = id0
 	dataStore.RSetValue(hdlr, rw, SandBoxKey("srp:U:", SandBoxPrefix, email), mdata)
 
 NeverLoggedIn:
 
-	godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 	www.Header().Set("Etag", id0)
 
 	www.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
@@ -4957,14 +4957,14 @@ var seq = 100
 
 //func respHandlerTest1(www http.ResponseWriter, req *http.Request) {
 //
-//	godebug.Printf(db_etag, "\n\n ------------------ ====================== ----------------- start AT: %s\n", godebug.LF())
+//	godebug.Db2Printf(db_etag, "\n\n ------------------ ====================== ----------------- start AT: %s\n", godebug.LF())
 //	var key, val string
 //	var ps goftlmux.Params
 //	var ok bool
 //
 //	rw, hdlr, ok := GetRwHdlrFromWWW(www, req)
 //	if !ok {
-//		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+//		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 //	}
 //	ps = rw.Ps
 //
@@ -4977,14 +4977,14 @@ var seq = 100
 //	//etag := req.Header.Get("Etag")
 //	//_ = etag
 //	id0 := ""
-//	godebug.Printf(db_etag, "If-None-Match = %s AT: %s\n", inm, godebug.LF())
+//	godebug.Db2Printf(db_etag, "If-None-Match = %s AT: %s\n", inm, godebug.LF())
 //
 //	if inm != "" { // Ok supposedly we have seen this before
-//		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+//		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 //
 //		BrowserMark, err := DbGetString(hdlr, rw, SandBoxKey("1x1:", SandBoxPrefix, inm))
 //		if err != nil || BrowserMark == "" {
-//			godebug.Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
+//			godebug.Db2Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
 //			// We do not have a record of this.
 //			id0 = getUUIDAsString()
 //			val = fmt.Sprintf(`var _v_ = {"status":"success","id":%q};`, id0)
@@ -5004,8 +5004,8 @@ var seq = 100
 //			return
 //		}
 //
-//		// godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
-//		godebug.Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
+//		// godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
+//		godebug.Db2Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
 //
 //		// Else - we have seen this before
 //		id0 = inm
@@ -5024,7 +5024,7 @@ var seq = 100
 //
 //	}
 //
-//	godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+//	godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 //	// We do not have a record of this.
 //	id0 = getUUIDAsString()
 //	val = fmt.Sprintf(`var _v_ = {"status":"success","id":%q};`, id0)
@@ -5154,13 +5154,13 @@ func ValidateCookies(LoginAuthCookie, LoginHashCookie, validation_secret, email 
 //
 func respHandlerMarkPage(www http.ResponseWriter, req *http.Request) {
 
-	godebug.Printf(db_etag, "\n\n ------------------ ====================== ----------------- start AT: %s\n", godebug.LF())
+	godebug.Db2Printf(db_etag, "\n\n ------------------ ====================== ----------------- start AT: %s\n", godebug.LF())
 	var ps goftlmux.Params
 	var ok bool
 
 	rw, hdlr, ok := GetRwHdlrFromWWW(www, req)
 	if !ok {
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 	}
 	ps = rw.Ps
 
@@ -5172,7 +5172,7 @@ func respHandlerMarkPage(www http.ResponseWriter, req *http.Request) {
 	if req.TLS != nil {
 		secure = true
 	}
-	godebug.Printf(db_etag, "If-None-Match = %s id0 = %s secure = %v AT: %s\n", inm, id0, secure, godebug.LF())
+	godebug.Db2Printf(db_etag, "If-None-Match = %s id0 = %s secure = %v AT: %s\n", inm, id0, secure, godebug.LF())
 
 	fx := func(cookieValue string) {
 		jsCode := fmt.Sprintf(MarkPageJS, id0)
@@ -5196,12 +5196,12 @@ func respHandlerMarkPage(www http.ResponseWriter, req *http.Request) {
 	}
 
 	if inm != "" { // Ok supposedly we have seen this before
-		godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 
 		redis_etag_key := SandBoxKey("1x1:", SandBoxPrefix, inm)
 		BrowserMark, err := DbGetString(hdlr, rw, redis_etag_key) // Pull, Parse, Update, Re-Write
 		if err != nil || BrowserMark == "" {                      // We do not have a record of this.
-			godebug.Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
+			godebug.Db2Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
 			fx("new-login-redis-expire")
 			return
 		}
@@ -5214,8 +5214,8 @@ func respHandlerMarkPage(www http.ResponseWriter, req *http.Request) {
 		IamI_old_key := SandBoxKey("1x1:", SandBoxPrefix, aMap["IamI"]) // At this point have the old IamI in aMap - delete it.
 		DbDel(hdlr, rw, IamI_old_key)
 
-		// godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
-		godebug.Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
+		// godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
+		godebug.Db2Printf(db_etag, "err = %s BrowserMark = %s AT: %s\n", err, BrowserMark, godebug.LF())
 
 		// Else - we have seen this before
 		www.Header().Set("Cache-Control", "must-revalidate, post-check=0, pre-check=0") // HTTP 1.1.
@@ -5241,7 +5241,7 @@ func respHandlerMarkPage(www http.ResponseWriter, req *http.Request) {
 
 	}
 
-	godebug.Printf(db_etag, "AT: %s\n", godebug.LF())
+	godebug.Db2Printf(db_etag, "AT: %s\n", godebug.LF())
 	fx("new-login-never-seen-before")
 	return
 
@@ -5867,7 +5867,7 @@ func EncryptData(hdlr *AesSrpType, www http.ResponseWriter, req *http.Request, S
 	nlen := aesccm.CalculateNonceLengthFromMessageLength(len(plaintext))
 	nonce := IV[0:nlen]
 
-	godebug.Printf(debugFlag2, "Nonce Length = %d\n", nlen)
+	godebug.Db2Printf(debugFlag2, "Nonce Length = %d\n", nlen)
 
 	cb, e1 := aes.NewCipher(key) // var cb cipher.Block
 	if e1 != nil {

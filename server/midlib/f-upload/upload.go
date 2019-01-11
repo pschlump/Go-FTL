@@ -277,12 +277,12 @@ func (hdlr *UploadHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 
 			if is_multipart {
 
-				godebug.Printf(debug_upload, "AT:%s\n", godebug.LF())
+				godebug.Db2Printf(debug_upload, "AT:%s\n", godebug.LF())
 
 				//parse the multipart form in the request
 				err := req.ParseMultipartForm(hdlr.maxMemory)
 				if err != nil {
-					godebug.Printf(debug_upload, "AT:%s\n", godebug.LF())
+					godebug.Db2Printf(debug_upload, "AT:%s\n", godebug.LF())
 					fmt.Printf("Error (14350): Failed to parse multi-part form.\n") // xyzzy - logrus
 					trx.AddNote(1, fmt.Sprintf("Error (14350): Failed to parse multi-part form.\n"))
 					http.Error(www, err.Error(), http.StatusInternalServerError)
@@ -292,11 +292,11 @@ func (hdlr *UploadHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 				//get a ref to the parsed multipart form
 				m := req.MultipartForm
 
-				godebug.Printf(debug_upload, "m.File=%s AT:%s\n", lib.SVarI(m), godebug.LF())
+				godebug.Db2Printf(debug_upload, "m.File=%s AT:%s\n", lib.SVarI(m), godebug.LF())
 				//get the *fileheaders
 				files := m.File["file"]
 				for ii, vv := range files {
-					godebug.Printf(debug_upload, "AT:%s\n", godebug.LF())
+					godebug.Db2Printf(debug_upload, "AT:%s\n", godebug.LF())
 					file_name = vv.Filename
 					file_name = urlpath.Clean(file_name)
 					mdata["file_name"] = file_name
@@ -361,7 +361,7 @@ func (hdlr *UploadHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 
 				}
 
-				godebug.Printf(debug_upload, "AT:%s\n", godebug.LF())
+				godebug.Db2Printf(debug_upload, "AT:%s\n", godebug.LF())
 				fmt.Fprintf(www, "{ \"status\":\"success\", \"data\":%s }", lib.SVarI(retData))
 
 			} else {
@@ -417,7 +417,7 @@ func (hdlr *UploadHandlerType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 
 				retData = append(retData, UploadReturnType{FileName: mdata["file_name"], DBId: mdata["uuid_of_file"]})
 
-				godebug.Printf(debug_upload, "AT:%s\n", godebug.LF())
+				godebug.Db2Printf(debug_upload, "AT:%s\n", godebug.LF())
 				fmt.Fprintf(www, "{ \"status\":\"success\", \"data\":%s }", lib.SVarI(retData))
 			}
 

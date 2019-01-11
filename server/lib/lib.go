@@ -1406,7 +1406,7 @@ func ParseFilter(ss string) (ff *FilterType, err error) {
 		return
 	}
 
-	godebug.Printf(db_filter, "Filter: rv=%q, FilterType=%s, %s\n", rv, SVar(FilterType{Name: rv[0][1], Value: rv[0][3], Op: OpLookup[rv[0][2]]}), godebug.LF())
+	godebug.Db2Printf(db_filter, "Filter: rv=%q, FilterType=%s, %s\n", rv, SVar(FilterType{Name: rv[0][1], Value: rv[0][3], Op: OpLookup[rv[0][2]]}), godebug.LF())
 
 	return &FilterType{
 		Name:  rv[0][1],
@@ -1423,7 +1423,7 @@ type FilterType struct {
 
 func ApplyFilter(filter []*FilterType, mdata map[string]interface{}) bool {
 
-	godebug.Printf(db_filter, "Filter: at top ApplyFilter, %s\n", godebug.LF())
+	godebug.Db2Printf(db_filter, "Filter: at top ApplyFilter, %s\n", godebug.LF())
 
 	for _, ff := range filter {
 		vvI, fnd := mdata[ff.Name]
@@ -1437,13 +1437,13 @@ func ApplyFilter(filter []*FilterType, mdata map[string]interface{}) bool {
 		switch ff.Op {
 		case OpEq:
 			if vv == ff.Value {
-				godebug.Printf(db_filter, "Filter: ApplyFilter -- matche equal, %s\n", godebug.LF())
+				godebug.Db2Printf(db_filter, "Filter: ApplyFilter -- matche equal, %s\n", godebug.LF())
 			} else {
 				return false
 			}
 		case OpNe:
 			if vv != ff.Value {
-				godebug.Printf(db_filter, "Filter: ApplyFilter -- matche not-equal, %s\n", godebug.LF())
+				godebug.Db2Printf(db_filter, "Filter: ApplyFilter -- matche not-equal, %s\n", godebug.LF())
 			} else {
 				return false
 			}

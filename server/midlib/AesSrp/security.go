@@ -39,7 +39,7 @@ func SetupRoles(rolesName []string, accessLevels map[string][]string) ([]RolesWi
 		bm = bm << 1
 	}
 
-	godebug.Printf(db_SetupRoles, "rn=%+v, rn_h=%+v, %s\n", rn, rn_h, godebug.LF())
+	godebug.Db2Printf(db_SetupRoles, "rn=%+v, rn_h=%+v, %s\n", rn, rn_h, godebug.LF())
 
 	an := make([]RolesWithBitMask, 0, len(rolesName))
 	for kk, vv := range accessLevels {
@@ -50,7 +50,7 @@ func SetupRoles(rolesName []string, accessLevels map[string][]string) ([]RolesWi
 		an = append(an, RolesWithBitMask{Name: kk, BitMask: t})
 	}
 
-	godebug.Printf(db_SetupRoles, "an=%+v\n", an)
+	godebug.Db2Printf(db_SetupRoles, "an=%+v\n", an)
 
 	return rn, rn_h, an
 }

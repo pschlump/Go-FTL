@@ -334,11 +334,11 @@ func SaveKeyData(hdlr *AesSrpType, rw *goftlmux.MidBuffer, tt, SandBoxPrefix str
 }
 
 func SaveEmailAuth(hdlr *AesSrpType, rw *goftlmux.MidBuffer, email, SandBoxPrefix, emailAuthToken string) {
-	godebug.Printf(db202, "SessionLife in Seconds=%d\n", hdlr.SessionLife)
-	godebug.Printf(db202, "Key1 =%s\n", SandBoxKey(hdlr.PreEau, SandBoxPrefix, email))
-	godebug.Printf(db202, "Key2 =%s\n", SandBoxKey(hdlr.PreEau, SandBoxPrefix, emailAuthToken))
-	godebug.Printf(db202, "Email =%s\n", email)
-	godebug.Printf(db202, "emailAuthToken =%s\n", emailAuthToken)
+	godebug.Db2Printf(db202, "SessionLife in Seconds=%d\n", hdlr.SessionLife)
+	godebug.Db2Printf(db202, "Key1 =%s\n", SandBoxKey(hdlr.PreEau, SandBoxPrefix, email))
+	godebug.Db2Printf(db202, "Key2 =%s\n", SandBoxKey(hdlr.PreEau, SandBoxPrefix, emailAuthToken))
+	godebug.Db2Printf(db202, "Email =%s\n", email)
+	godebug.Db2Printf(db202, "emailAuthToken =%s\n", emailAuthToken)
 
 	DbSetExpire(hdlr, rw, SandBoxKey(hdlr.PreEau, SandBoxPrefix, email), emailAuthToken, hdlr.SessionLife) // PreEau=='eau:'
 	DbSetExpire(hdlr, rw, SandBoxKey(hdlr.PreEau, SandBoxPrefix, emailAuthToken), email, hdlr.SessionLife) // PreEau=='eau:'
@@ -347,7 +347,7 @@ func SaveEmailAuth(hdlr *AesSrpType, rw *goftlmux.MidBuffer, email, SandBoxPrefi
 func GetEmailAuth(hdlr *AesSrpType, rw *goftlmux.MidBuffer, emailAuthToken, SandBoxPrefix string) (email string, ok bool) {
 	var err error
 	email, err = DbGetString(hdlr, rw, SandBoxKey(hdlr.PreEau, SandBoxPrefix, emailAuthToken))
-	godebug.Printf(db202, "Code 16: %s --->>> %s\n", SandBoxKey(hdlr.PreEau, SandBoxPrefix, emailAuthToken), err)
+	godebug.Db2Printf(db202, "Code 16: %s --->>> %s\n", SandBoxKey(hdlr.PreEau, SandBoxPrefix, emailAuthToken), err)
 	if err != nil {
 		return
 	}

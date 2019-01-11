@@ -165,7 +165,7 @@ func (hdlr *RedisListHandlerType) PreValidate(gCfg *cfg.ServerGlobalConfigType, 
 	} else {
 		hdlr.filter = []*lib.FilterType{}
 	}
-	godebug.Printf(db2, "Filter: end of postInit, hdlr.filter=%s, %s\n", godebug.SVarI(hdlr.filter), godebug.LF())
+	godebug.Db2Printf(db2, "Filter: end of postInit, hdlr.filter=%s, %s\n", godebug.SVarI(hdlr.filter), godebug.LF())
 	return
 }
 

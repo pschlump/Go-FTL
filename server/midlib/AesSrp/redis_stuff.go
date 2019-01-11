@@ -42,21 +42,21 @@ func DbSetExpire(hdlr *AesSrpType, rw *goftlmux.MidBuffer, key string, val strin
 		From: https://godoc.org/github.com/mediocregopher/radix.v2/redis
 		From: https://godoc.org/github.com/mediocregopher/radix.v2/pool
 	*/
-	godebug.Printf(db201, "DbSetExpire: %s key [%s] value [%s] life [%d]\n", godebug.LF(), key, val, life)
+	godebug.Db2Printf(db201, "DbSetExpire: %s key [%s] value [%s] life [%d]\n", godebug.LF(), key, val, life)
 	conn, err := hdlr.gCfg.RedisPool.Get()
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
 	}
 	defer hdlr.gCfg.RedisPool.Put(conn)
 
-	godebug.Printf(db201, "DbSetExpire: %s\n", godebug.LF())
+	godebug.Db2Printf(db201, "DbSetExpire: %s\n", godebug.LF())
 	err = conn.Cmd("SET", key, val).Err
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s on setting key: %s to value %s","LineFile":%q}`+"\n", err, key, val, godebug.LF()))
 		return
 	}
 
-	godebug.Printf(db201, "DbSetExpire: %s\n", godebug.LF())
+	godebug.Db2Printf(db201, "DbSetExpire: %s\n", godebug.LF())
 	err = conn.Cmd("EXPIRE", key, fmt.Sprintf("%d", life)).Err
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s on setting key: %s to value %s","LineFile":%q}`+"\n", err, key, val, godebug.LF()))
@@ -73,14 +73,14 @@ func DbSetString(hdlr *AesSrpType, rw *goftlmux.MidBuffer, key string, val strin
 		From: https://godoc.org/github.com/mediocregopher/radix.v2/redis
 		From: https://godoc.org/github.com/mediocregopher/radix.v2/pool
 	*/
-	godebug.Printf(db201, "DbSetString: %s key [%s] value [%s]\n", godebug.LF(), key, val)
+	godebug.Db2Printf(db201, "DbSetString: %s key [%s] value [%s]\n", godebug.LF(), key, val)
 	conn, err := hdlr.gCfg.RedisPool.Get()
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
 	}
 	defer hdlr.gCfg.RedisPool.Put(conn)
 
-	godebug.Printf(db201, "DbSetString: %s\n", godebug.LF())
+	godebug.Db2Printf(db201, "DbSetString: %s\n", godebug.LF())
 	err = conn.Cmd("SET", key, val).Err
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s on setting key: %s to value %s","LineFile":%q}`+"\n", err, key, val, godebug.LF()))

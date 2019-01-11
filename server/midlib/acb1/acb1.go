@@ -268,6 +268,7 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 			trx.PathMatched(1, "Acb1", hdlr.Paths, pn, req.URL.Path)
 
 			ps := &rw.Ps
+			_ = ps
 			www.Header().Set("Content-Type", "application/json")
 
 			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
