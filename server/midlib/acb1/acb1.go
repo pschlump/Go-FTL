@@ -97,7 +97,7 @@ func NewAcb1TypeServer(n http.Handler, p []string, redisPrefix, realm string) *A
 }
 
 type dispatchType struct {
-	handlerFunc func(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request)
+	handlerFunc func(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string)
 }
 
 var dispatch map[string]dispatchType
@@ -106,7 +106,7 @@ func init() {
 	dispatch = make(map[string]dispatchType)
 
 	dispatch["/api/acb1/test1"] = dispatchType{
-		handlerFunc: func(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request) {
+		handlerFunc: func(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
 			fmt.Printf("test1 called\n")
 			fmt.Fprintf(os.Stderr, "test1 called\n")
 		},
@@ -161,7 +161,7 @@ func (hdlr *Acb1Type) InsertTrackAdd(tag string) error {
 	return nil
 }
 
-func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request) {
+func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
 	fmt.Printf("trackAdd called\n")
 	fmt.Fprintf(os.Stderr, "trackAdd called\n")
 
@@ -264,17 +264,23 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
 		if rw, ok := www.(*goftlmux.MidBuffer); ok {
 
+			hdlr.SetupServer()
+			www.Header().Set("Content-Type", "application/json")
+
 			trx := mid.GetTrx(rw)
 			trx.PathMatched(1, "Acb1", hdlr.Paths, pn, req.URL.Path)
 
 			ps := &rw.Ps
-			_ = ps
-			www.Header().Set("Content-Type", "application/json")
+			data := ps.ByNameDflt("Data", "{}")
+			var mdata map[string]string
+			err := json.Unmarshal([]byte(data), &mdata)
+			if err != nil {
+				fmt.Fprintf(www, "{\"status\":\"error\",\"msg\":%q}", err)
+				return
+			}
 
 			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-
-			hdlr.SetupServer()
 
 			fx, ok := dispatch[req.URL.Path]
 			if !ok {
@@ -284,7 +290,7 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 				fmt.Fprintf(www, "{\"status\":\"not-implemented-yet\"}")
 				return
 			}
-			fx.handlerFunc(hdlr, rw, www, req)
+			fx.handlerFunc(hdlr, rw, www, req, mdata)
 			return
 
 			fmt.Fprintf(www, "{\"status\":\"not-implemented-yet\"}")
