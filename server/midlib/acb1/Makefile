@@ -1,21 +1,40 @@
 
-all:
+all: ddl.sql 
 	go build
 
+
+ddl.sql: ddl.m4.sql
+	m4 -P ddl.m4.sql >ddl.sql
 
 test:
 	go test
 
-test001_plan:
-	echo "*" 1. JSON Data
-	echo "++" 2. Curl Post - to what URL
-	echo "*" 3. Config Server to use /api/acb1 URL path
-	echo 4. Restart server ( $aa/pvp/
-	echo 5. Get Output
-	echo 6. Validate
-
+# * 1. JSON Data
+# * 2. Curl Post - to what URL
+# * 3. Config Server to use /api/acb1 URL path
+# * 4. Restart server ( $aa/pvp/
+# * 5. Get Output
+# + 6. Validate
 test001:
-	curl -X POST http://localhost:9019/api/acb1/track_add?bulk=
+	mkdir -p ./out
+	./test001.sh >out/test001.out 2>&1
+
+# 7. Add in other fields
+#   7a. seq
+#   7b. Timestamp
+# # site_id -> presmis_id
+#	look up using premis_id and premis_code
+# # Add in a table for Premis "Demo Ranch", "Demo Wyoming".
+#
+# 8. Add a insert/update capability
+# 9. Setup data for X=15 cows
+# 
+# QR generation capablity -
+#	1. Have a set of QR codes already built.
+#   2. Use one
+#   3. Wtite out the data
+#   4. Update the URL shortner with new data
+#
 
 doc:
 	markdown-cli -i Acb1.md -o Acb1.html -c ../markdown-cfg.json

@@ -16,8 +16,8 @@ import (
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/sizlib"
 	JsonX "github.com/pschlump/JSONx"
-	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 )
 
@@ -111,8 +111,27 @@ func init() {
 			fmt.Fprintf(os.Stderr, "test1 called\n")
 		},
 	}
+
 	dispatch["/api/acb1/track_add"] = dispatchType{
 		handlerFunc: trackAdd,
+	}
+	dispatch["/api/acb1/listBy"] = dispatchType{
+		handlerFunc: listBy,
+	}
+	dispatch["/api/acb1/generateQrFor"] = dispatchType{
+		handlerFunc: generateQrFor,
+	}
+	dispatch["/api/acb1/getTagId"] = dispatchType{
+		handlerFunc: getTagId,
+	}
+	dispatch["/api/acb1/getInfo"] = dispatchType{
+		handlerFunc: getInfo,
+	}
+	dispatch["/api/acb1/convToJson"] = dispatchType{
+		handlerFunc: convToJson,
+	}
+	dispatch["/api/acb1/chainHash"] = dispatchType{
+		handlerFunc: chainHash,
 	}
 
 }
@@ -166,6 +185,32 @@ func (hdlr *Acb1Type) InsertTrackAdd(tag string) error {
 	return nil
 }
 
+func FindTagId(hdlr *Acb1Type, premis_id, premis_animal string) (string, error) {
+	stmt := "select \"tag\" from \"v1_trackAdd\" where \"premis_id\" = $1	and \"premis_animal\" = $2 limit 1"
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, premis_id, premis_animal)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return "", err
+	}
+
+	for nr := 0; rows.Next(); nr++ {
+		if nr >= 1 {
+			fmt.Printf("Error too many rows for a user, should be unique primary key\n")
+			break
+		}
+
+		var tag string
+		err := rows.Scan(&tag)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return "", err
+		}
+
+		return tag, nil
+	}
+	return "", fmt.Errorf("Unable to use premis_id/animal_id to identify unique animal")
+}
+
 func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
 	fmt.Printf("trackAdd called\n")
 	fmt.Fprintf(os.Stderr, "trackAdd called\n")
@@ -173,14 +218,11 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 	ps := &rw.Ps
 
 	bulk := ps.ByNameDflt("bulk", "")
-	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-	fmt.Printf("bulk: ->%s<-\n", bulk)
+	godebug.DbPfb(db1, "bulk: ->%s<-\n", bulk)
 	var bulkData bulkDataType
 	var err error
 
-	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	godebug.DbPfb(db1, "%(Yellow)Partial Error [%s] AT: %(LF)\n", err)
 	if bulk != "" {
 		err = json.Unmarshal([]byte(bulk), &bulkData)
 	} else {
@@ -196,8 +238,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		})
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
-		fmt.Fprintf(os.Stdout, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
+		godebug.DbPfb(db1, "%(Red)Error [%s] AT: %(LF)\n", err)
 
 		fmt.Fprintf(www, "%s", godebug.SVarI(bulkRvType{
 			Status: "failed",
@@ -206,14 +247,12 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	godebug.DbPfb(db1, "%(Yellow)Partial Error [%s] AT: %(LF)\n", err)
 	if hdlr.AuthKey != "" && bulkData.Auth != hdlr.AuthKey {
 		err = fmt.Errorf("Invalid auth key")
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
-		fmt.Fprintf(os.Stdout, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
+		godebug.DbPfb(db1, "%(Red)Error [%s] AT: %(LF)\n", err)
 
 		fmt.Fprintf(www, "%s", godebug.SVarI(bulkRvType{
 			Status: "failed",
@@ -222,8 +261,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	godebug.DbPfb(db1, "%(Yellow)Partial Error [%s] AT: %(LF)\n", err)
 	var rv bulkRvType
 	statusVal := "success"
 
@@ -251,24 +289,21 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-	fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+	godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
 	fmt.Fprintf(os.Stdout, "rv = %s\n", godebug.SVarI(rv))
 	for ii, rr := range bulkData.Row {
-		fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-		fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+		godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
 		if rv.Detail[ii].ItemStatus == "success" {
-			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
 			if rr.Tag == "" && rr.SubId != "" {
 				// xyzzy100 - pull out Tag id or error -- If error set ItemStatus to...
 				// xyzzy - Call convSiteIDToTagId ( site_id, sub_id ) -> tagId, err
 				// xyzzy - if error ...
+				rr.Tag, err = FindTagId(hdlr, bulkData.SiteId, rr.SubId)
 			}
 		}
 		if rv.Detail[ii].ItemStatus == "success" {
-			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
 			err = hdlr.InsertTrackAdd(rr.Tag) // xyzzy - other params to pass!
 			if err != nil {
 				statusVal = "partial"
@@ -280,8 +315,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 	}
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
-		fmt.Fprintf(os.Stdout, "%sError[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.LF(), MiscLib.ColorReset)
+		godebug.DbPfb(db1, "%(Red)Error [%s] AT: %(LF)\n", err)
 
 		fmt.Fprintf(www, "%s", godebug.SVarI(bulkRvType{
 			Status: "failed",
@@ -292,8 +326,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 
 	if statusVal != "success" {
 		rv.Status = statusVal
-		fmt.Fprintf(os.Stderr, "%sPartial Error[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.SVarI(rv), MiscLib.ColorReset)
-		fmt.Fprintf(os.Stdout, "%sPartial Error[%s] AT: %s%s\n", MiscLib.ColorRed, err, godebug.SVarI(rv), MiscLib.ColorReset)
+		godebug.DbPfb(db1, "%(Yellow)Partial Error [%s] AT: %(LF)\n", err)
 
 		fmt.Fprintf(www, "%s", godebug.SVarI(rv))
 		return
@@ -303,6 +336,122 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		Status: "success",
 	}))
 }
+
+/*
+List Query
+select t1.*
+	, t2."file_name"
+	, t2."url_path"
+	, t2."qr_id"
+	, t2."qr_enc_id"
+	, t2."state" as "qr_state"
+from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."id"
+;
+*/
+func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("listBy called\n")
+	fmt.Fprintf(os.Stderr, "listBy called\n")
+
+	stmt :=
+		`select t1.*
+			, t2."file_name"
+			, t2."url_path"
+			, t2."qr_id"
+			, t2."qr_enc_id"
+			, t2."state" as "qr_state"
+		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."id"
+		`
+	_ = stmt
+
+	ps := &rw.Ps
+
+	typ := ps.ByNameDflt("typ", "cow")
+	dat := ""
+	switch typ {
+	case "cow":
+		stmt += "where t1.\"tag\" = $1\norder by t1.\"tag\" asc\n"
+		dat = ps.ByNameDflt("tag", "$err$")
+	case "ranch":
+		stmt += "where t1.\"ranch_name\" = $1\norder by t1.\"ranch_name\" asc\n"
+		dat = ps.ByNameDflt("ranch", "$err$")
+	case "locaiton":
+		stmt += "where t1.\"location\" = $1\n"
+		dat = ps.ByNameDflt("location", "$err$")
+	case "premis_id", "site_id":
+		stmt += "where t1.\"premis_id\" = $1\n"
+		dat = ps.ByNameDflt("premis_id", "$err$")
+	}
+	if dat == "$err$" {
+		fmt.Printf("Missing data\n")
+		fmt.Fprintf(www, `{"status":"error","msg":"database error: [%s]"}`, "missing data")
+		return
+	}
+
+	Rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, dat)
+	if err != nil {
+		fmt.Printf("Database error %s. stmt=%s data=[%s]\n", err, stmt, dat)
+		fmt.Fprintf(www, `{"status":"error","msg":"database error: [%v]"}`, err)
+		return
+	}
+
+	defer Rows.Close()
+	rowData, _, _ := sizlib.RowsToInterface(Rows)
+
+	fmt.Fprintf(www, `{"status":"success","data":%s}`, godebug.SVarI(rowData))
+}
+
+func generateQrFor(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("generateQrFor called\n")
+	fmt.Fprintf(os.Stderr, "generateQrFor called\n")
+
+	stmt := "select v1_next_avail_qr as \"x\""
+	_ = stmt
+
+	// TODO - call function, return x
+
+	fmt.Fprintf(www, `{"status":"success"}`)
+}
+
+func getTagId(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("getTagId called\n")
+	fmt.Fprintf(os.Stderr, "getTagId called\n")
+
+	// TODO - convert a premis_id/sub_id -> tag id and return
+
+	fmt.Fprintf(www, `{"status":"success"}`)
+}
+
+func getInfo(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("getInfo called\n")
+	fmt.Fprintf(os.Stderr, "getInfo called\n")
+
+	// TODO - get all the info on a cow
+
+	fmt.Fprintf(www, `{"status":"success"}`)
+}
+
+func convToJson(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("convToJson called\n")
+	fmt.Fprintf(os.Stderr, "convToJson called\n")
+
+	// TODO -- get all the info on a cow and convert to JSON and return
+
+	fmt.Fprintf(www, `{"status":"success"}`)
+}
+
+func chainHash(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("chainHash called\n")
+	fmt.Fprintf(os.Stderr, "chainHash called\n")
+
+	fmt.Fprintf(www, `{"status":"success"}`)
+}
+
+//func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+//	fmt.Printf("listBy called\n")
+//	fmt.Fprintf(os.Stderr, "listBy called\n")
+//
+//	fmt.Fprintf(www, `{"status":"success"}`)
+//}
 
 func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 
@@ -324,13 +473,11 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			fmt.Fprintf(os.Stderr, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
-			fmt.Fprintf(os.Stdout, "%sAT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+			godebug.DbPfb(db1, "%(Yellow)Partial Error [%s] AT: %(LF)\n", err)
 
 			fx, ok := dispatch[req.URL.Path]
 			if !ok {
-				fmt.Fprintf(os.Stderr, "%sInvalid Path[%s] AT: %s%s\n", MiscLib.ColorRed, req.URL.Path, godebug.LF(), MiscLib.ColorReset)
-				fmt.Fprintf(os.Stdout, "%sInvalid Path[%s] AT: %s%s\n", MiscLib.ColorRed, req.URL.Path, godebug.LF(), MiscLib.ColorReset)
+				godebug.DbPfb(db1, "%(Red)Error Path Invalid [%s] AT: %(LF)\n", req.URL.Path)
 
 				fmt.Fprintf(www, "{\"status\":\"not-implemented-yet\"}")
 				return
@@ -344,5 +491,7 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 
 	hdlr.Next.ServeHTTP(www, req)
 }
+
+const db1 = false
 
 /* vim: set noai ts=4 sw=4: */

@@ -1,6 +1,6 @@
 
 -- stmt := "insert into \"v1_trackAdd\" ( \"tag\" ) values ( $1 )"
-
+m4_changequote(`[[[', `]]]')
 
 CREATE SEQUENCE v1_tracAdd_seq
 INCREMENT 1
@@ -113,8 +113,8 @@ func chainHash(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, 
 */
 
 drop FUNCTION v1_next_avail_qr ;
-CREATE OR REPLACE FUNCTION v1_next_avail_qr 
-	RETURNS varchar AS $$
+CREATE OR REPLACE FUNCTION v1_next_avail_qr ()
+	RETURNS varchar AS 
 $body$
 DECLARE
     l_id char varying(40);
@@ -137,7 +137,7 @@ BEGIN
 		limit 1
 		;
 	if not found then
-		l_fail = true
+		l_fail = true;
 		l_data = '{"status":"error","code":"100","msg":"unable to generate QR code"}';
 	end if;
 
@@ -155,10 +155,12 @@ BEGIN
 			||'}';
 	end if;
 
+	RETURN l_data;
 END;
 $body$
 LANGUAGE plpgsql;
 
+-- select v1_next_avail_qr() as "x";
 
 
 
@@ -169,7 +171,14 @@ LANGUAGE plpgsql;
 
 
 
-CREATE OR REPLACE function v1_trackAdd_upd()
+
+
+
+
+
+m4_define([[[m4_updTrig]]],[[[
+
+CREATE OR REPLACE function $1_upd()
 RETURNS trigger AS 
 $BODY$
 BEGIN
@@ -180,29 +189,14 @@ $BODY$
 LANGUAGE 'plpgsql';
 
 
-CREATE TRIGGER v1_trackAdd_trig
-BEFORE update ON "v1_trackAdd"
+CREATE TRIGGER $1_trig
+BEFORE update ON "$1"
 FOR EACH ROW
-EXECUTE PROCEDURE v1_trackAdd_upd();
+EXECUTE PROCEDURE $1_upd();
+
+]]])
 
 
-
-
-CREATE OR REPLACE function v1_avail_qr_upd()
-RETURNS trigger AS 
-$BODY$
-BEGIN
-NEW.updated := current_timestamp;
-RETURN NEW;
-END
-$BODY$
-LANGUAGE 'plpgsql';
-
-
-CREATE TRIGGER v1_avail_qr_trig
-BEFORE update ON "v1_avail_qr"
-FOR EACH ROW
-EXECUTE PROCEDURE v1_avail_qr_upd();
-
-
+m4_updTrig(v1_trackAdd)
+m4_updTrig(v1_avail_qr)
 
