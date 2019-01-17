@@ -7,11 +7,17 @@
 package Acb1
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -35,6 +41,7 @@ func init() {
 		"OutputPath":  	     { "type":[ "string" ], "required":false, "default":"./qr-final" },
 		"OutputURL":  	     { "type":[ "string" ], "required":false, "default":"/qr-final/" },
 		"RedisPrefix":  	 { "type":[ "string" ], "required":false, "default":"dip:" },
+		"DisplayURL":	  	 { "type":[ "string" ], "required":false, "default":"http://www.2c-why.com/demo34" },
 		"LineNo":       	 { "type":[ "int" ], "default":"1" }
 		}`)
 }
@@ -55,6 +62,10 @@ func init() {
 //		"SingedOnceAddr":  	 { "type":[ "string" ], "required":false, "default":"" },
 //		"AppID":  	         { "type":[ "string" ], "required":false, "default":"100" },
 //
+//
+
+//
+// http://t432z.com/dec/5c -> http://test.test.com
 //
 
 func (hdlr *Acb1Type) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
@@ -82,6 +93,7 @@ type Acb1Type struct {
 	InputPath   string                      //
 	OutputPath  string                      //
 	OutputURL   string                      //
+	DisplayURL  string                      // URL to display results - destination of QR redirect
 	validEvent  map[string]bool             // list of valid events for items (acb)
 	LineNo      int                         //
 	gCfg        *cfg.ServerGlobalConfigType //
@@ -138,6 +150,7 @@ func init() {
 
 type bulkDataRow struct {
 	Tag   string `json:"Tag"`    // RFIF etc. (unique)
+	Note  string `json:"Notes"`  // User memo
 	SubId string `json:"Sub_id"` // Used with Site_id to pull out Tag
 	Event string `json:"Event"`  // One of standard set of vevents - will be validated.
 	Data  string `json:"Data"`   // Additional Data in JSON format
@@ -166,23 +179,214 @@ type bulkRvType struct {
 func (hdlr *Acb1Type) SetupValidEvents() {
 	if hdlr.validEvent == nil {
 		hdlr.validEvent = make(map[string]bool)
-		hdlr.validEvent["Init"] = true
-		hdlr.validEvent["Create-Event"] = true
-		hdlr.validEvent["Delete-Event"] = true
-		hdlr.validEvent["Update"] = true
+		hdlr.validEvent["1"] = true
+		hdlr.validEvent["2"] = true
+		hdlr.validEvent["3"] = true
+		hdlr.validEvent["4"] = true
+		hdlr.validEvent["5"] = true
+		hdlr.validEvent["6"] = true
 	}
 }
 
-func (hdlr *Acb1Type) InsertTrackAdd(tag string) error {
-	stmt := "insert into \"v1_trackAdd\" ( \"tag\" ) values ( $1 )"
-	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, tag)
+type DataToBeHashed struct {
+	Tag      string
+	PrevHash string `json:"prev_hash"`
+	Created  string
+	Note     string
+}
+
+type DataSetHashed []DataToBeHashed
+
+func SerializeDataToBeHashed(dt DataToBeHashed) []byte {
+	var buf bytes.Buffer
+
+	binary.Write(&buf, binary.BigEndian, int32(len(dt.Tag)))
+	buf.Write([]byte(dt.Tag))
+
+	binary.Write(&buf, binary.BigEndian, int32(len(dt.PrevHash)))
+	buf.Write([]byte(dt.PrevHash))
+
+	binary.Write(&buf, binary.BigEndian, int32(len(dt.Created)))
+	buf.Write([]byte(dt.Created))
+
+	binary.Write(&buf, binary.BigEndian, int32(len(dt.Note)))
+	buf.Write([]byte(dt.Note))
+
+	return buf.Bytes()
+}
+
+func SerializeAnimal(dt DataSetHashed) []byte {
+	var buf bytes.Buffer
+	for _, row := range dt {
+		rowS := SerializeDataToBeHashed(row)
+		buf.Write(rowS)
+	}
+	return buf.Bytes()
+}
+
+func (hdlr *Acb1Type) InsertTrackAdd(tag, note string) (string, error) {
+	hash_prev, max_ord_seq, qr_enc_id, err := hdlr.GetMostRecentHash(tag)
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) %(Red) hash_prev [%s] max_ord_seq [%s]\n", hash_prev, max_ord_seq)
+	stmt := "insert into \"v1_trackAdd\" ( \"tag\", \"note\", \"prev_hash\" ) values ( $1, $2, $3 )"
+	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, tag, note, hash_prev)
+	if err != nil {
+		return qr_enc_id, err
+	} else {
+		fmt.Printf("Success: %s data[%s, %s, %s]\n", stmt, tag, note, hash_prev)
+		fmt.Fprintf(os.Stderr, "Success: %s data[%s, %s, %s]\n", stmt, tag, note, hash_prev)
+	}
+	// 	1. Pull back data (including create date, hash)
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) hash_prev [%s] max_ord_seq [%s]\n", hash_prev, max_ord_seq)
+	data, err := hdlr.GetAllRows(tag)
+	// 	2. Put into data type
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) data ->%s<-\n", data)
+	var set DataSetHashed
+	err = json.Unmarshal([]byte(data), &set)
+	// 	3. Serialize it
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	serDat := SerializeAnimal(set)
+	// 	4. Keccak256 hash it
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	newHash := KeeackHash([]byte(serDat))
+	// 	5. update it.
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) newHash [%x], qr_enc_id [%s]\n", newHash, qr_enc_id) // xyzzy104
+	hdlr.UpdateHashCurrentRow(tag, max_ord_seq, string(newHash))
+	return qr_enc_id, nil
+}
+
+// data, err := hdlr.GetAllRows(tag)
+func (hdlr *Acb1Type) GetAllRows(tag string) (rowData string, err error) {
+	stmt :=
+		`select t1.*
+			, t2."file_name"
+			, t2."url_path"
+			, t2."qr_id"
+			, t2."qr_enc_id"
+			, t2."state" as "qr_state"
+		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
+		where "tag" = $1
+		order by "ord_seq" desc
+		`
+	Rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, tag)
+	if err != nil {
+		fmt.Printf("Database error %s. stmt=%s data=[%s]\n", err, stmt, tag)
+		// fmt.Fprintf(www, `{"status":"error","msg":"database error: [%v]"}`, tag)
+		return
+	}
+
+	defer Rows.Close()
+	finalData, _, _ := sizlib.RowsToInterface(Rows)
+
+	return sizlib.SVar(finalData), nil
+}
+
+// hdlr.UpdateHashCurrentRow(tag, max_ord_seq, newHash)
+func (hdlr *Acb1Type) UpdateHashCurrentRow(tag, max_ord_seq, newHash string) (err error) {
+	stmt := "update \"v1_trackAdd\" set \"hash\" = $1 where \"tag\" = $2 and \"ord_seq\" > $3"
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) stmt=[%s] data=[%x, %s, %s]\n", stmt, newHash, tag, max_ord_seq)
+	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, fmt.Sprintf("%x", newHash), tag, max_ord_seq)
+	if err != nil {
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF) err=%s\n", err)
+		return err
+	} else {
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		fmt.Printf("Success: %s data[%x, %s, %s]\n", stmt, newHash, tag, max_ord_seq)
+		fmt.Fprintf(os.Stderr, "Success: %s data[%x, %s, %s]\n", stmt, newHash, tag, max_ord_seq)
+	}
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+	return nil
+}
+
+func (hdlr *Acb1Type) GetMostRecentHash(tag string) (hash, ord_seq, qr_enc_id string, err error) {
+	stmt := "select \"hash\", \"ord_seq\", \"qr_id\" from \"v1_trackAdd\" where \"tag\" = $1 order by \"ord_seq\" desc"
+
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, tag)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return "", "0", "", err
+	}
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	for nr := 0; rows.Next(); nr++ {
+		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+
+		var hash, max_ord_seq, latest_qr_enc_id string
+		err := rows.Scan(&hash, &max_ord_seq, &latest_qr_enc_id)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return "", "0", "", err
+		}
+		// xyzzy104
+		godebug.DbPfb(db1, "%(Cyan) AT: %(LF) latest_qr_enc_id [%s]\n", latest_qr_enc_id)
+
+		return hash, max_ord_seq, latest_qr_enc_id, nil
+	}
+	return "", "0", "", nil
+}
+
+func (hdlr *Acb1Type) UpdateQRMarkAsUsed(qrId string) error {
+	stmt := "update \"v1_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) - stmt [%s] data[%s]\n", stmt, qrId)
+	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, qrId)
 	if err != nil {
 		return err
 	} else {
-		fmt.Printf("Success: %s data[%s]\n", stmt, tag)
-		fmt.Fprintf(os.Stderr, "Success: %s data[%s]\n", stmt, tag)
+		fmt.Printf("Success: %s data[%s]\n", stmt, qrId)
+		fmt.Fprintf(os.Stderr, "Success: %s data[%s]\n", stmt, qrId)
 	}
 	return nil
+}
+
+func (hdlr *Acb1Type) UpdateAnimalWithQR(tag, qrId string) error {
+	stmt := "update \"v1_trackAdd\" set \"qr_id\" = $1 where \"tag\" = $2"
+	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, qrId, tag)
+	if err != nil {
+		return err
+	} else {
+		fmt.Printf("Success: %s data[%s, %s]\n", stmt, qrId, tag)
+		fmt.Fprintf(os.Stderr, "Success: %s data[%s, %s]\n", stmt, qrId, tag)
+	}
+	return nil
+}
+
+// err = hdlr.PullQRFromDB(rr.Tag)
+func (hdlr *Acb1Type) PullQRFromDB(tag string) (qr_enc_id string, err error) {
+	// Xyzzy - sould replace with stored proc. that updates state in same transaction.
+	stmt := "select \"qr_enc_id\" from \"v1_avail_qr\" where \"state\" = 'avail' limit 1"
+	// insert into "v1_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
+	// 	  ( '170', '4q', 'http://127.0.0.1:9019/qr/00170.4.png', './td_0008/q00170.4.png', 'http://t432z.com/q/4q' )
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return "", err
+	}
+	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	for nr := 0; rows.Next(); nr++ {
+		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		if nr >= 1 {
+			fmt.Printf("Error too many rows for a user, should be unique primary key\n")
+			break
+		}
+
+		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		var qr string
+		err := rows.Scan(&qr)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return "", err
+		}
+		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+
+		// Xyzzy - test fail to error report
+		err = hdlr.UpdateQRMarkAsUsed(qr)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return "", err
+		}
+
+		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		return qr, nil
+	}
+	return "", fmt.Errorf("Failed to get a QR code")
 }
 
 func FindTagId(hdlr *Acb1Type, premis_id, premis_animal string) (string, error) {
@@ -211,6 +415,19 @@ func FindTagId(hdlr *Acb1Type, premis_id, premis_animal string) (string, error) 
 	return "", fmt.Errorf("Unable to use premis_id/animal_id to identify unique animal")
 }
 
+/*
+---------------------------------------------
+// Xyzzy101 - Setup QR Redirect
+---------------------------------------------
+
+	export QR_SHORT_AUTH_TOKEN="w4h0wvtb1zk4uf8Xv.Ns9Q7j8"
+	wget -o out/,list1 -O out/,list2 \
+		--header "X-Qr-Auth: ${QR_SHORT_AUTH_TOKEN}" \
+		"http://t432z.com/upd/?url=http://test.test.com&id=5c"
+
+	-- 1. DoGet - change to create a header
+	-- 2. Example Call to set this
+*/
 func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
 	fmt.Printf("trackAdd called\n")
 	fmt.Fprintf(os.Stderr, "trackAdd called\n")
@@ -231,6 +448,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		bulkData.SiteId = ps.ByNameDflt("Site_id", "")
 		bulkData.Row = append(bulkData.Row, bulkDataRow{
 			Tag:   ps.ByNameDflt("Tag", ""),
+			Note:  ps.ByNameDflt("Note", ""),
 			SubId: ps.ByNameDflt("Sub_id", ""),
 			Event: ps.ByNameDflt("Event", ""),
 			Data:  ps.ByNameDflt("Data", ""),
@@ -296,21 +514,77 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		if rv.Detail[ii].ItemStatus == "success" {
 			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
 			if rr.Tag == "" && rr.SubId != "" {
-				// xyzzy100 - pull out Tag id or error -- If error set ItemStatus to...
-				// xyzzy - Call convSiteIDToTagId ( site_id, sub_id ) -> tagId, err
-				// xyzzy - if error ...
+				// Xyzzy100 - pull out Tag id or error -- If error set ItemStatus to...
+				// Xyzzy - Call convSiteIDToTagId ( site_id, sub_id ) -> tagId, err
+				// Xyzzy - if error ...
 				rr.Tag, err = FindTagId(hdlr, bulkData.SiteId, rr.SubId)
 			}
 		}
+		qrId := ""
 		if rv.Detail[ii].ItemStatus == "success" {
 			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
-			err = hdlr.InsertTrackAdd(rr.Tag) // xyzzy - other params to pass!
+			// xyzzy104 - premis_id/animal_id etc.  // xyzzy - other params to pass! --
+			qrId, err = hdlr.InsertTrackAdd(rr.Tag, rr.Note)
 			if err != nil {
 				statusVal = "partial"
 				rv.Detail[ii].ItemStatus = "error"
 				rv.Detail[ii].Msg = fmt.Sprintf("%s", err)
 				err = nil
 			}
+		}
+		if rv.Detail[ii].ItemStatus == "success" && qrId == "" {
+			// xyzzy107 - test QR setup on t432z.com
+			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
+			qrId, err = hdlr.PullQRFromDB(rr.Tag)
+			if err != nil {
+				statusVal = "partial"
+				rv.Detail[ii].ItemStatus = "error"
+				rv.Detail[ii].Msg = fmt.Sprintf("%s", err)
+				err = nil
+			}
+			// pull out/update preped - QR from d.b.
+			// get the next avail QR code
+			//  	1. pull from d.b.
+			// 	 	2. update d.b. to mark as used.
+			// 	 	(3 below). update row about animal to show use of QR.
+		}
+		if rv.Detail[ii].ItemStatus == "success" {
+			// xyzzy107 - test QR setup on t432z.com
+			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
+			// update the redirect for QR code
+			// func DoGet(uri string, args ...string) (status int, rv string) {
+			if false {
+				ran := fmt.Sprintf("%d", rand.Intn(1000000000))
+				// status, rv := DoGet("http://t432z.com/upd/", "url", "http://www.2c-why.com/demo34", "id", qrId, "_ran_", ran)
+				// Xyzzy - t432z.com - URL from config???
+				status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "_ran_", ran)
+				if status != 200 {
+					statusVal = "partial"
+					rv.Detail[ii].ItemStatus = "error"
+					rv.Detail[ii].Msg = fmt.Sprintf("Failed to set QR Redirect for %s", qrId)
+					err = nil
+				} else {
+					fmt.Printf("body ->%s<-\n", body)
+				}
+			}
+		}
+		if rv.Detail[ii].ItemStatus == "success" {
+			// xyzzy105 - data push to server.
+			// xyzzy107 - test QR setup on t432z.com
+			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
+			// pull out/update preped - QR from d.b.
+			// 	 	2. update d.b. to mark as used.
+			// 	 	3. update row about animal to show use of QR.
+			err = hdlr.UpdateAnimalWithQR(rr.Tag, qrId)
+			if err != nil {
+				statusVal = "partial"
+				rv.Detail[ii].ItemStatus = "error"
+				rv.Detail[ii].Msg = fmt.Sprintf("%s", err)
+				err = nil
+			}
+		}
+		if rv.Detail[ii].ItemStatus == "success" {
+			godebug.DbPfb(db1, "%(Green)AT: %(LF)\n")
 		}
 	}
 
@@ -345,7 +619,7 @@ select t1.*
 	, t2."qr_id"
 	, t2."qr_enc_id"
 	, t2."state" as "qr_state"
-from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."id"
+from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
 ;
 */
 func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
@@ -359,7 +633,7 @@ func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req
 			, t2."qr_id"
 			, t2."qr_enc_id"
 			, t2."state" as "qr_state"
-		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."id"
+		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
 		`
 	_ = stmt
 
@@ -404,6 +678,7 @@ func generateQrFor(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	fmt.Printf("generateQrFor called\n")
 	fmt.Fprintf(os.Stderr, "generateQrFor called\n")
 
+	// -- xyzzy - change to just pull back QR infor for tag - select.
 	stmt := "select v1_next_avail_qr as \"x\""
 	_ = stmt
 
@@ -421,13 +696,38 @@ func getTagId(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 	fmt.Fprintf(www, `{"status":"success"}`)
 }
 
+// getInfo will get all the info on a cow.
+// Example: http://127.0.0.1:9019/api/acb1/getInfo?api_table_key=kip.philip&tag=5234321412419
 func getInfo(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
 	fmt.Printf("getInfo called\n")
 	fmt.Fprintf(os.Stderr, "getInfo called\n")
 
-	// TODO - get all the info on a cow
+	ps := &rw.Ps
 
-	fmt.Fprintf(www, `{"status":"success"}`)
+	tag := ps.ByNameDflt("tag", "")
+
+	stmt :=
+		`select t1.*
+			, t2."file_name"
+			, t2."url_path"
+			, t2."qr_id"
+			, t2."qr_enc_id"
+			, t2."state" as "qr_state"
+		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
+		where "tag" = $1
+		order by "ord_seq" desc
+		`
+	Rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, tag)
+	if err != nil {
+		fmt.Printf("Database error %s. stmt=%s data=[%s]\n", err, stmt, tag)
+		fmt.Fprintf(www, `{"status":"error","msg":"database error: [%v]"}`, tag)
+		return
+	}
+
+	defer Rows.Close()
+	rowData, _, _ := sizlib.RowsToInterface(Rows)
+
+	fmt.Fprintf(www, `{"status":"success","data":%s}`, godebug.SVarI(rowData))
 }
 
 func convToJson(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
@@ -492,6 +792,67 @@ func (hdlr *Acb1Type) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	hdlr.Next.ServeHTTP(www, req)
 }
 
-const db1 = false
+// Modified to send Header!
+/*
+---------------------------------------------
+// Xyzzy101 - Setup QR Redirect
+---------------------------------------------
+
+	export QR_SHORT_AUTH_TOKEN="w4h0wvtb1zk4uf8Xv.Ns9Q7j8"
+	wget -o out/,list1 -O out/,list2 \
+		--header "X-Qr-Auth: ${QR_SHORT_AUTH_TOKEN}" \
+		"http://t432z.com/upd/?url=http://test.test.com&id=5c"
+
+	-- 1. DoGet - change to create a header
+	-- 2. Example Call to set this
+*/
+func DoGet(uri string, args ...string) (status int, rv string) {
+
+	sep := "?"
+	var qq bytes.Buffer
+	qq.WriteString(uri)
+	for ii := 0; ii < len(args); ii += 2 {
+		// q = q + sep + name + "=" + value;
+		qq.WriteString(sep)
+		qq.WriteString(url.QueryEscape(args[ii]))
+		qq.WriteString("=")
+		if ii < len(args) {
+			qq.WriteString(url.QueryEscape(args[ii+1]))
+		}
+		sep = "&"
+	}
+	url_q := qq.String()
+
+	// res, err := http.Get(url_q)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url_q, nil)
+	req.Header.Add("User-Agent", "Go-FTL-acb1")
+	req.Header.Add("X-Qr-Auth", "w4h0wvtb1zk4uf8Xv.Ns9Q7j8") // Xyzzy - set from config?
+	res, err := client.Do(req)
+
+	if err != nil {
+		return 500, ""
+	} else {
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return 500, ""
+		}
+		status = res.StatusCode
+		if status == 200 {
+			rv = string(body)
+		}
+		return
+	}
+}
+
+func KeeackHash(b []byte) []byte {
+	d := sha3.NewKeccak256()
+	d.Write(b)
+	return d.Sum(nil)
+}
+
+const db1 = true
 
 /* vim: set noai ts=4 sw=4: */
