@@ -145,6 +145,9 @@ func init() {
 	dispatch["/api/acb1/chainHash"] = dispatchType{
 		handlerFunc: chainHash,
 	}
+	dispatch["/api/acb1/login_demo"] = dispatchType{
+		handlerFunc: loginDemo,
+	}
 
 }
 
@@ -226,7 +229,7 @@ func SerializeAnimal(dt DataSetHashed) []byte {
 
 func (hdlr *Acb1Type) InsertTrackAdd(tag, note string) (string, error) {
 	hash_prev, max_ord_seq, qr_enc_id, err := hdlr.GetMostRecentHash(tag)
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) %(Red) hash_prev [%s] max_ord_seq [%s]\n", hash_prev, max_ord_seq)
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) %(Red) hash_prev [%s] max_ord_seq [%s]\n", hash_prev, max_ord_seq)
 	stmt := "insert into \"v1_trackAdd\" ( \"tag\", \"note\", \"prev_hash\" ) values ( $1, $2, $3 )"
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, tag, note, hash_prev)
 	if err != nil {
@@ -236,20 +239,20 @@ func (hdlr *Acb1Type) InsertTrackAdd(tag, note string) (string, error) {
 		fmt.Fprintf(os.Stderr, "Success: %s data[%s, %s, %s]\n", stmt, tag, note, hash_prev)
 	}
 	// 	1. Pull back data (including create date, hash)
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) hash_prev [%s] max_ord_seq [%s]\n", hash_prev, max_ord_seq)
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) hash_prev [%s] max_ord_seq [%s]\n", hash_prev, max_ord_seq)
 	data, err := hdlr.GetAllRows(tag)
 	// 	2. Put into data type
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) data ->%s<-\n", data)
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) data ->%s<-\n", data)
 	var set DataSetHashed
 	err = json.Unmarshal([]byte(data), &set)
 	// 	3. Serialize it
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 	serDat := SerializeAnimal(set)
 	// 	4. Keccak256 hash it
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 	newHash := KeeackHash([]byte(serDat))
 	// 	5. update it.
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) newHash [%x], qr_enc_id [%s]\n", newHash, qr_enc_id) // xyzzy104
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) newHash [%x], qr_enc_id [%s]\n", newHash, qr_enc_id)
 	hdlr.UpdateHashCurrentRow(tag, max_ord_seq, string(newHash))
 	return qr_enc_id, nil
 }
@@ -305,9 +308,9 @@ func (hdlr *Acb1Type) GetMostRecentHash(tag string) (hash, ord_seq, qr_enc_id st
 		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
 		return "", "0", "", err
 	}
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 	for nr := 0; rows.Next(); nr++ {
-		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 
 		var hash, max_ord_seq, latest_qr_enc_id string
 		err := rows.Scan(&hash, &max_ord_seq, &latest_qr_enc_id)
@@ -315,8 +318,7 @@ func (hdlr *Acb1Type) GetMostRecentHash(tag string) (hash, ord_seq, qr_enc_id st
 			fmt.Printf("Error on d.b. query %s\n", err)
 			return "", "0", "", err
 		}
-		// xyzzy104
-		godebug.DbPfb(db1, "%(Cyan) AT: %(LF) latest_qr_enc_id [%s]\n", latest_qr_enc_id)
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF) latest_qr_enc_id [%s]\n", latest_qr_enc_id)
 
 		return hash, max_ord_seq, latest_qr_enc_id, nil
 	}
@@ -325,7 +327,7 @@ func (hdlr *Acb1Type) GetMostRecentHash(tag string) (hash, ord_seq, qr_enc_id st
 
 func (hdlr *Acb1Type) UpdateQRMarkAsUsed(qrId string) error {
 	stmt := "update \"v1_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF) - stmt [%s] data[%s]\n", stmt, qrId)
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) - stmt [%s] data[%s]\n", stmt, qrId)
 	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, qrId)
 	if err != nil {
 		return err
@@ -359,22 +361,22 @@ func (hdlr *Acb1Type) PullQRFromDB(tag string) (qr_enc_id string, err error) {
 		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
 		return "", err
 	}
-	godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 	for nr := 0; rows.Next(); nr++ {
-		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 		if nr >= 1 {
 			fmt.Printf("Error too many rows for a user, should be unique primary key\n")
 			break
 		}
 
-		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 		var qr string
 		err := rows.Scan(&qr)
 		if err != nil {
 			fmt.Printf("Error on d.b. query %s\n", err)
 			return "", err
 		}
-		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 
 		// Xyzzy - test fail to error report
 		err = hdlr.UpdateQRMarkAsUsed(qr)
@@ -383,7 +385,7 @@ func (hdlr *Acb1Type) PullQRFromDB(tag string) (qr_enc_id string, err error) {
 			return "", err
 		}
 
-		godebug.DbPfb(db1, "%(Cyan) AT: %(LF)\n")
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 		return qr, nil
 	}
 	return "", fmt.Errorf("Failed to get a QR code")
@@ -415,10 +417,44 @@ func FindTagId(hdlr *Acb1Type, premis_id, premis_animal string) (string, error) 
 	return "", fmt.Errorf("Unable to use premis_id/animal_id to identify unique animal")
 }
 
+// --------------------------------------------------------------
+// cowData := GetCowDisplayData(rr.Tag)	// xyzzy
+// --------------------------------------------------------------
 /*
----------------------------------------------
-// Xyzzy101 - Setup QR Redirect
----------------------------------------------
+{
+	"Cow": "rfid: 111"
+, 	"Ranch": "Ranch: RC"
+,	"SlaughterHouse": "Wyoming Beef Lab"
+,	"Aged": "Aged: 14 days"
+,	"DryAged": ""
+}
+*/
+type DataDisplayType struct {
+	Cow            string
+	Ranch          string
+	SlaughterHouse string
+	Aged           string
+	DryAged        string
+}
+
+func (hdlr *Acb1Type) GetCowDisplayData(tag string) (dataJsonString string, err error) {
+	var dd DataDisplayType
+	dd.Cow = "rfid: " + tag
+	dd.Ranch = "Wyoming: Demo Ranch"
+	dd.SlaughterHouse = "Wyoming: Beef Lab"
+	dd.Aged = "Aged Beef"
+	dd.DryAged = "Dry Aged"
+
+	// xyzzy
+	// xyzzy
+	// xyzzy107 - test QR setup on t432z.com
+
+	dataJsonString = godebug.SVarI(dd)
+	return
+}
+
+/*
+// Setup QR Redirect
 
 	export QR_SHORT_AUTH_TOKEN="w4h0wvtb1zk4uf8Xv.Ns9Q7j8"
 	wget -o out/,list1 -O out/,list2 \
@@ -522,7 +558,7 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 		}
 		qrId := ""
 		if rv.Detail[ii].ItemStatus == "success" {
-			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
+			godebug.DbPfb(db1, "%(Cyan)AT: %(LF)\n")
 			// xyzzy104 - premis_id/animal_id etc.  // xyzzy - other params to pass! --
 			qrId, err = hdlr.InsertTrackAdd(rr.Tag, rr.Note)
 			if err != nil {
@@ -532,9 +568,9 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 				err = nil
 			}
 		}
+		godebug.DbPfb(db1, "%(Cyan)AT: %(LF) qrId [%s]\n", qrId)
 		if rv.Detail[ii].ItemStatus == "success" && qrId == "" {
-			// xyzzy107 - test QR setup on t432z.com
-			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
+			godebug.DbPfb(db1, "%(Cyan)AT: %(LF)\n")
 			qrId, err = hdlr.PullQRFromDB(rr.Tag)
 			if err != nil {
 				statusVal = "partial"
@@ -549,29 +585,32 @@ func trackAdd(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, r
 			// 	 	(3 below). update row about animal to show use of QR.
 		}
 		if rv.Detail[ii].ItemStatus == "success" {
-			// xyzzy107 - test QR setup on t432z.com
-			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
-			// update the redirect for QR code
-			// func DoGet(uri string, args ...string) (status int, rv string) {
-			if false {
-				ran := fmt.Sprintf("%d", rand.Intn(1000000000))
-				// status, rv := DoGet("http://t432z.com/upd/", "url", "http://www.2c-why.com/demo34", "id", qrId, "_ran_", ran)
-				// Xyzzy - t432z.com - URL from config???
-				status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "_ran_", ran)
+			// test QR setup on t432z.com - update the redirect for QR code
+			ran := fmt.Sprintf("%d", rand.Intn(1000000000))
+			godebug.DbPfb(db1, "%(Cyan)AT: %(LF) ran [%v]\n", ran)
+			cowData, err := hdlr.GetCowDisplayData(rr.Tag)
+			if err != nil {
+				statusVal = "partial"
+				rv.Detail[ii].ItemStatus = "error"
+				rv.Detail[ii].Msg = fmt.Sprintf("Failed to set QR Redirect for - failed to get data for %s, error %s", qrId, err)
+				err = nil
+			} else {
+				godebug.DbPfb(db1, "%(Cyan)AT: %(LF) ran [%v]\n", ran)
+				// t432z.com - URL from config???
+				status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", cowData, "_ran_", ran)
 				if status != 200 {
 					statusVal = "partial"
 					rv.Detail[ii].ItemStatus = "error"
 					rv.Detail[ii].Msg = fmt.Sprintf("Failed to set QR Redirect for %s", qrId)
 					err = nil
 				} else {
+					godebug.DbPfb(db1, "%(Cyan)AT: %(LF)\n")
 					fmt.Printf("body ->%s<-\n", body)
 				}
 			}
 		}
 		if rv.Detail[ii].ItemStatus == "success" {
-			// xyzzy105 - data push to server.
-			// xyzzy107 - test QR setup on t432z.com
-			godebug.DbPfb(db1, "%(Yellow)AT: %(LF)\n")
+			godebug.DbPfb(db1, "%(Cyan)AT: %(LF)\n")
 			// pull out/update preped - QR from d.b.
 			// 	 	2. update d.b. to mark as used.
 			// 	 	3. update row about animal to show use of QR.
@@ -744,6 +783,24 @@ func chainHash(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, 
 	fmt.Fprintf(os.Stderr, "chainHash called\n")
 
 	fmt.Fprintf(www, `{"status":"success"}`)
+}
+
+func loginDemo(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("loginDemo called\n")
+	fmt.Fprintf(os.Stderr, "loginDemo called\n")
+
+	ps := &rw.Ps
+	// <input class="form-control" name="username" type="text">
+	// <input class="form-control" name="password" type="text">
+	// <input class="form-control" name="val2fa" type="text">
+	Un := ps.ByNameDflt("username", "")
+	Pw := ps.ByNameDflt("password", "")
+	X2fa := ps.ByNameDflt("val2fa", "")
+	if Un == "philip" && Pw == "1234" && X2fa == "1234" {
+		fmt.Fprintf(www, `{"status":"success","auth_token":"Xa-1jf2a-8891421-22a","jwt_token":"782389822718139823213873827827283782738238273827827382378237823827382738273823"}`)
+	} else {
+		fmt.Fprintf(www, `{"status":"failed"}`)
+	}
 }
 
 //func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
