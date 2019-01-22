@@ -7,7 +7,8 @@
 -- "Copyright (C) Philip Schlump, 2009-2017." 
 
 drop FUNCTION s_register_full(p_username varchar, p_password varchar, p_again varchar, p_ip_addr varchar, p_email varchar, p_real_name varchar, p_url varchar, p_app varchar );
-CREATE or REPLACE FUNCTION s_register_full(p_username varchar, p_password varchar, p_again varchar, p_ip_addr varchar, p_email varchar, p_real_name varchar, p_url varchar, p_app varchar )
+drop FUNCTION s_register_full(p_username varchar, p_password varchar, p_again varchar, p_ip_addr varchar, p_email varchar, p_real_name varchar, p_url varchar, p_app varchar, p_method varchar );
+CREATE or REPLACE FUNCTION s_register_full(p_username varchar, p_password varchar, p_again varchar, p_ip_addr varchar, p_email varchar, p_real_name varchar, p_url varchar, p_app varchar, p_method varchar )
 	RETURNS varchar AS $$
 
 DECLARE
@@ -29,6 +30,7 @@ DECLARE
   	l_auth_token	varchar (40);
     l_seq 			varchar (40);
 	l_redir 		varchar (400);
+	l_94_days 		varchar(50);
 	l_redirect_to		varchar (400);
 	l_redirect_to_app	varchar (400);
     l_privs			varchar (400);
@@ -119,7 +121,7 @@ BEGIN
 		select "t_customer"."config"
 			into  l_config
 			from "t_customer" as "t_customer" 
-			where "customer_id" = l_customer_id
+			where "id" = l_customer_id
 			;
 		if not found then
 			l_fail = true;
@@ -128,6 +130,7 @@ BEGIN
 	end if;
 
 
+	l_94_days = s_get_config_item( 'acct.auth_token.expire', l_customer_id, '94 days');
 
 	
 	if not l_fail then

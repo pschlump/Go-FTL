@@ -51,6 +51,23 @@
 			}
 		, "CallAfter": ["SendEmailMessage"]
 		}
+	,"/api/session/register_full": { "g": "s_register_full", "p": [ "username", "password", "again", "$ip$", "email", "real_name", "$url$", "app", "$method$" ], "nokey":true
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban"]
+		, "SetSession":{"$session$":true}
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again": 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
+			,"email": 		{ "required":true, "type":"string" }
+			,"real_name":	{ "required":true, "type":"string" }
+			,"$url$":		{ "required":true, "type":"string" }
+			,"app":		 	{ "required":true, "type":"string", "max_len":80, "min_len":2, "UrlEncode":true }
+			,"$method$":	{ "required":true, "type":"string" }
+			}
+		}
 	,"/api/session/simulate_email": { "g": "s_simulate_email", "p": [ "tn", "email_token", "$ip$", "$url$", "app", "kp" ], "nokey":true
 		, "LineNo":"Line: __LINE__ File: __FILE__"
 		, "Method":["GET","POST"]
