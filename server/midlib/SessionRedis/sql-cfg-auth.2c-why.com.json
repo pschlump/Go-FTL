@@ -67,6 +67,7 @@
 			,"app":		 	{ "required":true, "type":"string", "max_len":80, "min_len":2, "UrlEncode":true }
 			,"$method$":	{ "required":true, "type":"string" }
 			}
+		, "CallAfter": ["CreateJWTToken", "RedirectTo"]
 		}
 	,"/api/session/simulate_email": { "g": "s_simulate_email", "p": [ "tn", "email_token", "$ip$", "$url$", "app", "kp" ], "nokey":true
 		, "LineNo":"Line: __LINE__ File: __FILE__"
