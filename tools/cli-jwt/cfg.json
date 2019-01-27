@@ -1,5 +1,5 @@
 {
 	  "Copyright": "Copyright (C) Philip Schlump, 2009"
-	, "KeyDir": "../../pvp/test-key"
+	, "KeyDir": "../../server/goftl/test-key"
 	, "TokData": "{\"auth_token\":\"10326358-504a-4f1d-94c3-2977e3b98e02\"}"
 }
