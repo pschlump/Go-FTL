@@ -1,0 +1,15 @@
+<!-- Step 1 - in setting up a 2fa device 
+
+This is the URL that re-directs to the page with the progressive app on it.
+
+1. Setup local storage (ImoralDB?) with the hash.
+2. location.href = "/2fa/2fa-app.html"
+
+-->
+<script>
+localStorage.setItem('2fa_hash', JSON.stringify({"127.0.0.1:9019":{"hash":"0x1234567890123456789012345678901","pw":"password-for-decrypt"}}));
+// go get: var user = JSON.parse(localStorage.getItem('user'));
+
+// correct way of redirect - no history change!
+location.replace("/2fa/2fa-app.html");
+</script>

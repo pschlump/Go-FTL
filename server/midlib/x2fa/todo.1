@@ -1,0 +1,21 @@
+1. Create the API for setup
+	2. Add in the Redis to use ID -> hash
+	3. Report if timed out.
+	4. Add in a page - to do setup with entered ID.
+	5. Reprot errors
+
+2. Create the API for pull of 2 min HASH value.
+	/2fa/pull-2-min-hash
+
+3. Create the API call/library for validate of entered 6 digit number
+	/2fa/is-valid-2fa?id=, user=, 
+
+4. Remember 1 time codes
+	/2fa/generate-1-time-codes?fmt=list fmt=pdf
+		-> codes as JSON, url of PDF of codes
+	/2fa/n-remain-1-time-codes
+
+
+
+x2fa.go - 2fa support 
+
