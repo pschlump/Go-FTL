@@ -4934,6 +4934,7 @@ func init() {
 		"RedirectTo":              RedirectTo,
 		"Sleep":                   Sleep,
 		"CreateJWTToken":          CreateJWTToken,
+		"X2faSetup":               X2faSetup,
 		// "ChargeCreditCard":        ChargeCreditCard,
 	}
 }
@@ -5056,6 +5057,7 @@ func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv st
 func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+	fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
 	// func SignToken(tokData []byte, keyFile string) (out string, err error) {
 	//	hdlr.KeyFilePrivate        string                      // private key file for signing JWT tokens
@@ -5080,6 +5082,8 @@ func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, r
 
 	if ed.Status == "success" && len(ed.JWTClaims) > 0 {
 
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
 		claims := make(map[string]string)
 		for _, vv := range ed.JWTClaims {
 			claims[vv] = all[vv].(string)
@@ -5087,17 +5091,28 @@ func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, r
 		}
 		tokData := godebug.SVar(claims)
 
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
 		signedKey, err := SignToken([]byte(tokData), hdlr.KeyFilePrivate)
 		if err != nil {
+			all["status"] = "error"
+			all["msg"] = fmt.Sprintf("Error: Unable to sign the JWT token, %s", err)
+			delete(all, "$JWT-claims$")
+			rv = godebug.SVar(all)
+
 			fmt.Printf("Error: Unable to sign the JWT token, %s\n", err)
+			fmt.Fprintf(os.Stderr, "Error: Unable to sign the JWT token, %s\n", err)
 			return rv, true, 406
 		}
+
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top signedKey = -->>%s<<-- %s\n", MiscLib.ColorYellow, MiscLib.ColorReset, signedKey, godebug.LF())
 
 		all["jwt_token"] = signedKey
 
 		delete(all, "$JWT-claims$")
 
 		rv = godebug.SVar(all)
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 		return rv, false, 200
 	}
 
@@ -6209,6 +6224,9 @@ func SignToken(tokData []byte, keyFile string) (out string, err error) {
 		err = fmt.Errorf("Couldn't parse claims JSON: %v", err)
 		return
 	}
+
+	fmt.Fprintf(os.Stderr, "Siging: %s, AT: %s\n", tokData, godebug.LF())
+	fmt.Fprintf(os.Stderr, "Claims: %s, AT: %s\n", godebug.SVarI(claims), godebug.LF())
 
 	//-	// add command line claims
 	//-	if len(flagClaims) > 0 {

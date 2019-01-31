@@ -269,9 +269,15 @@ func init() {
 		"EmailConfigFileName":           { "type":[ "string" ], "default": "./email-config.json" },
 		"EmailTemplateDir":              { "type":[ "string" ], "default": "./tmpl/" },
 		"KeyFilePrivate":                { "type":[ "string" ] },
+		"DisplayURL2fa":                 { "type":[ "string" ], "required":false, "default": "/2fa/2fa-app.html" },
+		"RedisPrefix2fa":                { "type":[ "string" ], "required":false, "default": "2fa:" },
+		"Server2faURL":                  { "type":[ "string" ], "required":false, "default":"http://t432z.com/2fa"  },
 		"LineNo":                        { "type":[ "int" ], "default":"1" }
 		}`)
 }
+
+// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
+// key := fmt.Sprintf("%s%s", hdlr.RedisPrefix2fa, ID)
 
 func (hdlr *TabServer2Type) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
 	hdlr.Next = next
@@ -477,6 +483,9 @@ type TabServer2Type struct {
 	EmailConfigFileName   string                      // name of file to take Email config from
 	EmailTemplateDir      string                      //
 	KeyFilePrivate        string                      // private key file for signing JWT tokens
+	DisplayURL2fa         string                      // 2fa - see X2faSetup
+	RedisPrefix2fa        string                      // 2fa - see X2faSetup
+	Server2faURL          string                      // 2fa see X2faSetup
 	LineNo                int                         //
 	gCfg                  *cfg.ServerGlobalConfigType //
 	MuxAuto               map[string]int              // formerly global		-- make private xyzzy --		// Config for automaic reload  - to delete routes removed

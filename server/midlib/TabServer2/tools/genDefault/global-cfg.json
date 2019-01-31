@@ -1,0 +1,14 @@
+{
+	debug_flags: [ "TabServer2/192.168.0.157:8088/db_SQL.*" ] ,
+	trace_flags: [ "*" ] ,
+	server_name: "Federated Auth Server" ,
+	RedisConnectHost: """{{ __env__ REDIS_HOST }}""" ,
+	RedisConnectAuth: """{{ __env__ REDIS_AUTH }}""" ,
+	PGConn: """user=pschlump password={{ __env__ DB_PASS }} sslmode=disable dbname=pschlump port=5432 host={{ __env__ PG_HOST }}""" ,
+	DBType: "postgres" ,
+	DBName: "pschlump" ,
+	LoggingConfig: {
+		FileOn: "yes"
+		RedisOn: "yes"
+	}
+}
