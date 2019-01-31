@@ -1,15 +1,92 @@
 <!-- Step 1 - in setting up a 2fa device 
 
-This is the URL that re-directs to the page with the progressive app on it.
+	from ID to Hash - make API call using ID
+		Call w/ ID to set FP for this user.
+			dispatch["/api/x2fa/set-fp"] = dispatchType{
+			- Should return the "HASH" for the local storage???
+			- Could also return the "URL" for the msetup.html/setup.html file???
 
-1. Setup local storage (ImoralDB?) with the hash.
-2. location.href = "/2fa/2fa-app.html"
+0. if "ID" on url - the do work, redirect
+0. if no ID on url - then display form, collect ID, do work, redirect
+1. Get FP
+2. make restful call (jQuery) to /ai/x2fa/set-fp?id=Value
+	success
+		- get back "hash" and URL
+		- get back set of 1 time keys for this url - to be put into local stoage.
+		- set local storage
+	error
+		- report error - try again later.
+3. if "ok" then redirect to 2fa-app.html - usage/display for login. (progressive app)
 
 -->
+<script src="/js/fingerprintjs2/fingerprint2.js"></script>
+<script src="/js/jquery-3.3.1.js"></script>
+<script src="/js/2fa-setup-lib.js"></script>
 <script>
-localStorage.setItem('2fa_hash', JSON.stringify({"127.0.0.1:9019":{"hash":"0x1234567890123456789012345678901","pw":"password-for-decrypt"}}));
-// go get: var user = JSON.parse(localStorage.getItem('user'));
 
-// correct way of redirect - no history change!
-location.replace("/2fa/2fa-app.html");
+var g_origin = window.location.origin;
+if ( ! g_origin ) {			// Probablyl running on Opera
+	g_origin = window.location.protocol + "//" + window.location.host;
+}
+
+var g_param = URLStrToHash ( window.location.search );
+
+console.log ( 'window.location.search=', window.location.search );
+console.log ( 'g_param=', g_param );
+console.log ( 'g_origin=', g_origin );
+
+var ID = g_param["id"];
+
+console.log ( "ID=", ID );
+
+function nextStep(fp) {
+
+	var theParams = { "id": ID, "fp": fp };
+
+	$.ajax({
+		type: 'POST'
+		url: '/api/x2fa/set-fp'
+		data: theParams,
+		success: function (data) {
+			console.log ( 'data=', data );	 // already parsed.
+			if ( data.status == "success" ) {
+				hash = data.hash;
+				URL = data.URL;
+				var ls = {};
+				ls[URL] = { "hash" : ID, "fp": fp, "URL": URL };
+				localStorage.setItem('2fa_hash', JSON.stringify(ls));
+			}
+			if ( data.status && data.status != "success" ) {
+				alert ( data.msg );
+			}
+			// $("#output").text( JSON.stringify(data, null, 4) );
+		},
+		error: function(resp) {
+			console.log("error=",resp);
+			alert("got error status="+resp.status+" "+resp.statusText);
+		}
+	});
+
+}
+
+if (window.requestIdleCallback) {
+	requestIdleCallback(function () {
+		Fingerprint2.getV18(function (hex, components) {
+			console.log('fingerprint=', hex, components); // an array of components: {key: ..., value: ...}
+			// fp = JSON.tringify(components);
+			fp = hex;
+			nextStep(fp);
+		});
+	});
+} else {
+	setTimeout(function () {
+		Fingerprint2.getV18(function (hex, components) {
+			console.log('FIngerprint=', hex, components); // an array of components: {key: ..., value: ...}
+			fp = hex;
+			nextStep(fp);
+        })  
+    }, 500);
+}
+
 </script>
+<h2> This is the setup stage in JS code </h2>

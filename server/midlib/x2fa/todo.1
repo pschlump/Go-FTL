@@ -1,3 +1,43 @@
+/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/www/msetup.html
+	1. if 2fa data exists - then - update/add, else new.
+		xyzzy900
+	2. Relocate: // xyzzy901 - relocate to app at this point.
+
+remeber 1 time keys need to be saved in local storage when we do setup.
+	xyzzy902
+
+
+
+
+
+
+0. Test in this -then- make work w/ Registration stuff
+	1. 2fa-setup stuff
+	2. Intermediate state - not completed registration until 2fa setup
+
+Current user_id is returned to the client - 
+	1. May need to remove this at PostProcess
+	2. Use user_id to setup-2fa if turned on
+	3. check in registration if 2fa is on, then set state of register to 'temporary'
+		until 2fa is completed.
+
+
+
+7. Write the HTML/progressive APP for this.
+9. - how do we validate this in - "Login" call? - PG/SQL - need to put valid data into PG so Postgres Code can validate this.
+	1. List of valid #s
+	2. Use a Number, delete it.
+	3. Timeout on nubmers - 1 time keys in this with a no-timeout date
+	4. Add in code in s_login 
+	5. Add in 2fa param
+	6. Must have a "valid-login" flag in it - so can do push button validation.
+		- how to prevent 2nd login on this validation -
+		t_user.wait_for_validation == 'yes'?
+		-- Can only work if "push" data (Socket.IO/WebSocket)????
+		-- Can only work if 2nd page for require 2fa
+7. 2fa config - every login / X number of days valid device etc.
+
+
 1. Create the API for setup
 	2. Add in the Redis to use ID -> hash
 	3. Report if timed out.
@@ -18,4 +58,91 @@
 
 
 x2fa.go - 2fa support 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---- done ---- ---- done ---- ---- done ---- ---- done ---- ---- done ---- ---- done ---- ---- done ---- ---- done ---- 
+*0. Pull random generation code - Put in Package "ftlran"
+	*1. Gen Ran Int
+	*2. Gen Ran Bytes
+	*3. Hexify byte[]
+*2. Find correct header for HTML content type
+*3. Find code for pulling and using QR code
+*4. Find code for update to t432z.com  - set URL for QR - Package "setqr"
+*5. Generate 1st part - QR + text in Div
+*6. Generate 2nd part - the redirect for setup
+*8. /api/2fa APIs - write them
+
+1. msetup.html 
+	1. pull id
+	2. set in local storage
+	3. Add form + button
+	4. on submit - jump to 2fa-app.html
+2. setup.html?id=
+	1. pull id
+	2. set in local storage
+	3. Add form + button
+	4. on submit - jump to 2fa-app.html
+
+	- This is "generated" - where ? why ? how ?
+	- Everything on URL for this
+
+	At end of msetup.html/setup.html local storage should have
+		{"URL":{"hash":"value"}} in it.
+
+	from ID to Hash - make API call using ID
+		Call w/ ID to set FP for this user.
+			dispatch["/api/x2fa/set-fp"] = dispatchType{
+			-- Should return the "HASH" for the local storage???
+			-- Could also return the "URL" for the msetup.html/setup.html file???
+
+
+
+ID=iiiiiii - Id to lookup in Redis on server that has
+	1. Hash - generated on server at this point
+	2. Fp - Calcualte and send from msetup.html/setup.html -> server API using "id"
+	3. T2faID - only used on server - relate ID to PG t_2fa data
+	4. UserID - only used on server - relate ID to PG t_user data
+
+		type RedisData struct {
+			Hash   string `json:"hash"`
+			Fp     string `json:"fp"`
+			T2faID string `json:"t_2fa_id"`
+			UserID string `json:"user_id"`
+
+	How to get from "id" -> URL for local storage?							<<<< Q >>>>
+	
+	Answered: from ID to fp - use fingerprint2 code.
 
