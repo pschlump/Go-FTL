@@ -4,35 +4,8 @@
 // Copyright (C) Philip Schlump, 2009-2017.
 //
 
+// xyzzy - update t_user.acct_state = 'ok' - when 2fa setup.
 package X2fa
-
-/*
-1. Return of current 2min hash
-2.
-
-
-
-
-
-OK
-How do I test this...
-
-1. Pull back 2fa data and <div> - display it - verify QR setup.
-	dispatch["/api/2fa/getQRforSetup"] = dispatchType{
-2. Create "state" in s_register_immediate for 2fa not validated.
-3. Follow links in <div> to msetup.html, setup.html - verify setup.
-4. build the "app" and verify that it pulls in setup, then
-5. Verify that it makes the calls and generates the same # on client/server side.
-6. Then verify that the login checks the 2fa data and verifies it. (if configured to
-	use 2fa)
-
-app.html - should have ability to use 1-time codes if not on-line (so can still get
-logged in)
-
-consider a comment in the manifest - so can ask server if up to date - with a unique ID in
-that that causes the account to be opened - ETag + An auto-Fetch of a data time ETag.
-consider a patent on this.
-*/
 
 import (
 	"bytes"
@@ -73,7 +46,7 @@ func init() {
 		"DisplayURL":	  	{ "type":[ "string" ], "required":false, "default":"/2fa/2fa-app.html" },
 		"TimeoutCodes":     { "type":[ "int" ], "default":"120" }
 		"Server2faURL":	  	{ "type":[ "string" ], "required":false, "default":"http://t432z.com/2fa" },
-		"AuthKey":  	 	{ "type":[ "string" ], "required":false, "default":"test.test.test" },
+		"AuthKey":  	 	{ "type":[ "string" ], "required":false, "default":"8181.2121" },
 		"LineNo":       	{ "type":[ "int" ], "default":"1" }
 		}`)
 }
@@ -148,9 +121,6 @@ func init() {
 		},
 	}
 
-	// 1 left
-	// (3) xyzzy280  - required
-
 	dispatch["/api/x2fa/getQRForSetup"] = dispatchType{
 		// pull HTML/png - display when register. -- DIV with image+URL for QR, update qr on t432z.com
 		// This is part of "registration" process - and should show up as a _immediate registration or as email-confim on registraiton
@@ -162,7 +132,7 @@ func init() {
 		// This is the hash that only lasts for 2 min - universal that is used in combination with
 		// fingerprint and device-id (local-storage) to generate the 2fa 6 digit code.  Hash is generated if
 		// not found in Redis - and has TTL in redis of 120.  Use (int)hdlr.TimeoutCodes for this.
-		handlerFunc: get2minHash,
+		handlerFunc: get2MinHash,
 	}
 	dispatch["/api/x2fa/set-fp"] = dispatchType{
 		// set the fingerpint for a particular user - Input Temporary Redis "ID" - use Redis to get user_id.
@@ -170,10 +140,10 @@ func init() {
 	}
 	dispatch["/api/x2fa/is-valid-2fa"] = dispatchType{
 		// Return status=='success' if it is a valid 2fa - this will be disabled when not testing.  Requires a key to call.
-		handlerFunc: isValid2fa,
+		handlerFunc: IsValid2fa,
 	}
 	dispatch["/api/x2fa/gen-1-time-codes"] = dispatchType{
-		// (3) xyzzy280 - Return a database list of 1-time-codes for a user_id - will cause an Email to be sent to client.
+		// Return a database list of 1-time-codes for a user_id - will cause an Email to be sent to client.
 		handlerFunc: gen1TimeCodes,
 	}
 	dispatch["/api/x2fa/n-1-time-codes"] = dispatchType{
@@ -314,7 +284,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 		fmt.Fprintf(www, `{"status":"failed","msg":"Random Generation Failed","LineFile":%q}`, godebug.LF())
 		return
 	}
-	RanHash := fmt.Sprintf("0x%x", RanHashBytes)
+	RanHash := fmt.Sprintf("%x", RanHashBytes)
 	// func GenRandNumber(nDigits int) (buf string, err error) {
 	// func GenRandBytes(nRandBytes int) (buf []byte, err error) {
 
@@ -468,9 +438,6 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	id := ps.ByNameDflt("id", "")
 	godebug.DbPfb(db1, "id: ->%s<-\n", id)
 
-	img := ps.ByNameDflt("img", "n")
-	godebug.DbPfb(db1, "img: ->%s<-\n", img)
-
 	fp := ps.ByNameDflt("fp", "")
 	godebug.DbPfb(db1, "fp: ->%s<-\n", fp)
 
@@ -507,7 +474,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	err = conn.Cmd("SETEX", key, ttl, val).Err
 	if err != nil {
 		if db4 {
-			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
+			fmt.Printf("Error on redis - get(%s): %s\n", key, err)
 		}
 		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
 		return
@@ -515,6 +482,15 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 
 	stmt := "update \"t_2fa\" set \"fp\" = $1 where \"id\" = $2"
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.Fp, rr.T2faID)
+	if err != nil {
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
+		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		return
+	}
+
+	// xyzzy - update t_user.acct_state = 'ok' - when 2fa setup.
+	stmt = "update \"t_user\" set \"acct_state\" = 'ok' where \"id\" = $1"
+	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.UserID)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
 		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
@@ -575,14 +551,14 @@ func (hdlr *X2faType) PullQRURLFromDB() (qr_enc_id, qr_url string, err error) {
 // fingerprint and device-id (local-storage) to generate the 2fa 6 digit code.  Hash is generated if
 // not found in Redis - and has TTL in redis of 120.  Use (int)hdlr.TimeoutCodes for this.
 //
-// 2minHash - return hash + TTL
+// 2MinHash - return hash + TTL
 //
 // Xyzzy301 - This really should be on it's own channel for validate/update of hash values.
-// Xyzzy301 - This really should have a go-routine with a time-loop that updates the 2min hash on a time-loop.
+// Xyzzy301 - This really should have a go-routine with a time-loop that updates the 2Min hash on a time-loop.
 //
-func get2minHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
-	fmt.Printf("get2minHash called\n")
-	fmt.Fprintf(os.Stderr, "get2minHash called\n")
+func get2MinHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("get2MinHash called\n")
+	fmt.Fprintf(os.Stderr, "get2MinHash called\n")
 
 	// ------------------------------------------------------------------------------
 	// Get Connection
@@ -639,7 +615,7 @@ func get2minHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter
 		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
 		return
 	}
-	RanHash := fmt.Sprintf("0x%x", RanHashBytes)
+	RanHash := fmt.Sprintf("%x", RanHashBytes)
 	val := godebug.SVar(RedisData{
 		Hash: RanHash,
 	})
@@ -661,14 +637,14 @@ func get2minHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter
 }
 
 // Return 200 if it is a valid 2fa - this will be disabled when not testing.
-func isValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
-	fmt.Printf("isValid2fa called\n")
-	fmt.Fprintf(os.Stderr, "isValid2fa called\n")
+func IsValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("IsValid2fa called\n")
+	fmt.Fprintf(os.Stderr, "IsValid2fa called\n")
 
 	ps := &rw.Ps
 
 	Auth := ps.ByNameDflt("auth_key", "")
-	godebug.DbPfb(db1, "auth_key: ->%s<-\n", Auth)
+	godebug.DbPfb(db1, "auth_key: ->%s<- compare to hdlr.AuthKey ->%s<-\n", Auth, hdlr.AuthKey)
 
 	val2fa := ps.ByNameDflt("val2fa", "")
 	godebug.DbPfb(db1, "val2fa: ->%s<-\n", val2fa)
@@ -676,18 +652,32 @@ func isValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter,
 	user_id := ps.ByNameDflt("user_id", "")
 	godebug.DbPfb(db1, "user_id: ->%s<-\n", user_id)
 
+	auth_token := ps.ByNameDflt("auth_token", "")
+	godebug.DbPfb(db1, "auth_token: ->%s<-\n", auth_token)
+
 	// only run if hdlr.AuthKey is set to same as "auth_key". for this call.
 	if hdlr.AuthKey != "" && Auth != hdlr.AuthKey {
-		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key"}`)
+		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key","LineFile":%q}`, godebug.LF())
 		return
+	}
+
+	var err error
+
+	if auth_token != "" && user_id == "" {
+		user_id, err = hdlr.GetUserIDFromAuthToken(auth_token)
+		if err != nil {
+			fmt.Fprintf(www, `{"status":"failed","msg":"Unable to convert auth_token[%s] to user_id Error: %s","LineFile":%q}`, auth_token, err, godebug.LF())
+			return
+		}
 	}
 
 	// generate local copy based on user_id/auth_token - for all rows in t_2fa and any values in t_2fa_otk
 	LocalVal2fa, err := hdlr.GetValidList(user_id)
 	if err != nil {
-		fmt.Fprintf(www, `{"status":"failed","msg":"PG Database Error: %s"}`, err)
+		fmt.Fprintf(www, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
 		return
 	}
+	godebug.DbPfb(db1, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
 
 	for _, v := range LocalVal2fa {
 		if v == val2fa {
@@ -701,65 +691,95 @@ func isValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter,
 		}
 	}
 
-	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match"}`)
+	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
 }
 
-func (hdlr *X2faType) get2minHashFunc() (hash string, err error) {
-	fmt.Printf("get2minHashFunc called\n")
-	fmt.Fprintf(os.Stderr, "get2minHashFunc called\n")
+func (hdlr *X2faType) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
+	fmt.Printf("Get2MinHashFunc called\n")
+	fmt.Fprintf(os.Stderr, "Get2MinHashFunc called\n")
 
+	// ------------------------------------------------------------------------------
+	// Get Connection
+	// ------------------------------------------------------------------------------
 	conn, err := hdlr.gCfg.RedisPool.Get()
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
-		return
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+		return "", 0, err
 	}
 
+	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
+
+	// ------------------------------------------------------------------------------
+	// Construct key for "GET" then Get data and TTL
+	// ------------------------------------------------------------------------------
 	var rr RedisData
 	key := fmt.Sprintf("%s!2minHash", hdlr.RedisPrefix)
-	// val := fmt.Sprintf("{\"hash\":%q, \"t_2fa_id\":%q, \"fp\":%q, \"user_id\":%q}", RanHash, t_2fa_ID, "fingerprint-not-set-yet", user_id)
+	ttlLeft, _ = conn.Cmd("TTL", key).Int()
+	godebug.DbPfb(db1, "%(Cyan) ttlLeft [%v,%v] AT: %(LF)\n", ttlLeft, err)
 	v, err := conn.Cmd("GET", key).Str()
-	if err != nil && v != "" {
-		err = json.Unmarshal([]byte(v), &rr)
+	godebug.DbPfb(db1, "%(Yellow) v [%s,%v] AT: %(LF)\n", v, err)
+	if err != nil || v == "" {
+		godebug.DbPfb(db1, "%(Red) v [%s,%v] AT: %(LF)\n", v, err)
+		// will go on to create a new 2-min-hash
+	} else {
+		godebug.DbPfb(db1, "%(Green) v [%s,%v] AT: %(LF)\n", v, err)
+		err := json.Unmarshal([]byte(v), &rr)
 		if err != nil {
-			if db4 {
-				fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
+			// will go on to create a new 2-min-hash
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s.","LineFile":%q}`+"\n", err, godebug.LF()))
+		} else {
+			if ttlLeft > 5 {
+				// ----------------------------------------------------------------------
+				// SUCCESS return
+				// ----------------------------------------------------------------------
+				return rr.Hash, ttlLeft, nil
 			}
-			return "", err
 		}
-		hash = rr.Hash
-		return
 	}
 
+	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
+
+	// ------------------------------------------------------------------------------
+	// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
+	// ------------------------------------------------------------------------------
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
-		return "", err
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
+		return "", 0, err
 	}
-	RanHash := fmt.Sprintf("0x%x", RanHashBytes)
+	RanHash := fmt.Sprintf("%x", RanHashBytes)
 	val := godebug.SVar(RedisData{
 		Hash: RanHash,
 	})
-	ttl := 60 * 60
+	ttl := 125
 
 	err = conn.Cmd("SETEX", key, ttl, val).Err
 	if err != nil {
-		if db4 {
-			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
-		}
-		return "", err
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s.","LineFile":%q}`+"\n", err, godebug.LF()))
+		return "", 0, err
 	}
 
-	return rr.Hash, nil
+	// ----------------------------------------------------------------------
+	// SUCCESS return
+	// ----------------------------------------------------------------------
+	return rr.Hash, 120, nil
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
 // GetValidList get list of convened to string int values for valid 2fa
 func (hdlr *X2faType) GetValidList(user_id string) (list []string, err error) {
 
 	stmt := `
 select 'current' as "ty", "user_hash", "fp", 'x' as "one_time_key"
-	from "t_2fa" where "user_id" = $1
+	from "t_2fa"
+	where "user_id" = $1
+	  and "fp" is not null
 union
 	select 'otk' as "ty", 'x' as "user_hash", 'x' as "fp", "one_time_key"
-	from "t_2fa_otk" where "user_id" = $1
+	from "t_2fa_otk"
+	where "user_id" = $1
 order by 1, 2
 `
 	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id)
@@ -768,8 +788,8 @@ order by 1, 2
 		return
 	}
 	defer rows.Close()
-	current2minHash, err := hdlr.get2minHashFunc()
-	godebug.DbPfb(db1, "%(Yellow) AT: %(LF), current2minHash=%s\n", current2minHash)
+	current2MinHash, _, err := hdlr.Get2MinHashFunc()
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF), current2MinHash=%s\n", current2MinHash)
 	for nr := 0; rows.Next(); nr++ {
 
 		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
@@ -784,30 +804,133 @@ order by 1, 2
 		if ty == "okt" {
 			list = append(list, one_time_key)
 		} else {
-			val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2minHash))
+			val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))
 			val1 := fmt.Sprintf("%x", val0)
 			val2 := val1[len(val1)-6:]
-			val, err := strconv.ParseInt("0x"+val2, 16, 64)
+			val, err := strconv.ParseInt(val2, 16, 64)
 			if err != nil {
 				fmt.Printf("Error on d.b. query %s\n", err)
 				continue
 			}
 			val = val % 1000000
-			list = append(list, fmt.Sprintf("%d", val))
+			list = append(list, fmt.Sprintf("%06d", val))
 		}
 
 	}
 	return
 }
 
-// xyzzy280 - Return a database list of 1-time-codes for a user_id - will cause an Email to be sent to client.
+// ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
+func (hdlr *X2faType) GetPerDeviceHash(user_id, t2faId string) (user_hash, fp string, err error) {
+	//	user_hash, err := hdlr.GetPerDeviceHash(user_id, t2faId)
+
+	stmt := `select "user_hash", "fp" from "t_2fa" where "id" = $1 and "user_id" = $2`
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, t2faId, user_id)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return
+	}
+	defer rows.Close()
+	for nr := 0; rows.Next(); nr++ {
+
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		err = rows.Scan(&user_hash, &fp)
+		if err != nil {
+			return "", "", fmt.Errorf("Error [%s] user_id=[%s] t_2fa_id=[%s].", err, user_id, t2faId)
+		}
+		return
+	}
+	return "", "", fmt.Errorf("Failed to get user_hash/fp from t_tfa for user_id=[%s] t_2fa_id=[%s].", user_id, t2faId)
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
+func (hdlr *X2faType) GetUserIDFromAuthToken(auth_token string) (user_id string, err error) {
+	// 		user_id, err = hdlr.GetUserIDFromAuthToken ( auth_token );
+
+	stmt := `select "user_id" from "t_auth_token" where "auth_token" = $1`
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return
+	}
+	defer rows.Close()
+	for nr := 0; rows.Next(); nr++ {
+
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		err = rows.Scan(&user_id)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return
+		}
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		return
+	}
+	fmt.Printf("Error on d.b. query -got 0 rows\n")
+	return "", nil
+}
+
+// Return a database list of 1-time-codes for a user_id - will cause an Email to be sent to client.
 func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
 	fmt.Printf("gen1TimeCodes called\n")
 	fmt.Fprintf(os.Stderr, "gen1TimeCodes called\n")
 
-	// xyzzy
+	ps := &rw.Ps
 
-	fmt.Fprintf(www, `{"status":"success"}`)
+	Auth := ps.ByNameDflt("auth_key", "")
+	godebug.DbPfb(db1, "auth_key: ->%s<- compare to hdlr.AuthKey ->%s<-\n", Auth, hdlr.AuthKey)
+
+	user_id := ps.ByNameDflt("user_id", "")
+	godebug.DbPfb(db1, "user_id: ->%s<-\n", user_id)
+
+	t2faId := ps.ByNameDflt("t2faId", "")
+	godebug.DbPfb(db1, "t2faId: ->%s<-\n", t2faId)
+
+	auth_token := ps.ByNameDflt("auth_token", "")
+	godebug.DbPfb(db1, "auth_token: ->%s<-\n", auth_token)
+
+	// only run if hdlr.AuthKey is set to same as "auth_key". for this call.
+	if hdlr.AuthKey != "" && Auth != hdlr.AuthKey {
+		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key","LineFile":%q}`, godebug.LF())
+		return
+	}
+
+	var err error
+
+	if auth_token != "" && user_id == "" {
+		user_id, err = hdlr.GetUserIDFromAuthToken(auth_token)
+		if err != nil {
+			fmt.Fprintf(www, `{"status":"failed","msg":"Unable to convert auth_token[%s] to user_id Error: %s","LineFile":%q}`, auth_token, err, godebug.LF())
+			return
+		}
+	}
+
+	current2MinHash, ttlLeft, err := hdlr.Get2MinHashFunc()
+	if err != nil {
+		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to get 2Min hash Error: %s","LineFile":%q}`, err, godebug.LF())
+		return
+	}
+
+	user_hash, fp, err := hdlr.GetPerDeviceHash(user_id, t2faId)
+	if err != nil {
+		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to get per-device hash Error: %s","LineFile":%q}`, err, godebug.LF())
+		return
+	}
+
+	// xyzzy - convert to a function for this.
+	val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))
+	val1 := fmt.Sprintf("%x", val0)
+	val2 := val1[len(val1)-6:]
+	val, err := strconv.ParseInt(val2, 16, 64)
+	if err != nil {
+		fmt.Fprintf(www, `{"status":"failed","msg":"Failed to parse[%s] as base 16 int Error: %s","LineFile":%q}`, val2, err, godebug.LF())
+		return
+	}
+	val = val % 1000000
+	val_s := fmt.Sprintf("%06d", val) // list = append(list, fmt.Sprintf("%06d", val))
+
+	fmt.Fprintf(www, `{"status":"success","val":%q,"ttl":%d}`, val_s, ttlLeft)
 }
 
 func (hdlr *X2faType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
@@ -835,13 +958,13 @@ func (hdlr *X2faType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 			if !ok {
 				godebug.DbPfb(db1, "%(Red)Error Path Invalid [%s] AT: %(LF)\n", req.URL.Path)
 
-				fmt.Fprintf(www, "{\"status\":\"not-implemented-yet\",\"data\":%q}", req.URL.Path)
+				fmt.Fprintf(www, `{"status":"not-implemented-yet","data":%q,"LineFile":%q}`, req.URL.Path, godebug.LF())
 				return
 			}
 			fx.handlerFunc(hdlr, rw, www, req, mdata)
 			return
 
-			fmt.Fprintf(www, "{\"status\":\"not-implemented-yet\"}")
+			fmt.Fprintf(www, `{"status":"not-implemented-yet","LineFile":%q}`, godebug.LF())
 		}
 	}
 

@@ -1,3 +1,26 @@
+
+1. Progressive Web App ( or simulatio of for the moment  )
+	1. Display URL
+	2. Button to get 2fa - click on URL
+	3. do fetch to get UserHash (2min) -> # - compare to CLI call to do same.
+	4. Good enough for the moment
+
+2. Documentation
+2. 1 time setup html "msetup.html?id=" needs redirect to progressive-app
+
+2. Test Local - Push to .74
+2. Test with federated from 2c-why.com/demo40 -> login and validate
+
+3. Push to KIP
+
+
+-00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000-
+-00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000-
+-00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000-
+
+
+
+
 /Users/corwin/go/src/github.com/American-Certified-Brands/pvp/www/msetup.html
 	1. if 2fa data exists - then - update/add, else new.
 		xyzzy900
@@ -7,36 +30,18 @@ remeber 1 time keys need to be saved in local storage when we do setup.
 	xyzzy902
 
 
+https://www.troyhunt.com/everything-you-ever-wanted-to-know/
 
+Client APP needs off-line mode to work with list of 1 time codes
 
-
-
-0. Test in this -then- make work w/ Registration stuff
-	1. 2fa-setup stuff
-	2. Intermediate state - not completed registration until 2fa setup
-
-Current user_id is returned to the client - 
-	1. May need to remove this at PostProcess
-	2. Use user_id to setup-2fa if turned on
-	3. check in registration if 2fa is on, then set state of register to 'temporary'
-		until 2fa is completed.
-
-
-
-7. Write the HTML/progressive APP for this.
-9. - how do we validate this in - "Login" call? - PG/SQL - need to put valid data into PG so Postgres Code can validate this.
-	1. List of valid #s
-	2. Use a Number, delete it.
-	3. Timeout on nubmers - 1 time keys in this with a no-timeout date
-	4. Add in code in s_login 
-	5. Add in 2fa param
-	6. Must have a "valid-login" flag in it - so can do push button validation.
-		- how to prevent 2nd login on this validation -
-		t_user.wait_for_validation == 'yes'?
-		-- Can only work if "push" data (Socket.IO/WebSocket)????
-		-- Can only work if 2nd page for require 2fa
 7. 2fa config - every login / X number of days valid device etc.
 
+One Button Login (works best with a 2fa only every 14 days stuff)
+	-- Can only work if "push" data (Socket.IO/WebSocket)????
+	-- Can only work if 2nd page for require 2fa
+
+-- Validate Phone w/ SMS message and # for first login only.
+	-- Cost of a SMS message?
 
 1. Create the API for setup
 	2. Add in the Redis to use ID -> hash
@@ -44,20 +49,8 @@ Current user_id is returned to the client -
 	4. Add in a page - to do setup with entered ID.
 	5. Reprot errors
 
-2. Create the API for pull of 2 min HASH value.
-	/2fa/pull-2-min-hash
-
-3. Create the API call/library for validate of entered 6 digit number
-	/2fa/is-valid-2fa?id=, user=, 
-
-4. Remember 1 time codes
-	/2fa/generate-1-time-codes?fmt=list fmt=pdf
-		-> codes as JSON, url of PDF of codes
-	/2fa/n-remain-1-time-codes
 
 
-
-x2fa.go - 2fa support 
 
 
 
@@ -145,4 +138,39 @@ ID=iiiiiii - Id to lookup in Redis on server that has
 	How to get from "id" -> URL for local storage?							<<<< Q >>>>
 	
 	Answered: from ID to fp - use fingerprint2 code.
+
+Thu Jan 31 14:21:44 MST 2019
+*0. s_register* s_login TabServer2 - fix to use 2fa and validate 2fa if configured.
+*0. Get QR and data back on register.
+*0. Test Local 
+	*1. LoginRequired failes to check account status???
+	*2. JWT token is valid - but - not account setup competed.
+	*/api/session/login
+xyzzy - update t_user.acct_state = 'ok' - when 2fa setup.
+0. Test in this -then- make work w/ Registration stuff
+	1. 2fa-setup stuff
+	2. Intermediate state - not completed registration until 2fa setup
+Current user_id is returned to the client - 
+	1. May need to remove this at PostProcess
+	2. Use user_id to setup-2fa if turned on
+	3. check in registration if 2fa is on, then set state of register to 'temporary'
+		until 2fa is completed.
+9. - how do we validate this in - "Login" call? - PG/SQL - need to put valid data into PG so Postgres Code can validate this.
+	*1. List of valid #s
+	*2. Use a Number, delete it.
+	*3. Timeout on nubmers - 1 time keys in this with a no-timeout date
+	*4. Add in code in s_login 
+	*5. Add in 2fa param
+	*6. Must have a "valid-login" flag in it - so can do push button validation.
+		*- how to prevent 2nd login on this validation -
+		*t_user.wait_for_validation == 'yes'?
+2. Create the API for pull of 2 min HASH value.
+	/2fa/pull-2-min-hash
+3. Create the API call/library for validate of entered 6 digit number
+	/2fa/is-valid-2fa?id=, user=, 
+
+4. Remember 1 time codes
+	/2fa/generate-1-time-codes?fmt=list fmt=pdf
+		-> codes as JSON, url of PDF of codes
+	/2fa/n-remain-1-time-codes
 
