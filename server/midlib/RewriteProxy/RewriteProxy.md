@@ -47,6 +47,31 @@ destination of `http://192.168.0.44:20000/` will get transformed into
 	}
 ``` 
 
+Another Example:
+
+```
+			, { "RewriteProxy": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/RandomStatus^", "/RandomValue^" ]
+				, "Dest": "http://127.0.0.1:10000/" 
+			} },
+```
+
+An example with a rewrite.  Input is `http://.../Ran/RandomValue`, 
+proxy expects `http://.../RandomValue`.
+
+```
+			, { "RewriteProxy": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/Ran/RandomStatus^", "/Ran/RandomValue^" ]
+				, "MatchRE": [
+						"/Ran/"
+					]
+				, "ReplaceRE": [
+						"/"
+					]
+				, "Dest": "http://127.0.0.1:10000/" 
+			} },
+```
+
 Full Example
 ------------
 

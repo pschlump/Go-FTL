@@ -125,12 +125,15 @@ func (hdlr RewriteProxyHandlerType) ServeHTTP(www http.ResponseWriter, req *http
 			fmt.Printf("%sNewSingleHostReverseProxy (((Rewrite Part))) AT:%s %s\n", MiscLib.ColorYellow, godebug.LF(), MiscLib.ColorReset)
 			u := lib.GenURLFromReq(req)
 			if rw_prox_db1 {
-				fmt.Printf("RewriteProxy: Just before Original URL = >%s<  request is = %s, %s\n", u, lib.SVarI(req), godebug.LF())
+				fmt.Printf("RewriteProxy: Just before Original pn = %v URL = >%s<  request is = %s, %s\n", pn, u, lib.SVarI(req), godebug.LF())
 			}
 			newURL := u
 			if len(hdlr.MatchRE) > 0 {
-				if len(hdlr.MatchRE) > pn && len(hdlr.ReplaceRE) > pn && hdlr.MatchRE[pn] != "" && hdlr.ReplaceRE[pn] != "" {
-					newURL = hdlr.matchre[pn].ReplaceAllString(u, hdlr.ReplaceRE[pn])
+				// This used to do a match with 1 re pair for each match in Paths
+				// if len(hdlr.MatchRE) > pn && len(hdlr.ReplaceRE) > pn && hdlr.MatchRE[pn] != "" && hdlr.ReplaceRE[pn] != "" {
+				//	newURL = hdlr.matchre[pn].ReplaceAllString(u, hdlr.ReplaceRE[pn])
+				for ii := 0; ii < len(hdlr.MatchRE); ii++ {
+					newURL = hdlr.matchre[ii].ReplaceAllString(u, hdlr.ReplaceRE[ii])
 					if rw_prox_db1 {
 						fmt.Printf("RewriteProxy: Modified URL(re) is = >%s<, %s\n", newURL, godebug.LF())
 					}
@@ -139,7 +142,7 @@ func (hdlr RewriteProxyHandlerType) ServeHTTP(www http.ResponseWriter, req *http
 			req.URL, err = url.Parse(newURL)
 			// req.URL.Host = ""
 			if rw_prox_db1 {
-				fmt.Printf("RewriteProxy: Updated URL = >%s< err:%s\n", newURL, err)
+				fmt.Printf("RewriteProxy: Updated URL = >%s< newReq ->%s<- err:%s\n", newURL, lib.SVarI(req), err)
 			}
 			if err == nil {
 				questionMark := ""

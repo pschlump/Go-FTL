@@ -7,7 +7,7 @@
 		, "valid": {
 			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
-			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$host$": 		{ "required":true, "type":"string", "max_len":40, "min_len":8 }
 			}
 		, "CallAfter": ["CreateJWTToken"]
@@ -19,7 +19,7 @@
 		, "SetSession":{"$session$":true}
 		, "valid": {
 			 "auth_token": 			{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
 			,"callback": 			{ "optional":true }
 			}
 		}
@@ -30,7 +30,7 @@
 		, "SetSession":{"$session$":true}
 		, "valid": {
 			 "auth_token": 			{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 				{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
 			,"callback": 			{ "optional":true }
 			}
 		}
@@ -43,7 +43,7 @@
 			 "username": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
 			,"again": 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
-			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"email": 		{ "required":true, "type":"string" }
 			,"real_name":	{ "required":true, "type":"string" }
 			,"$url$":		{ "required":true, "type":"string" }
@@ -60,7 +60,7 @@
 			,"kp":		 	{ "required":true, "type":"string", "max_len":10, "min_len":1 }
 			,"email_token":	{                  "type":"string", "max_len":40, "min_len":2 }
 			,"app":		 	{                  "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$":		{ "required":true, "type":"string" }
 			}
 		, "CallAfter": ["SendEmailMessage"]
@@ -71,7 +71,7 @@
 		, "TableList":["t_user","t_ip_ban"]
 		, "valid": {
 			 "auth_token": 	{ "required":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$":		{ "required":true, "type":"string" }
 			,"$method$":	{ "required":true, "type":"string" }
 			}
@@ -87,7 +87,7 @@
 			,"again":	 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
 			,"old_password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
 			,"auth_token": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
 			}
 		, "CallAfter": ["SendEmailMessage","CreateJWTToken"]
@@ -102,7 +102,7 @@
 			,"again":	 		{ "required":true, "type":"string", "max_len":80, "min_len":4 }
 			,"old_password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
 			,"auth_token": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
 			}
 		, "CallAfter": ["SendEmailMessage","CreateJWTToken"]
@@ -115,7 +115,7 @@
 			 "username": 	{ "optional":true, "type":"string", "max_len":80, "min_len":4, "default":"" }
 			,"auth_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
 			,"email":	 	{ "optional":true, "type":"string", "max_len":250, "min_len":3, "default":"" }
-			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 		{ "required":true, "type":"string", "max_len":240, "min_len":2 }
 			}
 		, "CallAfter": ["SendEmailMessage"]
@@ -126,7 +126,7 @@
 		, "TableList":["t_user","t_ip_ban"]
 		, "valid": {
 			 "recovery_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
 			}
 		, "CallAfter": ["RedirectTo"]
@@ -140,7 +140,7 @@
 			 "password": 		{ "optional":true, "type":"string", "max_len":80, "min_len":4, "default":"" }
 			,"again":	 		{ "optional":true, "type":"string", "max_len":80, "min_len":4 }
 			,"recovery_token": 	{ "optional":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 			{ "required":true, "type":"string", "max_len":240, "min_len":2 }
 			}
 		, "CallAfter": ["SendEmailMessage","CreateJWTToken"]
@@ -148,21 +148,21 @@
 	,"/api/session/status_db1": { "g": "status_db", "p": [ "$ip$" ], "nokey":true
 		, "LineNo":"Line: __LINE__ File: __FILE__"
 		, "valid": {
-			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			}
 		}
 	,"/api/session/status_db2": { "g": "status_db", "p": [ "$ip$" ]
 		, "LineNo":"Line: __LINE__ File: __FILE__"
 		, "Method":["GET","POST"]
 		, "valid": {
-			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			}
 		}
 	,"/api/admin/status_db2": { "g": "status_db", "p": [ "$ip$" ]
 		, "LineNo":"Line: __LINE__ File: __FILE__"
 		, "Method":["GET","POST"]
 		, "valid": {
-			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			}
 		}
 	,"/api/session/missing_param_test": { "g": "s_missing_param_test", "p": [ "abc" ]
@@ -176,7 +176,7 @@
 		, "LineNo":"Line: __LINE__ File: __FILE__"
 		, "Method":["GET","POST"]
 		, "valid": {
-			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
 			,"$top$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
 			,"$host$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
@@ -187,7 +187,7 @@
 		, "LineNo":"Line: __LINE__ File: __FILE__"
 		, "Method":["GET","POST"]
 		, "valid": {
-			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
 			,"$top$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
 			,"$host$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
@@ -216,7 +216,7 @@
 		, "Method":["GET","POST"]
 		, "valid": {
 			 "email": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
-			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":2 }
 			,"$url$": 		{ "required":true, "type":"string", "max_len":400, "min_len":4 }
 			}
 		, "CallAfter": ["Sleep"]

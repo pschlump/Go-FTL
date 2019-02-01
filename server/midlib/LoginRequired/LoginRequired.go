@@ -982,6 +982,8 @@ func loadData(p string) ([]byte, error) {
 // of how to verify and view a token.
 func (hdlr *LoginRequiredType) VerifyToken(tokData []byte, keyFile string) (iat string, err error) {
 
+	fmt.Fprintf(os.Stderr, "%sNew tokData ->%s<- keyFile ->%s<- AT: %s%s\n", MiscLib.ColorYellow, tokData, keyFile, MiscLib.ColorReset)
+
 	// trim possible whitespace from token
 	tokData = regexp.MustCompile(`\s*$`).ReplaceAll(tokData, []byte{})
 	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-validate-token") {

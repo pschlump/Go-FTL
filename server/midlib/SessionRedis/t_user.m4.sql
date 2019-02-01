@@ -2,7 +2,6 @@
 -- "Copyright (C) Philip Schlump, 2009-2017." 
 
 -- drop table "t_user" ;
-alter table "t_user" add column  "user_attr" 			text default '{}'	;
 
 CREATE TABLE "t_user" (
 	  "id"					uuid DEFAULT uuid_generate_v4() not null primary key
@@ -36,3 +35,35 @@ create unique index "t_user_u4" on "t_user" ( "username" );
 
 m4_updTrig(t_user)
 
+---------------------------------------------------------------------------------------------------------------
+-- list of setup and validated devices
+---------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE "t_2fa" (
+	  "id"					uuid DEFAULT uuid_generate_v4() not null primary key
+	, "user_id"				char varying (40) 
+	, "user_hash"			text 
+	, "fp"					text 
+	, "updated" 			timestamp 									 						
+	, "created" 			timestamp default current_timestamp not null 					
+);
+
+create index "t_2fa_p1" on "t_2fa" ( "user_id" );
+
+m4_updTrig(t_2fa)
+
+---------------------------------------------------------------------------------------------------------------
+-- list of user one time keys
+---------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE "t_2fa_otk" (
+	  "id"					uuid DEFAULT uuid_generate_v4() not null primary key
+	, "user_id"				char varying (40) 
+	, "one_time_key"		text
+	, "updated" 			timestamp 									 						
+	, "created" 			timestamp default current_timestamp not null 					
+);
+
+create index "t_2fa_otk_p1" on "t_2fa_otk" ( "user_id" );
+
+m4_updTrig(t_2fa_otk)

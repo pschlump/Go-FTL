@@ -4,8 +4,44 @@
 // Copyright (C) Philip Schlump, 2009-2017.
 //
 
-// xyzzy - update t_user.acct_state = 'ok' - when 2fa setup.
 package X2fa
+
+/*
+Note:
+	https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken
+		{"jsonrpc":"2.0","id":83,"result":"0x6d3d28"}
+		{"jsonrpc":"2.0","id":83,"result":"0x6d3d29"}
+		From: https://ethereum.stackexchange.com/questions/49726/how-do-i-get-the-latest-block-using-etherscan-api
+		https://api.etherscan.io/api?module=block&action=getblockreward&blockno=0x6d3d29&apikey=YourApiKeyToken
+
+	Even easier:
+		https://api.blockcypher.com/v1/eth/main
+
+			{
+			  "name": "ETH.main",
+			  "height": 7069494,
+			  "hash": "f143602c86ad61a992cb4f2ec82714977c62efd8d138fc311e7ca7fcdb7476fa",
+			  "time": "2019-02-01T05:00:09.8589251Z",
+			  "latest_url": "https://api.blockcypher.com/v1/eth/main/blocks/f143602c86ad61a992cb4f2ec82714977c62efd8d138fc311e7ca7fcdb7476fa",
+			  "previous_hash": "00dd3b5c702ec9938964dd95667e4ba5d256c47b4c399f77dc95abee6d44b387",
+			  "previous_url": "https://api.blockcypher.com/v1/eth/main/blocks/00dd3b5c702ec9938964dd95667e4ba5d256c47b4c399f77dc95abee6d44b387",
+			  "peer_count": 64,
+			  "unconfirmed_count": 46,
+			  "high_gas_price": 5838392818,
+			  "medium_gas_price": 5838392818,
+			  "low_gas_price": 5000000000,
+			  "last_fork_height": 7034372,
+			  "last_fork_hash": "8cfaabc0b64ce7df52474e45b258046529648fc1c7b69ebb622989e69c7fb33f"
+			}
+
+xyzzy4141 - Oracle Project
+	1. Put Oracle in ~/go/src/www.2c-why.com/RandomOracle
+
+*/
+
+// Oracle In: 1. Put Oracle in ~/go/src/www.2c-why.com/RandomOracle
+// API:
+//	http://.../GetValue?_ran_=
 
 import (
 	"bytes"
@@ -277,6 +313,8 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	// ----------------------------------------------------------------------------------------------------------------------------------------
 	// Generate ID
 	ID := fmt.Sprintf("%d", rand.Intn(10000000)) // xyzzy201 - add in Checksum byte
+	// xyzzy4141
+	// RanHashBytes, err := UseRO.GenRandBytes(32)
 	// Generate Random Hash
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
@@ -609,6 +647,8 @@ func get2MinHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter
 	// ------------------------------------------------------------------------------
 	// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
 	// ------------------------------------------------------------------------------
+	// xyzzy4141
+	// RanHashBytes, err := UseRO.GenRandBytes(32)
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
@@ -743,6 +783,8 @@ func (hdlr *X2faType) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
 	// ------------------------------------------------------------------------------
 	// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
 	// ------------------------------------------------------------------------------
+	// xyzzy4141
+	// RanHashBytes, err := UseRO.GenRandBytes(32)
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))

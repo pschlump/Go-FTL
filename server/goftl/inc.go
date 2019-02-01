@@ -61,6 +61,7 @@ import (
 	_ "github.com/pschlump/Go-FTL/server/midlib/SocketIO"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Status"
 	_ "github.com/pschlump/Go-FTL/server/midlib/TabServer2"
+	_ "github.com/pschlump/Go-FTL/server/midlib/X2fa"
 	_ "github.com/pschlump/Go-FTL/server/midlib/ZipIt"
 	_ "github.com/pschlump/Go-FTL/server/midlib/f-upload"
 

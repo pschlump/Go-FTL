@@ -36,9 +36,9 @@ import (
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
-	JsonX "github.com/pschlump/JSONx"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -262,9 +262,9 @@ func init() {
 		}
 
 		origin := req.Header.Get("origin")
-		prefix := hdlr.RedisPrefix
+		// prefix := hdlr.RedisPrefix
 		// fmt.Printf("CORS: Validating with redis : Prefix [%s] origin [%s], %s\n", prefix, origin, godebug.LF())
-		val, err := hdlr.RedisGetValidOrigin(prefix + origin)
+		val, err := hdlr.RedisGetValidOrigin(hdlr.RedisPrefix + origin)
 		if err != nil {
 			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s request from origin(%s) that did not validate.","LineFile":%q}`+"\n", err, origin, godebug.LF()))
 			return false
@@ -304,7 +304,7 @@ func (hdlr *CORSType) RedisGetValidOrigin(key string) (val string, err error) {
 
 	v, err := conn.Cmd("GET", key).Str()
 	if err != nil {
-		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis key [%s].","LineFile":%q}`+"\n", err, key, godebug.LF()))
 		return "{}", err
 	}
 

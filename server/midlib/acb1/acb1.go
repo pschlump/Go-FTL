@@ -148,6 +148,9 @@ func init() {
 	dispatch["/api/acb1/login_demo"] = dispatchType{
 		handlerFunc: loginDemo,
 	}
+	dispatch["/api/acb1/v1_list_tag"] = dispatchType{
+		handlerFunc: listTag,
+	}
 
 }
 
@@ -451,6 +454,33 @@ func (hdlr *Acb1Type) GetCowDisplayData(tag string) (dataJsonString string, err 
 
 	dataJsonString = godebug.SVarI(dd)
 	return
+}
+
+/*
+<!-- <form class="is-form" id="form02" method="GET" action="/api/v001/v1_list_tag"> -->
+<form class="is-form" id="form02" method="GET" action="/api/acb1/v1_list_tag">
+
+,"/api/v001/v1_list_tag": { "query": "select distinct \"tag\" from \"v1_trackAdd\" "
+		handlerFunc: listTag,
+*/
+func listTag(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
+	fmt.Printf("getInfo called\n")
+	fmt.Fprintf(os.Stderr, "getInfo called\n")
+
+	stmt := "select distinct \"tag\" from \"v1_trackAdd\" "
+
+	Rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt)
+	if err != nil {
+		fmt.Printf("Database error %s. stmt=%s\n", err, stmt)
+		fmt.Fprintf(www, `{"status":"error","msg":"database error: [%v]"}`, err)
+		return
+	}
+
+	defer Rows.Close()
+	rowData, _, _ := sizlib.RowsToInterface(Rows)
+
+	// fmt.Fprintf(www, `{"status":"success","data":%s}`, godebug.SVarI(rowData))
+	fmt.Fprintf(www, `%s`, godebug.SVarI(rowData))
 }
 
 /*
