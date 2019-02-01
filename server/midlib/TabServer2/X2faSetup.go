@@ -1,3 +1,14 @@
+//
+// Go-FTL / TabServer2
+//
+// Copyright (C) Philip Schlump, 2012-2017. All rights reserved.
+//
+// Do not remove the following lines - used in auto-update.
+// Version: 0.5.9
+// BuildNo: 1811
+// FileId: 1011
+//
+
 package TabServer2
 
 import (
