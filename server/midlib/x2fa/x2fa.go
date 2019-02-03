@@ -611,69 +611,90 @@ func get2MinHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter
 
 	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
 
-	// ------------------------------------------------------------------------------
-	// Construct key for "GET" then Get data and TTL
-	// ------------------------------------------------------------------------------
 	var rr RedisData
-	key := fmt.Sprintf("%s!2minHash", hdlr.RedisPrefix)
-	ttlLeft, _ := conn.Cmd("TTL", key).Int()
-	godebug.DbPfb(db1, "%(Cyan) ttlLeft [%v,%v] AT: %(LF)\n", ttlLeft, err)
-	v, err := conn.Cmd("GET", key).Str()
-	godebug.DbPfb(db1, "%(Yellow) v [%s,%v] AT: %(LF)\n", v, err)
-	if err != nil || v == "" {
-		godebug.DbPfb(db1, "%(Red) v [%s,%v] AT: %(LF)\n", v, err)
-		// will go on to create a new 2-min-hash
+	if true {
+
+		RanHashBytes, err := GenRandBytes(32)
+		fmt.Fprintf(os.Stderr, "\n\nHashBytes [%x], AT:\n", RanHashBytes, godebug.LF())
+		if err != nil {
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
+			fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+			return
+		}
+		RanHash := fmt.Sprintf("%x", RanHashBytes)
+		godebug.DbPfb(db1, "%(Cyan) RanHash=[%s] AT: %(LF)\n", RanHash)
+
+		// ----------------------------------------------------------------------
+		// SUCCESS return
+		// ----------------------------------------------------------------------
+		// ttl is wrong! xyzzy
+		fmt.Fprintf(www, "{\"hash\":%q,\"ttl\":120,  \"status\":\"success\"}", RanHash)
+		return
+
 	} else {
-		godebug.DbPfb(db1, "%(Green) v [%s,%v] AT: %(LF)\n", v, err)
-		err := json.Unmarshal([]byte(v), &rr)
+		// ------------------------------------------------------------------------------
+		// Construct key for "GET" then Get data and TTL
+		// ------------------------------------------------------------------------------
+		key := fmt.Sprintf("%s!2minHash", hdlr.RedisPrefix)
+		ttlLeft, _ := conn.Cmd("TTL", key).Int()
+		godebug.DbPfb(db1, "%(Cyan) ttlLeft [%v,%v] AT: %(LF)\n", ttlLeft, err)
+		v, err := conn.Cmd("GET", key).Str()
+		godebug.DbPfb(db1, "%(Yellow) v [%s,%v] AT: %(LF)\n", v, err)
+		if err != nil || v == "" {
+			godebug.DbPfb(db1, "%(Red) v [%s,%v] AT: %(LF)\n", v, err)
+			// will go on to create a new 2-min-hash
+		} else {
+			godebug.DbPfb(db1, "%(Green) v [%s,%v] AT: %(LF)\n", v, err)
+			err := json.Unmarshal([]byte(v), &rr)
+			if err != nil {
+				if db4 {
+					fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
+				}
+				// will go on to create a new 2-min-hash
+			} else {
+				if ttlLeft > 5 {
+					// ----------------------------------------------------------------------
+					// SUCCESS return
+					// ----------------------------------------------------------------------
+					fmt.Fprintf(www, "{\"hash\":%q,\"ttl\":%v,\"status\":\"success\"}", rr.Hash, ttlLeft)
+					return
+				}
+			}
+		}
+
+		godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
+
+		// ------------------------------------------------------------------------------
+		// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
+		// ------------------------------------------------------------------------------
+		// xyzzy4141
+		// RanHashBytes, err := UseRO.GenRandBytes(32)
+		RanHashBytes, err := GenRandBytes(32)
+		if err != nil {
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
+			fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+			return
+		}
+		RanHash := fmt.Sprintf("%x", RanHashBytes)
+		val := godebug.SVar(RedisData{
+			Hash: RanHash,
+		})
+		ttl := 125
+
+		err = conn.Cmd("SETEX", key, ttl, val).Err
 		if err != nil {
 			if db4 {
 				fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
 			}
-			// will go on to create a new 2-min-hash
-		} else {
-			if ttlLeft > 5 {
-				// ----------------------------------------------------------------------
-				// SUCCESS return
-				// ----------------------------------------------------------------------
-				fmt.Fprintf(www, "{\"hash\":%q,\"ttl\":%v,\"status\":\"success\"}", rr.Hash, ttlLeft)
-				return
-			}
+			fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+			return
 		}
+
+		// ----------------------------------------------------------------------
+		// SUCCESS return
+		// ----------------------------------------------------------------------
+		fmt.Fprintf(www, "{\"hash\":%q,\"ttl\":120,  \"status\":\"success\"}", rr.Hash)
 	}
-
-	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
-
-	// ------------------------------------------------------------------------------
-	// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
-	// ------------------------------------------------------------------------------
-	// xyzzy4141
-	// RanHashBytes, err := UseRO.GenRandBytes(32)
-	RanHashBytes, err := GenRandBytes(32)
-	if err != nil {
-		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
-		return
-	}
-	RanHash := fmt.Sprintf("%x", RanHashBytes)
-	val := godebug.SVar(RedisData{
-		Hash: RanHash,
-	})
-	ttl := 125
-
-	err = conn.Cmd("SETEX", key, ttl, val).Err
-	if err != nil {
-		if db4 {
-			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
-		}
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
-		return
-	}
-
-	// ----------------------------------------------------------------------
-	// SUCCESS return
-	// ----------------------------------------------------------------------
-	fmt.Fprintf(www, "{\"hash\":%q,\"ttl\":120,  \"status\":\"success\"}", rr.Hash)
 }
 
 // Return 200 if it is a valid 2fa - this will be disabled when not testing.
@@ -754,52 +775,76 @@ func (hdlr *X2faType) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
 	// Construct key for "GET" then Get data and TTL
 	// ------------------------------------------------------------------------------
 	var rr RedisData
-	key := fmt.Sprintf("%s!2minHash", hdlr.RedisPrefix)
-	ttlLeft, _ = conn.Cmd("TTL", key).Int()
-	godebug.DbPfb(db1, "%(Cyan) ttlLeft [%v,%v] AT: %(LF)\n", ttlLeft, err)
-	v, err := conn.Cmd("GET", key).Str()
-	godebug.DbPfb(db1, "%(Yellow) v [%s,%v] AT: %(LF)\n", v, err)
-	if err != nil || v == "" {
-		godebug.DbPfb(db1, "%(Red) v [%s,%v] AT: %(LF)\n", v, err)
-		// will go on to create a new 2-min-hash
+	if true {
+
+		RanHashBytes, e0 := GenRandBytes(32)
+		fmt.Fprintf(os.Stderr, "\n\nHashBytes [%x]\n", RanHashBytes)
+		if e0 != nil {
+			err = e0
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
+			// fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+			return
+		}
+		hash = fmt.Sprintf("%x", RanHashBytes)
+		godebug.DbPfb(db1, "%(Cyan) hash(returned)=[%s] AT: %(LF)\n", hash)
+
+		// ----------------------------------------------------------------------
+		// SUCCESS return
+		// ----------------------------------------------------------------------
+		// xyzzy - ttl is wrong!
+		// fmt.Fprintf(www, "{\"hash\":%q,\"ttl\":120,  \"status\":\"success\"}", rr.Hash)
+		ttlLeft = 120 // xyzzy - ttl is wrong!
+		return
+
 	} else {
-		godebug.DbPfb(db1, "%(Green) v [%s,%v] AT: %(LF)\n", v, err)
-		err := json.Unmarshal([]byte(v), &rr)
-		if err != nil {
+		key := fmt.Sprintf("%s!2minHash", hdlr.RedisPrefix)
+		ttlLeft, _ = conn.Cmd("TTL", key).Int()
+		godebug.DbPfb(db1, "%(Cyan) ttlLeft [%v,%v] AT: %(LF)\n", ttlLeft, err)
+		v, err := conn.Cmd("GET", key).Str()
+		godebug.DbPfb(db1, "%(Yellow) v [%s,%v] AT: %(LF)\n", v, err)
+		if err != nil || v == "" {
+			godebug.DbPfb(db1, "%(Red) v [%s,%v] AT: %(LF)\n", v, err)
 			// will go on to create a new 2-min-hash
-			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s.","LineFile":%q}`+"\n", err, godebug.LF()))
 		} else {
-			if ttlLeft > 5 {
-				// ----------------------------------------------------------------------
-				// SUCCESS return
-				// ----------------------------------------------------------------------
-				return rr.Hash, ttlLeft, nil
+			godebug.DbPfb(db1, "%(Green) v [%s,%v] AT: %(LF)\n", v, err)
+			err := json.Unmarshal([]byte(v), &rr)
+			if err != nil {
+				// will go on to create a new 2-min-hash
+				logrus.Warn(fmt.Sprintf(`{"msg":"Error %s.","LineFile":%q}`+"\n", err, godebug.LF()))
+			} else {
+				if ttlLeft > 5 {
+					// ----------------------------------------------------------------------
+					// SUCCESS return
+					// ----------------------------------------------------------------------
+					return rr.Hash, ttlLeft, nil
+				}
 			}
 		}
-	}
 
-	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
+		godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
 
-	// ------------------------------------------------------------------------------
-	// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
-	// ------------------------------------------------------------------------------
-	// xyzzy4141
-	// RanHashBytes, err := UseRO.GenRandBytes(32)
-	RanHashBytes, err := GenRandBytes(32)
-	if err != nil {
-		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", 0, err
-	}
-	RanHash := fmt.Sprintf("%x", RanHashBytes)
-	val := godebug.SVar(RedisData{
-		Hash: RanHash,
-	})
-	ttl := 125
+		// ------------------------------------------------------------------------------
+		// Construct new 2-min hash (update) and set.  Either missing or lest than 5 sec left.
+		// ------------------------------------------------------------------------------
+		// xyzzy4141
+		// RanHashBytes, err := UseRO.GenRandBytes(32)
+		RanHashBytes, err := GenRandBytes(32)
+		if err != nil {
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
+			return "", 0, err
+		}
+		RanHash := fmt.Sprintf("%x", RanHashBytes)
+		rr = RedisData{
+			Hash: RanHash,
+		}
+		val := godebug.SVar(rr)
+		ttl := 125
 
-	err = conn.Cmd("SETEX", key, ttl, val).Err
-	if err != nil {
-		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", 0, err
+		err = conn.Cmd("SETEX", key, ttl, val).Err
+		if err != nil {
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s.","LineFile":%q}`+"\n", err, godebug.LF()))
+			return "", 0, err
+		}
 	}
 
 	// ----------------------------------------------------------------------
@@ -847,7 +892,8 @@ order by 1, 2
 			list = append(list, one_time_key)
 		} else {
 			val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))
-			val1 := fmt.Sprintf("%x", val0)
+			// val1 := fmt.Sprintf("%x", val0)
+			val1 := string(val0)
 			val2 := val1[len(val1)-6:]
 			val, err := strconv.ParseInt(val2, 16, 64)
 			if err != nil {
@@ -962,7 +1008,8 @@ func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 
 	// xyzzy - convert to a function for this.
 	val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))
-	val1 := fmt.Sprintf("%x", val0)
+	// val1 := fmt.Sprintf("%x", val0)
+	val1 := string(val0)
 	val2 := val1[len(val1)-6:]
 	val, err := strconv.ParseInt(val2, 16, 64)
 	if err != nil {
