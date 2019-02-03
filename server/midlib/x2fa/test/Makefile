@@ -26,8 +26,8 @@ redis_2fa_data:
 	@echo Redis Keys
 	@echo
 	redis-cli -h 192.168.0.199 <redis_2fa.redis | tee ,r1
-	@echo
-	ed ,r1 <ed.1 >,ed.1 
-	redis-cli -h 192.168.0.199 <,r1
+	@echo "auth ${REDIS_AUTH}" >,r2
+	go run go-proc-redis.go >>,r2
+	redis-cli -h 192.168.0.199 <,r2
 	@echo
 
