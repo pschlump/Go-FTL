@@ -65,69 +65,73 @@ type RanData struct {
 // ============================================================================================================================================
 // Should move to aesccm package
 func GenRandBytes(nRandBytes int) (buf []byte, err error) {
-	if LocalGen {
-		if dbCipher {
-			fmt.Printf("AT: %s\n", godebug.LF())
-		}
-		buf = make([]byte, nRandBytes)
-		_, err = rand.Read(buf)
-		if err != nil {
-			fmt.Printf(`{"msg":"Error generaintg random numbers :%s"}\n`, err)
-			return nil, err
-		}
-		// fmt.Printf("Value: %x\n", buf)
-		return
-	} else {
-
-		URL := "http://www.2c-why.com/Ran/RandomValue"
-		var status int
-		var body string
-
-		if FirstRequest {
-			ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
-			// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
-			status, body = DoGet(URL, "_ran_", ran)
-		} else {
-			status, body = DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch.
-			// xyzzy use TimeRemain, ThisEpoc, LastResult
-		}
-
-		if status != 200 {
-			fmt.Printf("Unable to get RandomOracle - what to do, status = %v\n", status)
-			fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, status = %v\n", status)
-			buf = make([]byte, nRandBytes)
-			return
-		}
-
-		fmt.Fprintf(os.Stderr, "%sRandomValue%s ->%s<- AT:%s\n", MiscLib.ColorYellow, MiscLib.ColorReset, body, godebug.LF())
-
-		// fmt.Fprintf(www, `{"status":"success","value":"%x","ttl":%d,"ep":%v}`, aValue, ttlCurrent, epoc_120)
-		var pd RanData
-		err = json.Unmarshal([]byte(body), &pd)
-		if pd.Status != "success" {
-			fmt.Printf("Unable to get RandomOracle - what to do, status = %v\n", status)
-			fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, status = %v\n", status)
-			buf = make([]byte, nRandBytes)
-			return
-		}
-
-		buf, err = hex.DecodeString(pd.Value)
-		if err != nil {
-			fmt.Printf("Unable to get RandomOracle - what to do, err = %v\n", err)
-			fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, err = %v\n", err)
-			buf = make([]byte, nRandBytes)
-			return
-		}
-
-		FirstRequest = false
-		TimeRemain = pd.TTL
-		ThisEpoc = pd.Epoc
-
-		return
+	if dbCipher {
+		fmt.Printf("AT: %s\n", godebug.LF())
 	}
+	buf = make([]byte, nRandBytes)
+	_, err = rand.Read(buf)
+	if err != nil {
+		fmt.Printf(`{"msg":"Error generaintg random numbers :%s"}\n`, err)
+		return nil, err
+	}
+	// fmt.Printf("Value: %x\n", buf)
+	return
 }
 
-const LocalGen = false
+// ============================================================================================================================================
+// Should move to aesccm package
+func GenRandBytesOracle() (buf []byte, ttl, epoc int, err error) {
+	URL := "http://www.2c-why.com/Ran/RandomValue"
+	var status int
+	var body string
+
+	if FirstRequest {
+		ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
+		// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
+		status, body = DoGet(URL, "_ran_", ran)
+	} else {
+		status, body = DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch.
+		// xyzzy use TimeRemain, ThisEpoc, LastResult
+	}
+
+	if status != 200 {
+		fmt.Printf("Unable to get RandomOracle - what to do, status = %v\n", status)
+		fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, status = %v\n", status)
+		buf = make([]byte, 32)
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, "%sRandomValue%s ->%s<- AT:%s\n", MiscLib.ColorYellow, MiscLib.ColorReset, body, godebug.LF())
+
+	// fmt.Fprintf(www, `{"status":"success","value":"%x","ttl":%d,"ep":%v}`, aValue, ttlCurrent, epoc_120)
+	var pd RanData
+	err = json.Unmarshal([]byte(body), &pd)
+	if pd.Status != "success" {
+		fmt.Printf("Unable to get RandomOracle - what to do, status = %v\n", status)
+		fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, status = %v\n", status)
+		buf = make([]byte, 32)
+		return
+	}
+
+	buf, err = hex.DecodeString(pd.Value)
+	if err != nil {
+		fmt.Printf("Unable to get RandomOracle - what to do, err = %v\n", err)
+		fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, err = %v\n", err)
+		buf = make([]byte, 32)
+		return
+	}
+
+	FirstRequest = false
+
+	TimeRemain = pd.TTL
+	ThisEpoc = pd.Epoc
+
+	ttl = pd.TTL
+	epoc = pd.Epoc
+
+	return
+}
+
 const dbCipher = false
 
 /* vim: set noai ts=4 sw=4: */

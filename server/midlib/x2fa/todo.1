@@ -1,17 +1,88 @@
+1. msetup.html - need to present form if don't have `id=YYYYYY` on CLI.
+1. msetup.html - need to redirect to index.html.
 
-1. Progressive Web App ( or simulatio of for the moment  )
+
+
+
+
+
+
+
++1. Progressive Web App ( or simulatio of for the moment  )
 	1. Display URL
+	1. Display TTL
+	1. Add TTL count down.
 	2. Button to get 2fa - click on URL
-	3. do fetch to get UserHash (2min) -> # - compare to CLI call to do same.
 	4. Good enough for the moment
 
-2. Documentation
-2. 1 time setup html "msetup.html?id=" needs redirect to progressive-app
++2. Documentation
++2. 1 time setup html "msetup.html?id=" needs redirect to progressive-app
 
-2. Test Local - Push to .74
+*2. Test Local 
+2. Push to .206 (what URL to use ? www.2c-why.com)
 2. Test with federated from 2c-why.com/demo40 -> login and validate
-
+	Test all of this
 3. Push to KIP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000- -00000-
@@ -174,3 +245,11 @@ Current user_id is returned to the client -
 		-> codes as JSON, url of PDF of codes
 	/2fa/n-remain-1-time-codes
 
+
+Sun Feb  3 20:42:09 MST 2019
+
+*0. Cleanup - GO Code xyzzy5602
+*	- Move code from GenRandomBytes 
+*		func GenRandBytes(nRandBytes int) (buf []byte, err error) {
+*	- GenRandomOracle - implement that.
+*	-
