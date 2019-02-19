@@ -85,7 +85,7 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		rv = godebug.SVarI(all)
 
 		// key := fmt.Sprintf("2faStash:%s:%s", ed.UserID, auth_tok_2part)
-		key := fmt.Sprintf("2faStash:User:%s", auth_tok_2part)
+		key := fmt.Sprintf("2faStash:User:%s", auth_tok_2part) // xyzzy - 2faStash: to be a "key" in config
 		err = conn.Cmd("SETEX", key, 60*4, rv).Err
 		if err != nil {
 			rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())

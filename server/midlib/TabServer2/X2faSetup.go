@@ -40,9 +40,11 @@ type RedisData struct {
 	URL    string `json:"URL"`
 }
 
+// xyzzy - config item
 const timeOutConst = (60 * 60 * 24) + 5
 
 // xyzzy-2fa - X2faSetup
+// type PrePostFlagType int - to replace 'bool' type.
 func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
@@ -69,12 +71,6 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 	       "xsrf_token": "05266ceb-ee79-4c91-9418-c4f3a6b267fd"
 	   }
 	*/
-
-	type RedirectToData struct {
-		Status string `json:"status"`
-		UserID string `json:"user_id"`
-		Use2fa string `json:"use_2fa"`
-	}
 
 	var ed RedirectToData
 	var all map[string]interface{}
