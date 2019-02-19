@@ -34,6 +34,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/Go-FTL/server/tr"
+	"github.com/pschlump/HashStrings"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
@@ -1180,6 +1181,24 @@ func InjectDataPs(ps *goftlmux.Params, h SQLOne, res http.ResponseWriter, req *h
 			//} else {
 			//	goftlmux.AddValueToParams("$ip$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
 			//}
+
+		// SHA256 hash of IP address with "salt" - will be unique - but not an IP address.
+		case "$IP_HASH$", "$ip_hash$":
+			forward := req.Header.Get("X-Forwarded-For")
+			if forward != "" {
+				forward = HashStrings.Sha256("salt-3", forward)
+				goftlmux.AddValueToParams("$ip_hash$", forward, 'i', goftlmux.FromInject, ps)
+			} else {
+				h, _, err := net.SplitHostPort(req.RemoteAddr)
+				if err == nil {
+					h = HashStrings.Sha256("salt-3", h)
+					goftlmux.AddValueToParams("$ip_hash$", h, 'i', goftlmux.FromInject, ps)
+				} else {
+					h = HashStrings.Sha256("salt-3", "0.0.0.0")
+					goftlmux.AddValueToParams("$ip_hash$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
+				}
+			}
+
 		case "$url$":
 			if req.TLS != nil {
 				https = "https://"
@@ -1188,6 +1207,7 @@ func InjectDataPs(ps *goftlmux.Params, h SQLOne, res http.ResponseWriter, req *h
 			}
 			v := https + req.Host
 			goftlmux.AddValueToParams("$url$", v, 'i', goftlmux.FromInject, ps)
+
 		case "$ua$": // User Agent
 			{
 				// fmt.Printf ( "Found $ua$ - inject\n" )

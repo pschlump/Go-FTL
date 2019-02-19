@@ -32,207 +32,6 @@ import (
 
 // --------------------------------------------------------------------------------------------------------------------------
 
-//func init() {
-//
-//	// normally identical - but not this time.
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*TabServer2Type)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//		}
-//		gCfg.ConnectToRedis()
-//		gCfg.ConnectToPostgreSQL()
-//		pCfg.gCfg = gCfg
-//		return
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &TabServer2Type{} }
-//
-//	postInit := func(h interface{}, cfgData map[string]interface{}, callNo int) error {
-//		// var err error
-//
-//		hh, ok := h.(*TabServer2Type)
-//		if !ok {
-//			fmt.Printf("Error: Wrong data type passed to FileServeType - postInit\n")
-//			return mid.ErrInternalError
-//		} else {
-//
-//			hh.MuxAuto = make(map[string]int)
-//			hh.MuxAutoPass = 1
-//
-//			// xyzzy setup watchers for changes in files?
-//
-//			hh.db_func = make(map[string]bool, maxI(len(hh.DbFunctions), 1))
-//			for _, vv := range hh.DbFunctions {
-//				// db_func["PickInsertUpdateColumns"] = false
-//				hh.db_func[vv] = true
-//			}
-//
-//			t, err := os.Getwd()
-//			if err != nil {
-//				fmt.Fprintf(os.Stderr, "%sTabServer2: Error (14022):  Unable to get current working directory. LineNo:%d.%s\n", MiscLib.ColorRed, hh.LineNo, MiscLib.ColorReset)
-//				fmt.Printf("TabServer2: Error (14022):  Unable to get current working directory. LineNo:%d.\n", hh.LineNo)
-//				return mid.ErrInternalError
-//			}
-//			hh.pwd = t
-//
-//			fmt.Printf("\nTabServer2: --- start of TabServer2 config --- Running in [%s] LineNo:%d.\n", t, hh.LineNo)
-//
-//			// Convert from String LoginSystem -> Internal Type LoginSystemType
-//			switch hh.LoginSystem {
-//			case "LstNone":
-//				hh.loginSystem = LstNone
-//			case "LstAesSrp":
-//				hh.loginSystem = LstAesSrp
-//			case "LstUnPw":
-//				hh.loginSystem = LstUnPw
-//			case "LstBasic":
-//				hh.loginSystem = LstBasic
-//			default:
-//				hh.loginSystem = LstAesSrp
-//				// hh.loginSystem = LstNone
-//				fmt.Fprintf(os.Stderr, "%sTabServer2: Info (15122):  Unable to convert LoginSystem [%s]. Should be one of 'LstNone', 'LstAesSrp', 'LstUnPw', 'LstBasic'.   AesSrp assumed.  LineNo:%d.%s\n", MiscLib.ColorYellow, hh.LoginSystem, hh.LineNo, MiscLib.ColorReset)
-//				fmt.Printf("TabServer2: Info (15122):  Unable to convert LoginSystem [%s]. Should be one of 'LstNone', 'LstAesSrp', 'LstUnPw', 'LstBasic'.   AesSrp assumed.  LineNo:%d.\n", hh.LoginSystem, hh.LineNo)
-//			}
-//
-//			if db3 {
-//				sqlCfgFN, ok := sizlib.SearchPathApp(hh.SQLCfgFN, hh.AppName, hh.SearchPath)
-//				fmt.Printf("sqlCfgFN = %s ok = %v, %s\n", sqlCfgFN, ok, godebug.LF())
-//			}
-//
-//			n_config := 0
-//			n_files_loaded := 0
-//
-//			if sqlCfgFN, ok := sizlib.SearchPathApp(hh.SQLCfgFN, hh.AppName, hh.SearchPath); ok {
-//				fmt.Printf("TabServer2: sql config: %s, %s\n", sqlCfgFN, godebug.LF())
-//				SQLCfg, err := readInSQLConfig(sqlCfgFN)
-//				hh.SQLCfg = SQLCfg
-//				if err != nil {
-//					fmt.Printf("TabServer2: Error: %s\n", err)
-//					SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + sqlCfgFN[1:], ErrorMsg: fmt.Sprintf("%s", err)})
-//				} else {
-//					n_config++
-//					n_files_loaded = 1
-//					SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + sqlCfgFN[1:], ErrorMsg: ""})
-//				}
-//			}
-//
-//			// ----------------------------------------------------------------------------------------------------------------------------------------------------
-//			// Read in module based end-points
-//			// ----------------------------------------------------------------------------------------------------------------------------------------------------
-//			// Called from ~/Projects/w-watch/w-watch.go
-//			// 		s := doGet(&client, "http://localhost:8090/api/reloadTableConfig")
-//			// in: base.go -- respHandlerReloadTableConfig(res http.ResponseWriter, req *http.Request, ps goftlmux.Params) {
-//			// ----------------------------------------------------------------------------------------------------------------------------------------------------
-//			for _, TopPath := range hh.AppRoot {
-//				var ignoreList []string
-//				fmt.Printf("TabServer2: At Search for additional sql-cfg.json files, TopPath=%s from AppRoot=%s, %s\n", TopPath, godebug.SVar(hh.AppRoot), godebug.LF())
-//				// fmt.Printf("At Search for additional sql-cfg.json files , %s\n", godebug.LF())
-//				// opts__TopPath := sizlib.SubstitueUserInFilePathImmediate("/Users/corwin/Projects/who-cares/app") // xyzzy from CLI -W option //xyzzy - replace ~ with home dir.
-//				opts__TopPath := sizlib.SubstitueUserInFilePathImmediate(TopPath)
-//				// fmt.Printf("TabServer2: Path ->%s<- At, %s\n", opts__TopPath, godebug.LF())
-//				// ignoreList = append(ignoreList, "/Users/corwin/Projects/who-cares/who-cares-server") // xyzzy from globa-cfg.json file
-//				dirs := sizlib.FindDirsWithSQLCfg(opts__TopPath, ignoreList)
-//				// fmt.Printf("TabServer2: dirs ->%s<- At, %s\n", sizlib.SVar(dirs), godebug.LF())
-//				fList, ok := sizlib.SearchPathAppModule(hh.SQLCfgFN, hh.AppName, dirs)
-//				// fmt.Printf("TabServer2: fList ->%s<- At, %s\n", sizlib.SVar(fList), godebug.LF())
-//				if ok {
-//					fmt.Fprintf(os.Stderr, "%sTabServer2: List of additional sql-cfg*.josn files found: %s server config line:%d AT, %s%s\n",
-//						MiscLib.ColorGreen, sizlib.SVar(fList), hh.LineNo, godebug.LF(), MiscLib.ColorReset)
-//					for _, v := range fList {
-//						n_files_loaded++
-//						fmt.Printf("TabServer2: Reading in additional SQLCfg: %s\n", v)
-//						fmt.Fprintf(os.Stderr, "%sTabServer2: Reading in additional SQLCfg: %s%s\n", MiscLib.ColorGreen, v, MiscLib.ColorReset)
-//						tSQLCfg, err := readInSQLConfig(v) // func readInSQLConfig(path string) map[string]SQLOne {
-//						if err != nil {
-//							fmt.Printf("TabServer2: Error: %s\n", err)
-//							SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + v[1:], ErrorMsg: fmt.Sprintf("%s", err)})
-//						} else {
-//							// 1. combine note: 'f' values - concatenate for each key - instead of overwrite -- xyzzyConcatNoteKey
-//							//		Collect all the note: 'f's into a set of strings - then post-process them
-//							preNote := make(map[string]string)
-//							for ii, vv := range hh.SQLCfg {
-//								if strings.HasPrefix(ii, "note:") {
-//									preNote[ii] = vv.F
-//								}
-//							}
-//							fmt.Printf("PreNote = %s\n", preNote)
-//							if hh.SQLCfg == nil {
-//								hh.SQLCfg = make(map[string]SQLOne)
-//							}
-//							for j, w := range tSQLCfg {
-//								hh.SQLCfg[j] = w
-//							}
-//							for ii, vv := range hh.SQLCfg {
-//								if strings.HasPrefix(ii, "note:") {
-//									if old, ok := preNote[ii]; ok {
-//										// preNote[ii] = vv.F
-//										vv.F = old + "\n" + vv.F
-//										hh.SQLCfg[ii] = vv
-//									}
-//								}
-//							}
-//							SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hh.pwd + v[1:], ErrorMsg: ""})
-//							n_config++
-//						}
-//					}
-//				}
-//			}
-//
-//			if n_files_loaded == 0 {
-//				fmt.Fprintf(os.Stderr, "%sTabServer2: Error (14122):  Unable to find the %s file using %s path. AppName=%s LineNo:%d in server config file.%s\n", MiscLib.ColorRed, hh.SQLCfgFN, hh.SearchPath, hh.AppName, hh.LineNo, MiscLib.ColorReset)
-//				fmt.Printf("TabServer2: Error (14122):  Unable to find the %s file using %s path. LineNo:%d in server config file.\n", hh.SQLCfgFN, hh.SearchPath, hh.LineNo)
-//			}
-//
-//			// xyzzy - valid that the sql_cfg.json data is correct - check table/column info
-//			if !hh.CheckSqlCfgValid() {
-//				fmt.Printf("Early exit - sql_cfg.json is not valid\n")
-//				n_config = -1
-//			}
-//
-//			// xyzzy - put this back in -- loadAllCsrfTokens(hh)
-//
-//			hh.theMux = goftlmux.NewRouter()
-//
-//			initEndPoints(hh.theMux, hh)
-//
-//			hh.final, err = lib.ParseBool(hh.Final)
-//
-//			if n_config == 0 {
-//				fmt.Printf("\n************************************************\n* Warning - no TabServer2 config files loaded\n ************************************************\n\n")
-//				return mid.ErrInternalError
-//			}
-//		}
-//
-//		return nil
-//	}
-//
-//	/*
-//	   var opts struct {
-//	   	GlobalCfgFN string `short:"g" long:"globaCfgFile"    description:"Full path to global config"          default:"global-cfg.json"`
-//	   	SQLCfgFN    string `short:"s" long:"sqlCfgFile"      description:"Full path to SQL config"             default:"sql-cfg.json"`
-//	   	Port        string `short:"p" long:"port"            description:"Port to listen on"                   default:"8090"` // Used from global-cfg.json
-//	   	Search      string `short:"S" long:"searchPath"      description:"SearchPath to use for config files"  default:"./cfg:.:~/cfg"`
-//	   	AppName     string `short:"A" long:"application"     description:"Application to run"                  default:""`
-//	   	TopPath     string `short:"T" long:"topPath"         description:"search for sql-cfg.json files"       default:""`
-//	   }
-//	*/
-//
-//	cfg.RegInitItem2("TabServer2", initNext, createEmptyType, postInit, `{
-//		}`)
-//	// 1. g_schema // xyzzy - should pull from config "public"
-//	// 2. xyzzyPath1 // xyzzyPath1 - should pull from config ./table_ddl
-//}
-//
-//// normally identical
-//func (hdlr *TabServer2Type) SetNext(next http.Handler) {
-//	hdlr.Next = next
-//}
-
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
 		x := &TabServer2Type{}
@@ -361,15 +160,16 @@ func (hdlr *TabServer2Type) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgDat
 	for _, TopPath := range hdlr.AppRoot {
 		var ignoreList []string
 		fmt.Printf("TabServer2: At Search for additional sql-cfg.json files, TopPath=%s from AppRoot=%s, %s\n", TopPath, godebug.SVar(hdlr.AppRoot), godebug.LF())
+		fmt.Fprintf(os.Stderr, "TabServer2: At Search for additional sql-cfg.json files, TopPath=%s from AppRoot=%s, %s\n", TopPath, godebug.SVar(hdlr.AppRoot), godebug.LF())
 		// fmt.Printf("At Search for additional sql-cfg.json files , %s\n", godebug.LF())
 		// opts__TopPath := sizlib.SubstitueUserInFilePathImmediate("/Users/corwin/Projects/who-cares/app") // xyzzy from CLI -W option //xyzzy - replace ~ with home dir.
 		opts__TopPath := sizlib.SubstitueUserInFilePathImmediate(TopPath)
-		// fmt.Printf("TabServer2: Path ->%s<- At, %s\n", opts__TopPath, godebug.LF())
+		fmt.Fprintf(os.Stderr, "\nTabServer2: Search In Path ->%s<- At, %s\n", opts__TopPath, godebug.LF())
 		// ignoreList = append(ignoreList, "/Users/corwin/Projects/who-cares/who-cares-server") // xyzzy from globa-cfg.json file
 		dirs := sizlib.FindDirsWithSQLCfg(opts__TopPath, ignoreList)
-		// fmt.Printf("TabServer2: dirs ->%s<- At, %s\n", sizlib.SVar(dirs), godebug.LF())
+		fmt.Fprintf(os.Stderr, "  Directories Found: %s\n", sizlib.SVarI(dirs))
 		fList, ok := sizlib.SearchPathAppModule(hdlr.SQLCfgFN, hdlr.AppName, dirs)
-		// fmt.Printf("TabServer2: fList ->%s<- At, %s\n", sizlib.SVar(fList), godebug.LF())
+		fmt.Fprintf(os.Stderr, "   SQLCfgFN=%s AppName=%s List of Files= %s\n", hdlr.SQLCfgFN, hdlr.AppName, sizlib.SVarI(fList))
 		if ok {
 			fmt.Fprintf(os.Stdout, "%sTabServer2: List of additional sql-cfg*.josn files found: %s server config line:%d AT, %s%s\n",
 				MiscLib.ColorGreen, sizlib.SVarI(fList), hdlr.LineNo, godebug.LF(), MiscLib.ColorReset)
@@ -415,8 +215,20 @@ func (hdlr *TabServer2Type) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgDat
 							}
 						}
 					}
+					// Prevent duplicate addition of file names.
+					// haveFileAlready := false
+					// addFn := hdlr.pwd + v[1:]
+					// for _, fn := range SqlCfgFilesLoaded {
+					// 	if addFn == fn.FileName {
+					// 		haveFileAlready = true
+					// 		break
+					// 	}
+					// }
+					// if !haveFileAlready {
 					SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: hdlr.pwd + v[1:], ErrorMsg: ""})
+					// SqlCfgFilesLoaded = append(SqlCfgFilesLoaded, SqlCfgLoaded{FileName: addFn})
 					n_config++
+					// }
 				}
 			}
 		}
@@ -431,6 +243,10 @@ func (hdlr *TabServer2Type) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgDat
 	if !hdlr.CheckSqlCfgValid() {
 		fmt.Printf("Early exit - sql_cfg.json is not valid\n")
 		n_config = -1
+	}
+
+	for n, v := range SqlCfgFilesLoaded {
+		fmt.Fprintf(os.Stderr, "%s[%v] %v -- %s%s\n", MiscLib.ColorYellow, n, v, godebug.LF(), MiscLib.ColorReset)
 	}
 
 	// xyzzy - put this back in -- loadAllCsrfTokens(hdlr)
@@ -574,6 +390,7 @@ func initEndPoints(theMux *goftlmux.MuxRouter, hdlr *TabServer2Type) {
 		// xyzzy ------------------------------------------------------------------------------------------------------------------------------------------------
 		if pn := lib.PathsMatchN(hdlr.Paths, key); pn >= 0 {
 			fmt.Printf("%sTabServer2: Matched: %s%s\n", MiscLib.ColorGreen, key, MiscLib.ColorReset)
+			fmt.Fprintf(os.Stderr, "%s     Path[%s]: %s%s\n", MiscLib.ColorGreen, hdlr.Paths[pn], key, MiscLib.ColorReset)
 			if len(key) > 0 && key[0:1] == "/" && (!strings.HasPrefix(key, api_table) || len(val.Crud) == 0) && !val.Redis {
 				hdlr.MuxAuto[key] = hdlr.MuxAutoPass
 				if debugCrud01 {

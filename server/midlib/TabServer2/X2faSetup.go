@@ -13,16 +13,19 @@ package TabServer2
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	mathRand "math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
+	"github.com/pschlump/HashStrings"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
@@ -98,7 +101,7 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		html, QRImgURL, ID, err := GetQRForSetup(hdlr, www, req, ps, ed.UserID)
 		if err != nil {
 			fmt.Fprintf(www, `{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return "{\"status\":\"failed\"}", false, 200 // xyzzy - better error return
+			return "{\"status\":\"failed\"}", true, 200 // xyzzy - better error return
 		}
 
 		all["html_2fa"] = html
@@ -109,10 +112,292 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 		rv = godebug.SVar(all)
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-		return rv, false, 200
+		return rv, true, 200
 	}
 
 	return rv, false, 200
+}
+
+// xyzzy-2fa - X2faValidateToken
+// rv - return value string - JSON
+// rexit, if true, then will return with error from parent
+// rstatus - status to return with
+func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rrv string, rexit bool, rstatus int) {
+
+	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+	/*
+		at top rv = -->>{
+			"auth_token":"06fedeb4-6984-493a-9fb4-85b95e8401fd",
+			"config":"{}",
+			"customer_id":"1",
+			"jwt_token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoX3Rva2VuIjoiMDZmZWRlYjQtNjk4NC00OTNhLTlmYjQtODViOTVlODQwMWZkIn0.HeOVeKmiAUI3U6WJ9LDDVsRrkSq2acItixU7ZlcgyU6L5k1D7-ohX8D167rxhm3IT55TlHz_riDno7gR8s47ppKjyensvjPKX_4e0xmGHVgzafKMY131PZRS9DC2AaOzXMnZJ2oGWpBHRYkOZsH9i4q6Jeztn2f5lt7S0pMCMfdRtngMPerKJLeCcZoqK2TXjeutPXgYZKb8lkWUmXY6TevdXvA9ekG7nFU3j6TO42-qsJBlYJFEM_zoGyGaqdMBdD3v0ejarh31fVBGnh9xIq9drs3fddT_JaS3q5xDjz1ZRCWpd3RQvv2EZCohUVbSIYvHDTrT4JhJIaOHOf4zVQ",
+			"privs":"[]",
+			"seq":"8452319e-4a9f-4c32-b86d-19a3e7a9ed2f",
+			"status":"success",
+			"user_id":"3290ce1d-14fa-414d-8759-4a323e40ad32",
+			"xsrf_token":"2c11fa61-f4e7-477e-8570-ac100564b989"
+		}<<-- File: /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/TabServer2/X2faSetup.go LineNo:122
+	*/
+
+	type RedirectToData struct {
+		Status string `json:"status"`
+		UserID string `json:"user_id"`
+	}
+
+	var ed RedirectToData
+	var all map[string]interface{}
+
+	err := json.Unmarshal([]byte(rv), &ed)
+	if err != nil {
+		return rv, false, 200
+	}
+	err = json.Unmarshal([]byte(rv), &all)
+	if err != nil {
+		return rv, false, 200
+	}
+
+	if ed.Status == "success" { // this means UN/PW are ok, is not a blocked IP address etc.  Account not expired etc.
+
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+		// all["html_2fa"] = html
+		all["2fa"] = "is *NOT* valid"
+
+		user_id := ed.UserID
+
+		delete(all, "user_id")
+
+		rv = godebug.SVar(all)
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+		fmt.Printf("IsValid2fa called\n")
+		fmt.Fprintf(os.Stderr, "IsValid2fa called\n")
+
+		val2fa := ps.ByNameDflt("val2fa", "")
+		godebug.DbPfb(db1x2fa, "val2fa: ->%s<-\n", val2fa)
+
+		var err error
+		godebug.DbPfb(db1x2fa, "%(Cyan) user_id = %q AT: %(LF)\n", user_id)
+
+		// generate local copy based on user_id/auth_token - for all rows in t_2fa and any values in t_2fa_otk
+		LocalVal2fa, err := hdlr.GetValidList(user_id)
+		if err != nil {
+			rv = fmt.Sprintf(`{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
+			fmt.Fprintf(os.Stderr, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`+"\n", err, godebug.LF())
+			return rv, true, 200
+		}
+		godebug.DbPfb(db1x2fa, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
+
+		for _, v := range LocalVal2fa {
+			if v == val2fa {
+				stmt := "delete from \"t_2fa_otk\" where \"user_id\" = $1 and \"one_time_key\" = $2"
+				_, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id, v)
+				if err != nil {
+					fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+				}
+				all["2fa"] = "is valid. Yea!"
+				rv = godebug.SVar(all)
+				godebug.DbPfb(db1x2fa, "%(Green) SHOULD BE SUCCESS rv = %s AT: %(LF), Parent = %s, p2 = %s\n", rv, godebug.LF(2), godebug.LF(3))
+				return rv, false, 200
+			}
+		}
+
+		fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+		return rv, true, 200
+	}
+
+	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+	return rv, true, 200
+}
+
+const db1x2fa = true
+
+func (hdlr *TabServer2Type) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
+	fmt.Printf("Get2MinHashFunc called\n")
+	fmt.Fprintf(os.Stderr, "Get2MinHashFunc called\n")
+
+	// ------------------------------------------------------------------------------
+	// Get Connection
+	// ------------------------------------------------------------------------------
+	conn, err := hdlr.gCfg.RedisPool.Get()
+	defer hdlr.gCfg.RedisPool.Put(conn)
+	if err != nil {
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+		return "", 0, err
+	}
+
+	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
+
+	// ------------------------------------------------------------------------------
+	// Construct key for "GET" then Get data and TTL
+	// ------------------------------------------------------------------------------
+	RanHashBytes, ttl, _, e0 := GenRandBytesOracle()
+	fmt.Fprintf(os.Stderr, "\n\nHashBytes [%x]\n", RanHashBytes)
+	if e0 != nil {
+		err = e0
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
+		// fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		return
+	}
+	hash = fmt.Sprintf("%x", RanHashBytes)
+	godebug.DbPfb(db1, "%(Cyan) hash(returned)=[%s] AT: %(LF)\n", hash)
+
+	// ----------------------------------------------------------------------
+	// SUCCESS return
+	// ----------------------------------------------------------------------
+	ttlLeft = ttl
+	return
+}
+
+// ============================================================================================================================================
+// Should move to aesccm package
+func GenRandBytesOracle() (buf []byte, ttl, epoc int, err error) {
+	URL := "http://www.2c-why.com/Ran/RandomValue"
+	var status int
+	var body string
+
+	if FirstRequest {
+		ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
+		// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
+		status, body = DoGet(URL, "_ran_", ran)
+	} else {
+		status, body = DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch.
+		// xyzzy use TimeRemain, ThisEpoc, LastResult
+	}
+
+	if status != 200 {
+		fmt.Printf("Unable to get RandomOracle - what to do, status = %v\n", status)
+		fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, status = %v\n", status)
+		buf = make([]byte, 32)
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, "%sRandomValue%s ->%s<- AT:%s\n", MiscLib.ColorYellow, MiscLib.ColorReset, body, godebug.LF())
+
+	// fmt.Fprintf(www, `{"status":"success","value":"%x","ttl":%d,"ep":%v}`, aValue, ttlCurrent, epoc_120)
+	var pd RanData
+	err = json.Unmarshal([]byte(body), &pd)
+	if pd.Status != "success" {
+		fmt.Printf("Unable to get RandomOracle - what to do, status = %v\n", status)
+		fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, status = %v\n", status)
+		buf = make([]byte, 32)
+		return
+	}
+
+	buf, err = hex.DecodeString(pd.Value)
+	if err != nil {
+		fmt.Printf("Unable to get RandomOracle - what to do, err = %v\n", err)
+		fmt.Fprintf(os.Stderr, "Unable to get RandomOracle - what to do, err = %v\n", err)
+		buf = make([]byte, 32)
+		return
+	}
+
+	FirstRequest = false
+
+	TimeRemain = pd.TTL
+	ThisEpoc = pd.Epoc
+
+	ttl = pd.TTL
+	epoc = pd.Epoc
+
+	return
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
+// GetValidList get list of convened to string int values for valid 2fa
+func (hdlr *TabServer2Type) GetValidList(user_id string) (list []string, err error) {
+
+	stmt := `
+select 'current' as "ty", "user_hash", "fp", 'x' as "one_time_key"
+	from "t_2fa"
+	where "user_id" = $1
+	  and "fp" is not null
+union
+	select 'otk' as "ty", 'x' as "user_hash", 'x' as "fp", "one_time_key"
+	from "t_2fa_otk"
+	where "user_id" = $1
+order by 1, 2
+`
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return
+	}
+	defer rows.Close()
+	current2MinHash, _, err := hdlr.Get2MinHashFunc()
+	godebug.DbPfb(db1, "%(Yellow) AT: %(LF), current2MinHash=%s\n", current2MinHash)
+	for nr := 0; rows.Next(); nr++ {
+
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		var ty, user_hash, fp, one_time_key string
+		err = rows.Scan(&ty, &user_hash, &fp, &one_time_key)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return
+		}
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+
+		if ty == "okt" {
+			list = append(list, one_time_key)
+		} else {
+			val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))
+			// val1 := fmt.Sprintf("%x", val0)
+			val1 := string(val0)
+			val2 := val1[len(val1)-6:]
+			val, err := strconv.ParseInt(val2, 16, 64)
+			if err != nil {
+				fmt.Printf("Error on d.b. query %s\n", err)
+				continue
+			}
+			val = val % 1000000
+			list = append(list, fmt.Sprintf("%06d", val))
+		}
+
+	}
+	return
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
+func (hdlr *TabServer2Type) GetUserIDFromAuthToken(auth_token string) (user_id string, err error) {
+	// 		user_id, err = hdlr.GetUserIDFromAuthToken ( auth_token );
+
+	stmt := `select "user_id" from "t_auth_token" where "auth_token" = $1`
+	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id)
+	if err != nil {
+		fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+		return
+	}
+	defer rows.Close()
+	for nr := 0; rows.Next(); nr++ {
+
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		err = rows.Scan(&user_id)
+		if err != nil {
+			fmt.Printf("Error on d.b. query %s\n", err)
+			return
+		}
+		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
+		return
+	}
+	fmt.Printf("Error on d.b. query -got 0 rows\n")
+	return "", nil
+}
+
+// ============================================================================================================================================
+var FirstRequest bool = true
+var TimeRemain int
+var ThisEpoc int
+var LastResut []byte
+
+type RanData struct {
+	Status string `json:"status"`
+	Value  string `json:"value"`
+	TTL    int    `json:"ttl"`
+	Epoc   int    `json:"ep"`
 }
 
 func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Request, ps *goftlmux.Params, user_id string) (html, QRImgURL, ID string, err error) {
@@ -123,7 +408,7 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 
 	// ----------------------------------------------------------------------------------------------------------------------------------------
 	// Generate ID
-	ID = fmt.Sprintf("%d", rand.Intn(10000000)) // xyzzy201 - add in Checksum byte
+	ID = fmt.Sprintf("%d", mathRand.Intn(10000000)) // xyzzy201 - add in Checksum byte
 	// Generate Random Hash
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
@@ -142,7 +427,7 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 
 	// ----------------------------------------------------------------------------------------------------------------------------------------
 	// update t432z.com URL shorter for this QR
-	ran := fmt.Sprintf("%d", rand.Intn(1000000000))
+	ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
 	godebug.DbPfb(db1, "%(Cyan)AT: %(LF) ran [%v]\n", ran)
 
 	theData := `{"data":"data written to system in file"}`

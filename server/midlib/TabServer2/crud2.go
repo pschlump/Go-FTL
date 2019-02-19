@@ -1673,29 +1673,31 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 		for _, fx_name := range h.CallAfter {
 			trx.AddNote(1, fmt.Sprintf("CallAfter [%s]", fx_name))
 			if !exit {
-				fmt.Printf("CallAfter [%s]\n", fx_name)
+				fmt.Fprintf(os.Stderr, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
 				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				// , "CallAfter": ["SendReportsToGenMessage", "SendEmailToGenMessage"]
-				fmt.Printf("CallAfter exit at bottom=%v\n", exit)
+				fmt.Fprintf(os.Stderr, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
 			}
 		}
-		exit = false
+		// exit = false
 	}
 	if exit {
 		fmt.Printf("****************** exit from after operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
+		fmt.Fprintf(os.Stderr, "****************** exit from after operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
 		done = true
 		isError = true
 		ReturnErrorMessageRv(a_status, rv, "Postprocessing signaled error", "18007",
 			fmt.Sprintf(`Error(18007): Postprocessing signaled error. sql-cfg.json[%s] %s`, cfgTag, godebug.LF()), res, req, *ps, trx, hdlr) // status:error
 	}
 
+	fmt.Fprintf(os.Stderr, "%s AT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
+
 	if !isError {
+		fmt.Fprintf(os.Stderr, "%s AT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 		trx.SetRvBody(rv)
 		// io.WriteString(res, sizlib.JsonP(rv, res, req))
 		if h.ReturnAsHash {
-			fmt.Printf("x44:b: %s\n", godebug.LF())
-			// fmt.Printf("AtAT: %s\n", godebug.LF())
-			// rv = fmt.Sprintf("{\"status\":\"success\",\"data\":%s}", rv)
+			fmt.Fprintf(os.Stderr, "%s AT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 			if h.ReturnGetPKAsHashTableName {
 				tn := h.AssignedName
 				if tn == "" {
@@ -1706,10 +1708,12 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 				}
 				rv = fmt.Sprintf(`{"status":"success","%s":%s}`, tn, rv)
 			} else {
+				fmt.Fprintf(os.Stderr, "%s AT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
 				//	rv = fmt.Sprintf("{\"status\":\"success\",\"data\":%s}", rv)
 				rv = fmt.Sprintf(`{"status":"success","data":%s}`, rv)
 			}
 		}
+		fmt.Fprintf(os.Stderr, "%s AT: %s ->%s<- %s\n", MiscLib.ColorGreen, godebug.LF(), rv, MiscLib.ColorReset)
 		io.WriteString(res, rv)
 	}
 
@@ -1984,6 +1988,7 @@ func init() {
 		"Sleep":                   Sleep,
 		"CreateJWTToken":          CreateJWTToken,
 		"X2faSetup":               X2faSetup,
+		"X2faValidateToken":       X2faValidateToken,
 		// "ChargeCreditCard":        ChargeCreditCard,
 	}
 }
