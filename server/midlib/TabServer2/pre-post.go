@@ -19,12 +19,14 @@ type PrePostFlagType int
 // procesing function.
 //
 const (
-	PrePostRVUpdatedSuccess PrePostFlagType = 1 // rv written, use 'status' - processing complete.
-	PrePostRVUpdatedFail    PrePostFlagType = 2 // rv written, use 'status' - processing complete.
+	PrePostRVUpdatedSuccess PrePostFlagType = 1 // rv written, use 'status' - processing complete.	exit=true
+	PrePostRVUpdatedFail    PrePostFlagType = 2 // rv written, use 'status' - processing complete.	exit=true
 	PrePostNoAction         PrePostFlagType = 3 // go to next processing, neither 'rv' or 'satus' relevant.
-	PrePostFatalSetStatus   PrePostFlagType = 4 // Fatal Error: set status.
-	PrePostNextStep         PrePostFlagType = 5 // Just procede to next processing step
+	PrePostFatalSetStatus   PrePostFlagType = 4 // Fatal Error: set status.	exit=true
+	PrePostNextStep         PrePostFlagType = 5 // Just procede to next processing step.
 )
+
+// xyzzy - String() function for these constants! - so can log it.
 
 // var funcMap map[string]func(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx) (string, bool, int)
 var funcMap map[string]FuncMapType
@@ -68,7 +70,7 @@ func FuncMapExtend(name string, fx FuncMapType) (err error) {
 
 // CallFunction will call a pre-post processing function.  This is the palce where the PrePost constants will need to be handled.
 // This function also reports to the log any attempts to call a non-existent function.
-func (hdlr *TabServer2Type) CallFunction(ba string, fx_name string, res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx) (string, bool, int) {
+func (hdlr *TabServer2Type) CallFunction(ba string, fx_name string, res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx) ( /*rv*/ string /*exit*/, bool /*status*/, int) {
 	var exit bool = false
 	var a_status int = 200
 	if fx, ok := funcMap[fx_name]; ok {
