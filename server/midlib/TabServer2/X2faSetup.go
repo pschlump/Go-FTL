@@ -43,11 +43,16 @@ type RedisData struct {
 // xyzzy - config item
 const timeOutConst = (60 * 60 * 24) + 5
 
+func DumpRV(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+	fmt.Printf("%srv ->%s<- AT:%s %s\n", MiscLib.ColorYellow, rv, godebug.LF(), MiscLib.ColorReset)
+	return rv, false, 200
+}
+
 // xyzzy-2fa - X2faSetup
 // type PrePostFlagType int - to replace 'bool' type.
 func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
 
-	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+	fmt.Printf("%sX2faSetup! AT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorRed, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n\n\n", MiscLib.ColorGreen, MiscLib.ColorReset, rv, godebug.LF())
@@ -111,7 +116,9 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		return rv, true, 200
 	}
 
-	return rv, false, 200
+	fmt.Printf("rv= ->%s<- at:%s\n", rv, godebug.LF())
+
+	return fmt.Sprintf(`{"status":"failed","msg":"failed at %s"}`, godebug.LF()), false, 200
 }
 
 // xyzzy-2fa - X2faValidateToken
@@ -201,7 +208,7 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 		}
 
 		fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
-		return rv, true, 200
+		return rv, false, 200
 	}
 
 	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())

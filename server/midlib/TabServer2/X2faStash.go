@@ -64,6 +64,8 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		return rv, false, 200
 	}
 
+	fmt.Printf("ed=%s at:%s\n", godebug.SVar(ed), godebug.LF())
+
 	if ed.Status == "success" && ed.Use2fa == "yes" {
 
 		id, err := uuid.NewV4()
@@ -102,7 +104,7 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 			}
 			val = "0"
 		} else {
-			err = conn.Cmd("TTL", key, 60*4).Err
+			err = conn.Cmd("EXPIRE", key, 60*4).Err
 			if err != nil {
 				rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
 				return rv, true, 200
@@ -120,7 +122,7 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		nVal++
 
 		rv = fmt.Sprintf(`{"status":"success","auth_tok_2part":%q,"nVal":%d}`, auth_tok_2part, nVal)
-		return rv, true, 200
+		return rv, false, 200
 
 	}
 

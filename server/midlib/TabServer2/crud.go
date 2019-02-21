@@ -1545,8 +1545,8 @@ func (hdlr *TabServer2Type) GenTemplate(h SQLOne, op string, mdata map[string]st
 				// xyzzyAAAAb2 - If not logged in - then no $customer_id$ and will be out of range - should generate an error - not PANIC
 				v := ps.ByNameDflt("$customer_id$", "1")
 				if !ps.HasName("$customer_id$") {
-					fmt.Printf("Error (12902): Must be logged in to have a $customer_id$, probably an invalid sql-cfg.json setting. Remove 'CustomerIdPart' or make nokey:false.\n")
-					return "** not logged in **", errors.New("Error (12902): Must be logged in to have a $customer_id$, probably an invalid sql-cfg.json setting. Remove 'CustomerIdPart' or make nokey:false.\n")
+					fmt.Printf("Error (12902): Must be logged in to have a $customer_id$, probably an invalid sql-cfg.json setting. Remove 'CustomerIdPart' or make LoginRequired:true.\n")
+					return "** not logged in **", errors.New("Error (12902): Must be logged in to have a $customer_id$, probably an invalid sql-cfg.json setting. Remove 'CustomerIdPart' or make LoginRequired:true.\n")
 				} else {
 					bp = AddBindValue(data, v)
 				}

@@ -1665,9 +1665,11 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			trx.AddNote(1, fmt.Sprintf("CallAfter [%s]", fx_name))
 			if !exit {
 				fmt.Fprintf(os.Stderr, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
+				fmt.Fprintf(os.Stdout, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
 				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				// , "CallAfter": ["SendReportsToGenMessage", "SendEmailToGenMessage"]
 				fmt.Fprintf(os.Stderr, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
+				fmt.Fprintf(os.Stdout, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
 			}
 		}
 		// exit = false

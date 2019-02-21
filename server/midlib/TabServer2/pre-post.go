@@ -53,6 +53,7 @@ func init() {
 		"X2faValidateToken":       X2faValidateToken,
 		"X2faStash":               X2faStash,
 		"X2faSetupPt2of2":         X2faSetupPt2of2,
+		"DumpRV":                  DumpRV,
 		// -- add support for "push-to-login" at this point.
 		// "ChargeCreditCard":        ChargeCreditCard,
 	}

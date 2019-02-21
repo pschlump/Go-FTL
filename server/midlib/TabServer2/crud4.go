@@ -25,9 +25,8 @@ import (
 	"sync"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-
 	"github.com/Sirupsen/logrus"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/mid"
@@ -679,17 +678,17 @@ func AfterPasswordChange(res http.ResponseWriter, req *http.Request, cfgTag stri
 				fmt.Printf("AfterPasswordChange SUCCESS-Caching it: username=%s auth_token=%s privs=->%s<- user_id=%s XSRF-TOKEN from cookie=%s\n", username, auth_token, privs, user_id, cookie)
 			}
 			dt := fmt.Sprintf(`{"master":%q, "username":%q, "user_id":%q, "XSRF-TOKEN":%q, "customer_id":%q }`, privs, username, user_id, cookie, customer_id)
-			//rr.RedisDo("SET", "api:USER:"+auth_token, dt)
-			//rr.RedisDo("EXPIRE", "api:USER:"+auth_token, 1*60*60) // Validate for 1 hour
-			conn.Cmd("SET", "api:USER:"+auth_token, dt)
-			conn.Cmd("EXPIRE", "api:USER:"+auth_token, 1*60*60) // Validate for 1 hour
+			// combine into SETEX, PJS: Thu Feb 21 13:14:26 MST 2019
+			// conn.Cmd("SET", "api:USER:"+auth_token, dt)
+			// conn.Cmd("EXPIRE", "api:USER:"+auth_token, 1*60*60) // Validate for 1 hour
+			conn.Cmd("SETEX", "api:USER:"+auth_token, 1*60*60, dt) // Validate for 1 hour
 		}
 	}
 	return rv, exit, a_status
 }
 
 /*
-	,"/api/test/register_new_user": { "g": "test_register_new_user($1,$2,$3,$4,$5,$6,$7,$8,$9)", "p": [ "username", "password", "$ip$", "email", "real_name", "$url$", "csrf_token", "site", "name" ], "nokey":true
+	,"/api/test/register_new_user": { "g": "test_register_new_user($1,$2,$3,$4,$5,$6,$7,$8,$9)", "p": [ "username", "password", "$ip$", "email", "real_name", "$url$", "csrf_token", "site", "name" ],
 
 for ".G" - use "P" parameters and GetStoredProcedurePlist - so...
 	PostgreSQL - ($1,$2...$n)

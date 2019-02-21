@@ -704,7 +704,7 @@ type SQLOne struct {
 	ValidPost                  map[string]ValidationIn //
 	ValidPut                   map[string]ValidationIn //
 	ValidDel                   map[string]ValidationIn //
-	LoginRequired              bool                    // Defaults to false, no login required (nokey)
+	LoginRequired              bool                    // Defaults to false, no login required (formerly nokey)
 	Redis                      bool                    //
 	CacheIt                    string                  //
 	TableName                  string                  // xyzzy921 - Should override URL - not doing this currently - need to do this. -- Should be put in TableList also xyzzy
