@@ -360,6 +360,7 @@ func (hdlr *CORSType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 
 			// ---------------------------------------------------------------------------------------------------
 			if req.Method == "OPTIONS" {
+				fmt.Fprintf(os.Stderr, "\n%s\n------------------------------------------------- OPTIONS -------------------------------------------------\n%s\n\n", MiscLib.ColorCyan, godebug.SVarI(req), MiscLib.ColorReset)
 				hdlr.logf("ServeHTTP: Preflight request")
 				hdlr.handlePreflight(www, rw, req)
 				// Preflight requests are standalone and should stop the chain as some other
@@ -372,6 +373,7 @@ func (hdlr *CORSType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 					www.WriteHeader(http.StatusOK)
 				}
 			} else {
+				fmt.Fprintf(os.Stderr, "\n%s\n------------------------------------------------- %s -------------------------------------------------\n%s\n\n", MiscLib.ColorCyan, req.Method, godebug.SVarI(req), MiscLib.ColorReset)
 				hdlr.logf("ServeHTTP: Actual request")
 				hdlr.handleActualRequest(www, rw, req)
 				hdlr.Next.ServeHTTP(www, req)

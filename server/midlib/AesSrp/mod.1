@@ -1,0 +1,9 @@
+
+1. aessrp_ext.go 
+	1. Change case on 1 constant - so lower case.
+	2. Allows fixing, at compile time, of the random number for testing.  Same random as gosrp.
+		< 	if db100 {
+		< 		sss.FixRandom("706a423a9b390a79a21a53b5ebb02bcf55be72fa4f9b151f03630558cf0309f9a6e5fe876ae82bd1e1e822ed46d08d353c9aaff3fbc5aa77f1d921e2150c6751")
+	3. Dumping of key information to log for testing, also db100 .
+	4. Added a testing function -- returns a constant.
+		< 	mux.HandleFunc("/api/testGet2fa", respHandlerTest2faReturn).Method("GET", "POST")                        // Test function that returns a dummy 2fa 2nd factor

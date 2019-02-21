@@ -1,0 +1,56 @@
+1. If 
+	http://localhost/PostDel/3343432432432234
+Then load from this 'index.html'
+Then 'index.html' loads src="bob.js"
+The requested path will bee
+	http://localhost/PostDel/3343432432432234/bob.js
+So....
+
+	if 404 return &&
+		if PathDel ( /PostDel/:id ) from path &&
+		if File found /bob.js - then update path with it and re-try?
+
+	or 
+
+	if PathDel ( /PostDel/:id ) - then
+		Change path to http://localhost/bob.js?
+		And run
+
+	Or -- A pre-determined  set of "valid" paths for an etire sites static resources
+	And if http://localhost/.../known-path.js, then return that path?
+
+
+
+Exampels of what I would want to work
+	<link rel="apple-touch-icon" href="favicon.png?_ver_=3">
+	<link rel="shortcut icon" sizes="120x120" href="favicon.png?_ver_=3">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"> -->
+	<script src="js-lib/jquery-2.1.4.js"></script>
+	<link rel="stylesheet" href="style/bootstrap-3.3.7/dist/css/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="style/bootstrap-3.3.7/dist/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="style/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="style/my-aside.css?_ver_=00001">
+	<link rel="stylesheet" href="style/video-react.css" />
+	<script src="js-lib/app-config.js?_ver_=00001"></script>
+
+Maybee Use
+    <base href="http://www.myepicsite.com/assets/">
+    <base href="http://192.168.0.157:8088/">
+Maybee Use
+    <base href="/">
+
+Current
+	<link rel="apple-touch-icon" href="/favicon.png?_ver_=3">
+	<link rel="shortcut icon" sizes="120x120" href="/favicon.png?_ver_=3">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<script src="http://192.168.0.157:8088/js-lib/jquery-2.1.4.js"></script>
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/css/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/my-aside.css?_ver_=00001">
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/video-react.css" />
+	<script src="http://192.168.0.157:8088/js-lib/app-config.js?_ver_=00001"></script>
+
+
+Search for "pushState" and "HTML5"
+

@@ -1,0 +1,112 @@
+CommandLocationMap = {
+	"cp": "/bin/cp",
+	"css-pack": "/Users/corwin/bin/pack-css",
+	"lessc": "/usr/bin/lessc",
+	"make": "/usr/bin/make",
+	"markdown-cli": "/Users/corwin/bin/markdown-cli",
+	"sass": "/usr/bin/sass",
+	"scss": "/usr/bin/sass",
+	"tsc": "/usr/local/lib/node_modules/typescript/bin/tsc",
+	"uglifyjs": "/usr/local/bin/uglifyjs"
+}
+
+ExtProcessTable = [
+	{
+		"ToExt": [
+			".html"
+		],
+		"FromExt": ".md",
+		"CommandToRun": "{ \"Cmd\":\"markdown-cli\", \"Params\":[ \"-i\", \"{{.inputFile}}\", \"-o\", \"{{.outputFile}}\", \"-c\", \"../markdown-cfg.json\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".js"
+		],
+		"FromExt": ".ts",
+		"CommandToRun": "{ \"Cmd\":\"tsc\", \"Params\":[ \"{{.inputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".min.js",
+			".min.map"
+		],
+		"FromExt": ".js",
+		"CommandToRun": "{ \"Cmd\":\"uglifyjs\", \"Params\":[ \"--input\", \"{{.inputFile}}\", \"--output\", \"{{.outputFile}}\", \"--source-map\", \"{{.base_file_name}}.min.map\", \"--comments\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".min.css"
+		],
+		"FromExt": ".css",
+		"CommandToRun": "{ \"Cmd\":\"css-pack\", \"Params\":[ \"-i\", \"{{.inputFile}}\", \"-o\", \"{{.outputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".out"
+		],
+		"FromExt": ".in",
+		"CommandToRun": "{ \"Cmd\":\"cp\", \"Params\":[ \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".brotilli"
+		],
+		"FromExt": ".jpg",
+		"CommandToRun": "{ \"Cmd\":\"make\", \"Params\":[ \"{{.outputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".css"
+		],
+		"FromExt": ".sass",
+		"CommandToRun": "{ \"Cmd\":\"sass\", \"Params\":[ \"--sourcemap=file\", \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".css"
+		],
+		"FromExt": ".scss",
+		"CommandToRun": "{ \"Cmd\":\"scss\", \"Params\":[ \"--scss\", \"--sourcemap=file\", \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".min.css"
+		],
+		"FromExt": ".less",
+		"CommandToRun": "{ \"Cmd\":\"lessc\", \"Params\":[ \"--clean-css\", \"{{.inputFile}}\", \"{{.outputFile}}\" ] }",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	},
+	{
+		"ToExt": [
+			".html"
+		],
+		"FromExt": ".markdown",
+		"CommandToRun": "",
+		"ReRun": false,
+		"InternalFunc": "json: unsupported type: fileserve.InternalFuncType"
+	}
+]
+
+Expect Output
+Invalid size input >100Z< expected 0..n, (will use all available space)
+---------------------------------------
+Invalid size input >100Z< expected 0..n, (will use all available space)
+PASS
+ok  	github.com/pschlump/Go-FTL/server/midlib/InMemoryCache	0.012s

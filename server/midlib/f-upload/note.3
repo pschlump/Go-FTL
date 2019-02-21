@@ -1,0 +1,297 @@
+
+package UploadFiles
+
+/*
+
+Issues:
+	1. Failed to get file extension
+	2. Mulitple file uplaods - means multiple names - investigate
+	3. How we get "array" params back from processing
+	4. Validate "file-name" stuff
+
+TODO:
+	0. Save in d.b.
+	0. Progromatic call - so can upload image for processing via 2nd ajax call.
+		(or upload, then on completion do a second call?)
+		(or upload, server side - do a call) -- Post process --
+
+
+	1. Validate file size info
+
+	2. Other Params -- user/project/product etc. -> mdata
+	2. If Image - collect size info - save in d.b.
+	2. re-hash file name for 1st 2 char file sep
+		Add up chars in user-file name - and mod 100 or mod 1000, or and 0xFF -- get a 2 char sum of file
+
+	3. If image - do a full read/save to sanitize image.
+	3. If image - conversion - to .png for all? -- whatever we need for zxing processing.
+	3. Set save/timeout - for discard of files
+
+
+*2. Config to save under UUID name or Orig-Mod name -- via setting template
+*3. Get the drag/drop stuff to work in demo with this (dropzone) http://www.dropzonejs.com/
+
+https://matt.aimonetti.net/posts/2013/07/01/golang-multipart-file-upload-example/ -- Send file to multi-part-upload in go
+
+*/
+
+import (
+	"encoding/base64"
+	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/pschlump/Go-FTL/server/cfg"
+	"github.com/pschlump/Go-FTL/server/goftlmux"
+	"github.com/pschlump/Go-FTL/server/lib"
+	"github.com/pschlump/Go-FTL/server/mid"
+	"github.com/pschlump/Go-FTL/server/sizlib"
+	"github.com/pschlump/godebug"
+)
+
+// --------------------------------------------------------------------------------------------------------------------------
+
+func init() {
+
+	// normally identical
+	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
+		pCfg, ok := ppCfg.(*UploadType)
+		if ok {
+			pCfg.SetNext(next)
+			rv = pCfg
+		} else {
+			err = mid.FtlConfigError
+			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
+		}
+		gCfg.ConnectToRedis()
+		gCfg.ConnectToPostgreSQL()
+		pCfg.gCfg = gCfg
+		return
+	}
+
+	// normally identical
+	createEmptyType := func() interface{} {
+		rv := &UploadType{}
+		return rv
+	}
+
+	postInitValidation := func(h interface{}, callNo int) error {
+		fmt.Printf("In postInitValidation, h=%v\n", h)
+		hh, ok := h.(*UploadType)
+		if !ok {
+			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
+			return mid.ErrInternalError
+		}
+		u, err := filepath.Abs(hh.UploadDirectory)
+		if err != nil {
+			fmt.Printf("Error: converting to absolute path, %s, Line No:%d\n", err, hh.LineNo)
+			return mid.ErrInternalError
+		}
+		// xyzzy - check that directory exists
+		// xyzzy - create if not exists
+		hh.UploadDirectory = u
+		t := int64(hh.MaxMemory) * 1024
+		hh.maxMemory = t
+		return nil
+	}
+
+	cfg.RegInitItem2("UploadFile", initNext, createEmptyType, postInitValidation, `{
+		"Paths":        	{ "type":[ "string","filepath"], "isarray":true, "required":true },
+        "UploadDirectory":  { "type":[ "string" ], "default":"./upload" },
+        "MaxMemory":        { "type":[ "int" ], "default":"10240" },
+        "FileNameTmpl":     { "type":[ "string" ], "default":"%{upload_path%}/%{uuid_of_file%}.%{file_ext%}" },
+		"LineNo":        	{ "type":[ "int" ], "default":"1" }
+		}`)
+
+	// "FileNameTmpl":        { "type":[ "string" ], "default":"%{upload_path%}/%{user_id%}/%{product_id%}/%{file_name%}" },
+}
+
+// normally identical
+func (hdlr *UploadType) SetNext(next http.Handler) {
+	hdlr.Next = next
+}
+
+var _ mid.GoFTLMiddleWare = (*UploadType)(nil)
+
+// --------------------------------------------------------------------------------------------------------------------------
+
+type UploadType struct {
+	Next            http.Handler                //
+	Paths           []string                    //
+	UploadDirectory string                      // Directory to place file in
+	FileNameTmpl    string                      // Qt template for file name
+	MaxMemory       int                         // Maximum mejory in K (*1024)
+	LineNo          int                         //
+	maxMemory       int64                       // Maximum mejory converted to bytes
+	gCfg            *cfg.ServerGlobalConfigType //
+}
+
+func NewQRRedirectServer(n http.Handler, p []string, to string) *UploadType {
+	rv := &UploadType{Next: n, Paths: p, UploadDirectory: to}
+	return rv
+}
+
+func (hdlr *UploadType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
+
+	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
+		if rw, ok := www.(*goftlmux.MidBuffer); ok {
+
+			trx := mid.GetTrx(rw)
+			trx.PathMatched(1, "UploadType", hdlr.Paths, pn, req.URL.Path)
+
+			ps := &rw.Ps
+
+			// New New ---------------------------------------------------------------------
+			var mr *multipart.Reader
+
+			is_multipart := false
+
+			ct := req.Header.Get("Content-Type")
+			// RFC 2616, section 7.2.1 - empty type
+			//   SHOULD be treated as application/octet-stream
+			if ct == "" {
+				ct = "application/octet-stream"
+			}
+			ct, _, err := mime.ParseMediaType(ct)
+			switch {
+			case ct == "application/x-www-form-urlencoded":
+				// xyzzy - should look for "file" as base64 encoded data.
+
+			case ct == "multipart/form-data":
+				mr, err = req.MultipartReader()
+				if err != nil {
+					http.Error(www, err.Error(), http.StatusInternalServerError)
+					fmt.Printf("Error (14343): Failed to parse MultipartHeader\n")
+					return
+				}
+				is_multipart = true
+
+			default:
+				http.Error(www, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			mdata := make(map[string]string, 20) // The posts that match
+			// tr.TraceUriPs(req, &ps)		// xyzzy4
+
+			trx.SetFunc(1)
+			// trx.SetDataPs(&ps) // xyzzy4
+			trx.AddNote(1, "Parsed the data from the URL and Post data.")
+
+			// fmt.Printf("m=%v\n", m)
+			file_name := ps.ByNameDflt("file_name", "")
+			mdata["file_name"] = file_name
+			mdata["filename"] = ps.ByNameDflt("filename", "")
+			mdata["file_data"] = ps.ByNameDflt("file_data", "")
+			mdata["size"] = ps.ByNameDflt("size", "")
+			mdata["file_type"] = ps.ByNameDflt("file_type", "")
+			id0 := lib.GetUUIDAsString()
+			mdata["uuid_of_file"] = id0
+			mdata["id"] = id0
+			mdata["file_ext"] = filepath.Ext(file_name)
+
+			// if file is an image then... calculate and get these values
+			// mdata["height"] = ps.ByNameDflt("height", "")
+			// mdata["width"] = ps.ByNameDflt("width", "")
+
+			// xyzzy - sanitize file names [ no .. or other weird stuff ]
+			mdata["user_id"] = ps.ByNameDflt("user_id", "")       // xyzzy4 from where? - config
+			mdata["product_id"] = ps.ByNameDflt("product_id", "") // xyzzy4 from where? - config
+			mdata["upload_path"] = hdlr.UploadDirectory
+			pwd, _ := os.Getwd() // xyzzy4 make global config data in hdlr
+			mdata["pwd"] = pwd
+
+			if debug_upload {
+				fmt.Printf("Data=[%s]\n", sizlib.SVar(mdata))
+				fmt.Printf("Params=[%s]\n", ps.DumpParamTable())
+			}
+
+			if is_multipart {
+
+				length := req.ContentLength
+				ffile_name := sizlib.Qt(hdlr.FileNameTmpl, mdata)
+				for {
+
+					part, err := mr.NextPart()
+					if err == io.EOF {
+						break
+					}
+					var read int64
+					var p float32
+
+					// ffile_name := sizlib.Qt(hdlr.FileNameTmpl, mdata)
+					if debug_upload {
+						fmt.Printf("Multi-Part: data=%s\n", lib.SVarI(part))
+						fmt.Printf("Multi-Part: Full File Name [%s]\n", ffile_name)
+					}
+					trx.AddNote(1, fmt.Sprintf("Full File Name [%s]\n", ffile_name))
+					dst, err := os.OpenFile(ffile_name, os.O_WRONLY|os.O_CREATE, 0644)
+					if err != nil {
+						http.Error(www, err.Error(), http.StatusInternalServerError)
+						// res.WriteHeader(http.StatusInternalServerError)
+						fmt.Printf("Error (14356): Failed to open the file, dstfiel\n")
+						trx.AddNote(1, fmt.Sprintf("Error (14356): Failed to open the file, dstfiel\n"))
+						return
+					}
+					trx.AddNote(1, "Successfully opened the file")
+					for {
+						buffer := make([]byte, 100000)
+						cBytes, err := part.Read(buffer)
+						if err == io.EOF {
+							break
+						}
+						read = read + int64(cBytes)
+						//fmt.Printf("read: %v \n",read )
+						p = float32(read) / float32(length) * 100
+						fmt.Printf("progress: %v \n", p)
+						dst.Write(buffer[0:cBytes])
+					}
+				}
+				fmt.Printf("Your file: %s has been successfully received and saved as [%s]\n", mdata["file_name"], ffile_name)
+				fmt.Fprintf(www, "<p>Your file:%s has been successfully received.</p>\n", mdata["file_name"])
+
+			} else {
+
+				ffile_name := sizlib.Qt(hdlr.FileNameTmpl, mdata)
+				if debug_upload {
+					fmt.Printf("Base 64 encoded, Full File Name [%s]\n", ffile_name)
+				}
+				trx.AddNote(1, fmt.Sprintf("Base 64 encoded, Full File Name [%s]\n", ffile_name))
+				dst, err := os.OpenFile(ffile_name, os.O_WRONLY|os.O_CREATE, 0644)
+				if err != nil {
+					http.Error(www, err.Error(), http.StatusInternalServerError)
+					// res.WriteHeader(http.StatusInternalServerError)
+					fmt.Printf("Error (14357): Failed to open the file, dstfiel\n")
+					trx.AddNote(1, fmt.Sprintf("Error (14357): Failed to open the file, dstfiel\n"))
+					return
+				}
+				trx.AddNote(1, "Successfully opened the file")
+				data, err := base64.StdEncoding.DecodeString(ps.ByName("file_data"))
+				if err != nil {
+					fmt.Printf("Error (14358): Failed to decode the file\n")
+					trx.AddNote(1, fmt.Sprintf("Error (14357): Failed to decode\n"))
+				}
+				dst.Write(data)
+				trx.AddNote(1, "Data Written")
+
+			}
+
+			// xyzzy - save into d.b. the info on file!
+
+			return
+		}
+		http.Error(www, "Not Authorized", http.StatusUnauthorized)
+		return
+	}
+
+	hdlr.Next.ServeHTTP(www, req)
+}
+
+var debug_upload = true
+
+/* vim: set noai ts=4 sw=4: */

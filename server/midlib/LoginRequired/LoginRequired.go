@@ -208,15 +208,15 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 						// isValid := hdlr.CheckXsrfTokenVsSession(xt, session)
 						isValid := (err == nil && xt == good)
 						if isValid {
-							fmt.Fprintf(os.Stderr, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\n%s\n",
-								MiscLib.ColorGreen, xt, bc, err, good, isValid, MiscLib.ColorReset)
-							fmt.Fprintf(os.Stdout, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\n%s\n",
-								MiscLib.ColorGreen, xt, bc, err, good, isValid, MiscLib.ColorReset)
+							fmt.Fprintf(os.Stderr, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\nAT:%s %s\n",
+								MiscLib.ColorGreen, xt, bc, err, good, isValid, godebug.LF(), MiscLib.ColorReset)
+							fmt.Fprintf(os.Stdout, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\nAT:%s %s\n",
+								MiscLib.ColorGreen, xt, bc, err, good, isValid, godebug.LF(), MiscLib.ColorReset)
 						} else {
-							fmt.Fprintf(os.Stderr, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\n%s\n",
-								MiscLib.ColorRed, xt, bc, err, good, isValid, MiscLib.ColorReset)
-							fmt.Fprintf(os.Stdout, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\n%s\n",
-								MiscLib.ColorRed, xt, bc, err, good, isValid, MiscLib.ColorReset)
+							fmt.Fprintf(os.Stderr, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\nAT:%s %s\n",
+								MiscLib.ColorRed, xt, bc, err, good, isValid, godebug.LF(), MiscLib.ColorReset)
+							fmt.Fprintf(os.Stdout, "\n%sChecking X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, session.err=%s good=%s isValid=%v\nAT:%s %s\n",
+								MiscLib.ColorRed, xt, bc, err, good, isValid, godebug.LF(), MiscLib.ColorReset)
 						}
 						//if !isValid {
 						//	fmt.Fprintf(os.Stderr, "\n%s!!! Not Valid !!! X-Xsrf-Token = -->>%s<<--, X-Go-FTL-Trx-Id=%s, isValid=%v\n\tAT:%s\n%s\n",
@@ -299,7 +299,7 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 					if hdlr.gCfg.DbOn("*", "LoginRequired", "db-bearer") {
 						fmt.Fprintf(os.Stderr, "AT: - About to check/validate bearer token %s\n", godebug.LF())
 					}
-					jwt_token := hdlr.GetBearer(req)
+					jwt_token := hdlr.GetBearer(req, ps)
 					if hdlr.gCfg.DbOn("*", "LoginRequired", "db-bearer") {
 						fmt.Fprintf(os.Stderr, "%sAuthorization: bearer -->>%s<<--, %s%s\n", MiscLib.ColorYellow, jwt_token, godebug.LF(), MiscLib.ColorReset)
 					}
@@ -324,28 +324,33 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 						   	SADD
 						   	SREM
 						*/
-						hdlr.MergeSessionData(rw, true)
-						if !first {
-							if !chkXsrf(xt) {
-								return
-							}
-						} else {
-							xref_in_set, err := hdlr.RedisSetContains("ses__xsrf:"+sc, xt) // trx__xsrf: shoud be set in config
-							fmt.Printf("%sFirst==True, key=trx__xsrf:%s xt=[%s] xref_in_set=[%v] err=%s, AT:%s%s\n", MiscLib.ColorCyan, bc, xt, xref_in_set, err, godebug.LF(), MiscLib.ColorReset)
-							if err == nil { // if no error then
-								if xref_in_set {
-									fmt.Printf("%s\tShould return - with error, skipping for now%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
-									fmt.Fprintf(os.Stderr, "%s\tShould return - with error, skipping for now%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
-									if true { // xyzzy-2016-06-13
-										www.WriteHeader(http.StatusForbidden)
-										return
+
+						if true { // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PJS Feb 5
+
+							hdlr.MergeSessionData(rw, true)
+							if !first {
+								if !chkXsrf(xt) {
+									return
+								}
+							} else {
+								xref_in_set, err := hdlr.RedisSetContains("ses__xsrf:"+sc, xt) // trx__xsrf: shoud be set in config
+								fmt.Printf("%sFirst==True, key=trx__xsrf:%s xt=[%s] xref_in_set=[%v] err=%s, AT:%s%s\n", MiscLib.ColorCyan, bc, xt, xref_in_set, err, godebug.LF(), MiscLib.ColorReset)
+								if err == nil { // if no error then
+									if xref_in_set {
+										fmt.Printf("%s\tShould return - with error, skipping for now%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+										fmt.Fprintf(os.Stderr, "%s\tShould return - with error, skipping for now%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+										if true { // xyzzy-2016-06-13
+											www.WriteHeader(http.StatusForbidden)
+											return
+										}
+									} else {
+										fmt.Printf("%s\txsrf_token: \"It's an older code sir, but it checks out. I was about to clear them.\" - %s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
+										fmt.Fprintf(os.Stderr, "%s\txsrf_token: \"It's an older code sir, but it checks out. I was about to clear them.\" - %s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
 									}
-								} else {
-									fmt.Printf("%s\txsrf_token: \"It's an older code sir, but it checks out. I was about to clear them.\" - %s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
-									fmt.Fprintf(os.Stderr, "%s\txsrf_token: \"It's an older code sir, but it checks out. I was about to clear them.\" - %s\n", MiscLib.ColorGreen, MiscLib.ColorReset)
 								}
 							}
-						}
+						} // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PJS Feb 5
+
 						hdlr.Next.ServeHTTP(www, req)
 						if first {
 							hdlr.InjextXsrf(rw, www, xsrf_token)                              // disasemble response // inject "$xsrf_token$"
@@ -493,11 +498,20 @@ func (hdlr *LoginRequiredType) GetDataPost(ParamName string, ps *goftlmux.Params
 }
 
 // Look for an Authentication header with a 'bearer' and pull that out
-func (hdlr *LoginRequiredType) GetBearer(req *http.Request) (rv string) {
+func (hdlr *LoginRequiredType) GetBearer(req *http.Request, ps *goftlmux.Params) (rv string) {
 	aa := req.Header.Get("Authorization")
 	aX := strings.Split(aa, " ")
 	if len(aX) >= 2 && aX[0] == "bearer" {
 		rv = aX[1]
+	}
+	// xyzzy - Try cookie - xyzzy
+	if rv == "" {
+		rv = lib.GetCookie("X-Jwt-Token", req)
+	}
+	// xyzzy - Try URL Param
+	if rv == "" {
+		rv = hdlr.GetData("XJwtToken", ps)
+		fmt.Fprintf(os.Stderr, "rv - via GetData/XJwtToken = ->%s<- AT: %s\n", rv, godebug.LF())
 	}
 	return
 }
@@ -982,7 +996,8 @@ func loadData(p string) ([]byte, error) {
 // of how to verify and view a token.
 func (hdlr *LoginRequiredType) VerifyToken(tokData []byte, keyFile string) (iat string, err error) {
 
-	fmt.Fprintf(os.Stderr, "%sNew tokData ->%s<- keyFile ->%s<- AT: %s%s\n", MiscLib.ColorYellow, tokData, keyFile, MiscLib.ColorReset)
+	pwd, _ := os.Getwd()
+	fmt.Fprintf(os.Stderr, "%sNew tokData ->%s<- keyFile ->%s<- pwd ->%s<- AT: %s%s\n", MiscLib.ColorYellow, tokData, keyFile, godebug.LF(), pwd, MiscLib.ColorReset)
 
 	// trim possible whitespace from token
 	tokData = regexp.MustCompile(`\s*$`).ReplaceAll(tokData, []byte{})
@@ -1235,9 +1250,9 @@ func (hdlr *LoginRequiredType) InjextXsrf(rw *goftlmux.MidBuffer, www http.Respo
 			}
 			//if hdlr.OnErrorDiscard == "yes" {
 			if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
-				fmt.Fprintf(os.Stderr, "%sData Discarded - due to syntax error%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "%sData Discarded - due to syntax error ->%s<- %s%s\n", MiscLib.ColorRed, body, godebug.LF(), MiscLib.ColorReset)
 			}
-			fmt.Fprintf(os.Stdout, "%sData Discarded - due to syntax error%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+			fmt.Fprintf(os.Stdout, "%sData Discarded - due to syntax error ->%s<- %s%s\n", MiscLib.ColorRed, body, godebug.LF(), MiscLib.ColorReset)
 			www.WriteHeader(http.StatusInternalServerError)
 			rw.ReplaceBody([]byte("{}"))
 			rw.SaveDataInCache = false

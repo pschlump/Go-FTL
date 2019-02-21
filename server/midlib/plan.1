@@ -1,0 +1,92 @@
+Doc / Test - Plan
+
+	1. write documents for:
+
+*		*. file_serer (fs.go) 			some work --- 		-- Pull in test from Go Source
+
+*		*. AesSrp						--- a lot --- Angular2 demo --- Still need iOS/Android Clients -- And... Angular2 demo
+
+		*. BasicAuth
+		*. BasicAuthPgSQL
+		*. BasicAuthRedis
+		*. Cookie
+		*. DirectoryBrowse
+		*. DumpRequest
+		*. DumpResponse
+		*. Echo
+		*. Else							
+		*. GeoIpFilter 					- documentation - detail how to / where to download the database
+		*. GoTemplate					
+		*. Gzip
+		*. Header
+		*. InMemoryCache
+		*. JSONToTable			
+		*. JSONp
+		*. LimitExtentionTo
+		*. LimitPathReTo
+		*. LimitPathTo
+		*. Logging
+		*. LoginRequired
+		*. Minify					
+		*. RedirToHttps
+		*. Redirect
+		*. RedisList				
+		*. RedisListRaw			
+		*. RejectDirectory
+		*. RejectExtension
+		*. RejectIpAddress
+		*. RejectPath
+		*. RejectRePath
+		*. Rewrite
+		*. RewriteProxy					
+		*. Status
+
+2 to go
+
+		---------------------------------------- eob --------------------------------
+
++===================================================================================================================================
+| Really Nice To Havs
++-----------------------------------------------------------------------------------------------------------------------------------
+| 1. TraceStack Calls -> Other item
+| 2. Cache config/monitoring
+| 3. Synthetic Responce Middlewarey
+| 4. TabServer2 Middleware with "trace" output.
+| 5. A set of sites that demo each and every one of the Middleware
+|    www.go-ftl.com/demo/basicauth_demo/...
+|    www.go-ftl.com/demo/echo_demo/...
+| 6. Security Headers: https://www.keycdn.com/blog/http-security-headers/
++===================================================================================================================================
+
+		y. SortData
+		y. FilterData
+
+		y. DirectoryRaw
+		y. TabServer2
+
+		z. WebSockets / Socket.IO / AesSrp-Socket.IO
+
+	1. Verify that InMemoryCache will look at headers to determine expire date/time of files 
+	2. Verify that InMemoryCache will look at list of base files and date/time on them - if changed - then .Next!
+	3. Verify that Minify sets/appends-to the base-file list for InMemoryCache
+	4. Verify that file_server sets/appends-to the base-file list for InMemoryCache - with user/theme + build commands
+
+	5. Verify .md -> .html and .tmpl -> .html templates
+	6. Host documentation and site with this server.
+
+	7. Do a "wordpress" cached demo site.
+
+Notes
+	Rewrite
+			1. gogomux needs "locked" params that can not be cchanged after a rewrite/reparse of params
+			2. effects of 2 calls to parse params - with that duplicate or orverwrite?
+			/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/rewrite
+			-- need a day of cleanup and work! --
+
+TODO
+		x. AllowPath - non re version of limit_re_path
+		+. DirectoryReject/Allow - change name add new
+
+2. Errors report file id
+3. Errors have unique number
+

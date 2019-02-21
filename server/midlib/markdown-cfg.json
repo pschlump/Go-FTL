@@ -1,0 +1,4 @@
+{
+	"Pre": "{% extend \"go_ftl_docs.html\" %}\n{% block doc_body %}\n",
+	"Post": "\n{% endblock %}\n"
+}

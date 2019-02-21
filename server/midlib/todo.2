@@ -1,0 +1,143 @@
+TODO - convert to a structure insteaad of JSON for spec
+
+     1	AesSrp
+     2	BasicAuth
+     3	BasicAuthPgSQL
+     4	BasicAuthRedis
+     5	CSRFToken
+     6	Cookie
+     7	DirectoryBrowse
+     8	DumpRequest
+     9	DumpResponse
+    10	Echo
+    11	Else
+    12	ErrorTemplate
+    13	GenError
+    14	GeoIpFilter
+    15	GoTemplate
+    16	Gzip
+    17	HTML5Path
+    18	Header
+    19	HostToCustomerId
+    20	InMemoryCache
+    21	JSONToTable
+    22	JSONp
+    23	Latency
+    24	LimitExtensionTo
+    25	LimitPathReTo
+    26	LimitPathTo
+    27	Logging
+    28	LoginRequired
+    29	Minify
+    30	Prefix
+    31	RedirToHttps
+    32	Redirect
+    33	RedisList
+    34	RedisListRaw
+    35	RejectDirectory
+    36	RejectExtension
+    37	RejectHotlink
+    38	RejectIpAddress
+    39	RejectPath
+    40	RejectRePath
+    41	Rewrite
+    42	RewriteProxy
+    43	SocketIO
+    44	Status
+    45	TabServer2
+    46	XSRF
+
+http://stackoverflow.com/questions/10858787/what-are-the-uses-for-tags-in-go
+	- remove JSON for defauilt init/type - use "tags"?
+		`gfType:"int" gfDefault:123 gfSource:"env:KEY" gfSourceKey:"AAA"`
+		`gfType:"int" gfDefault:123 gfSource:"etcd:KEY" gfRequired:"true"`
+		`gfType:"int" gfDefault:123 gfSource:"redis:KEY"`
+
+		AdminPassword	`gfType:"string" gfDefault:"monkey" gfSource:"env:aessrp_admin_password"`
+
+
+
+
+
+
+See ~/Project/reflect1:wq
+
+
+
+
+
+
+
+
+
+./AesSrp/aessrp_ext.go
+
+	// SRP and AES Config --------------------------------------------------------------------------------------------------
+	cfg.RegInitItem2("SrpAesAuth", initNext, createEmptyType, postInitValidation, `{
+		"Paths":                    { "type":[ "string","filepath" ], "isarray":true, "required":true },
+		"EncReqPaths":              { "type":[ "string","filepath" ], "isarray":true },
+		"MatchPaths":               { "type":[ "string","filepath" ], "isarray":true },
+		"Bits":                     { "type":[ "int" ], "default":"2048" },
+		"NGData":					{ "type":[ "struct" ] },
+		"SendStatusOnError":        { "type":[ "bool" ], "default":"false" },
+		"AdminPassword":            { "type":[ "string" ], "default":"green eggs and ham" },
+		"FailedLoginThreshold":     { "type":[ "int" ], "default":"10" },
+		"NewUserPrivs":             { "type":[ "string" ], "default":"user" },
+		"SendEmail":                { "type":[ "bool" ], "default":"true" },
+		"EmailApp":                 { "type":[ "string" ], "default":"user-login" },
+		"KermitRule":               { "type":[ "bool" ], "default":"true" },
+		"EmailConfigFileName":      { "type":[ "string" ], "default": "./email-config.json" },
+		"SupportEmailTo":           { "type":[ "string" ], "default":"pschlump@gmail.com" },
+		"TwoFactorRequired":        { "type":[ "string" ], "default":"y" },
+		"BackupKeyIter":            { "type":[ "int" ], "default":"1000" },
+		"KeyIter":                  { "type":[ "int" ], "default":"1000" },
+		"BackupKeySizeBytes":       { "type":[ "int" ], "default":"16" },
+		"CookieExpireInXDays":      { "type":[ "int" ], "default":"1" },
+		"CookieExpireInXDays2":     { "type":[ "int" ], "default":"2" },
+		"SessionLife":              { "type":[ "int" ], "default":"86400" },
+		"KeySessionLife":           { "type":[ "int" ], "default":"300" },
+		"CookieSessionLife":        { "type":[ "int" ], "default":"172800" },
+		"TwoFactorLife":            { "type":[ "int" ], "default":"360" },
+		"PreEau":                   { "type":[ "string" ], "default":"eau:" },
+		"PreKey":                   { "type":[ "string" ], "default":"ses:" },
+		"PreAuth":                  { "type":[ "string" ], "default":"aut:" },
+		"Pre2Factor":               { "type":[ "string" ], "default":"p2f:" },
+		"PwResetKey":               { "type":[ "string" ], "default":"pwr:" },
+		"PwExpireIn":               { "type":[ "int" ], "default":"86400" },
+		"TestModeInject":           { "type":[ "string" ], "isarray":true },
+		"PasswordSV":               { "type":[ "string" ] },
+		"SandBoxExpreTime":         { "type":[ "int" ], "default":"7200" },
+		"SecurityAccessLevelsName": { "type":[ "hash" ] },
+		"SecurityPrivilages":       { "type":[ "hash" ] },
+		"StayLoggedInExpire":       { "type":[ "int" ], "default":"86400" },
+		"UserNameForRegister":      { "type":[ "bool" ], "default":"false" },
+		"SecurityConfig":           { "type":[ "struct" ] },
+		"PwRecoverTemplate1":       { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/unable-to-pwrecov1.html" },
+		"PwRecoverTemplate2":       { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/unable-to-pwrecov2.html" },
+		"PwRecoverTemplate3":       { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/#/pwrecov2" },
+		"RegTemplate1":             { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/unable-to-register1.html" },
+		"RegTemplate2":             { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/unable-to-register2.html" },
+		"RegTemplate3":             { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/unable-to-register3.html" },
+		"RegTemplate4":             { "type":[ "string" ], "default":"{{.HTTPS}}{{.HOST}}/#/login" },
+		"AllowReregisterDeviceID":  { "type":[ "bool" ], "default":"false" },
+		"LimitDeviceIDs":           { "type":[ "int" ], "default":"20" },
+		"InDemoMode":               { "type":[ "bool" ], "default":"false" },
+		"InTestMode":               { "type":[ "bool" ], "default":"false" },
+		"DbUserColAPI":             { "type":[ "string" ], "default":"/api/table/t_user" },
+		"DbUserCols":               { "type":[ "string" ], "isarray":true },
+		"DbUserColsDb":             { "type":[ "string" ], "isarray":true },
+		"AnonUserPaths":            { "type":[ "string","filepath" ], "isarray":true },
+	    "NonEmailAccts":            { "type":[ "string" ], "isarray":true },
+		"LineNo":                   { "type":[ "int" ], "default":"1" }
+		}`)
+
+type MidConfigItem struct {
+	Name		string
+	Type		[]string	// string, filepath, !env!, !redis!, !etcd!
+	Default		string
+	NDefault	int
+	BDefault	bool
+	IsArray		bool
+	Required	bool
+}
+

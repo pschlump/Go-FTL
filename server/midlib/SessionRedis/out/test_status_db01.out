@@ -1,0 +1,6 @@
+select status_db ( '1.1.1.1' );
+              status_db              
+-------------------------------------
+ {"status":"success","ip":"1.1.1.1"}
+(1 row)
+

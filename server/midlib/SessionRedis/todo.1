@@ -1,0 +1,1816 @@
+
+*1. Setup a Ubuntu Xienel 16.04 system with systemd - test install/setup with systemd
++1. Update for systemd -> .206
+	1. Put go-ftl into a loop in the script
++1. Backup of .159 D: -> other media
+
+
+
+
+
+
+
+
+
+
++0. Setup email on 2c-why.com
+	0. Fix apt-get on .206
+	1.	-- See results at no-reply and noreply@2c-why.com
+	  	noreply.registration@2c-why.com
+		pschlump@2c-why.com
+		support@2c-why.com
+		noreply@2c-why.com
+		no-reply@2c-why.com
+
++1. Pick "python" class - learn "python"
+
++2. OAuth2 get server running.
+	1. Basic un/pw auth
+	2. With 2fa - simulated using a back end key/pin extract
+	3. Use with improved signed/tokens
+
+3. Products/Classes							Transportable		Business	Spanish		Quick  to-Buz	 Dev-Time
+	1. go-classes(2)							yes					y			y		  y				   	1m
+	2. Redux/React								yes					y			y		  y				   	2m
+	3. Full Stack								yes					y			y		  n				   	2m
+	4. Python Classes							yes					y			y		  n		 y			2m	+= 7m
+	5. Data Structures in GO					yes					y			y		  n					4m
+	6. Compiler construction in go				yes					y			y		  n					4m
+	7. Vue.js / Full Stack						yes					y			y		  n					4m
+3. Products/Tools
+	1. React Monitor							yes					y							 y			4m
+	2. Pg Monitor								yes					y							 y			4m
+	3. Pg Tune									yes					y							 y			8m	+= 12m (2018)
+	4. Pg Data									yes					y							 y			6m
+	5. Pg Install/Backup						yes					y							 y			2m
+	6. Email templates							yes					y							 y			4m	+= 12m (2019)
+	7. Hyper-Tunnel								yes					y							 y			4m
+3. Job/Remote																			   y*
+
+
+
+?What is standing in your way from doing this?
+	Classes:
+		1. Sound studio
+		2. Time to record/develop content
+		3. Just some work
+		4. Email system	
+		5. Registration / Support of Students
+		6. Taking of Credit-Card
+	Products
+		1. Time to develop product
+		4. Email system	
+		5. Registration / Support of Students
+		6. Taking of Credit-Card
+		4. Web-Cron / Web-Schedule / Cron-Monitor
+
+	1. Registration/Email etc.
+	2. Charging for classes
+	3. Class Presentation Tool - Auto Grade - Chat etc.
+	4. Marketing of this to people
+	5. Marketing of this to Universities / etc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++3. Clean up all Go-FTL logging and output.
+	- Show "match" state for what "middleware"/"plugins" matched and ran.
+	- For each match - add to the rw/wr - on a list. - then in "mid" - at end - print out the set of matches or reject.s
+
+
+
+
+
+
+
+
+
+	
+Defect:
+	1. in t_auth_token, expire should not exceed the date/time of the users's t_user expire field.
+	2. updating t_user with a new expire - should change all of the t_auth_token's for this and the Redis to expire sooner if necessary.
+	4. Read in key/decode just once (Private/Public) - check to see if file has ben changed.
+	5. Integration of "t_user"."expire" and Redis TTL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+((( Later )))
+-----------------------------------------------------------------------------------------------------
+	1. Option editor.
+		-- l_xsrf_mode = 'progressive-hashed'  - implement, test
+	2. Redis HSET, HGET - for Origin Test -- In cors and other stuff that uses "prefix:"+key - exists - just set single HASH under "Prefix".
+	3. Determine/Fix effect of server restart - verify that any TOKEN info is correctly stored in Redis, not locally.
+		xsrf_token
+		auth_token 
+		etc...
+
+	1. Site Registration page for a new site (CRUD!)
+		*0. Site Registration ".sh" script (./bin/new_cust.sh)
+		1. sequence for customer id's?
+		http://name.xyzzy.com -> redis for CORS
+				-> t_cusomer
+				-> t_host_to_customer
+
+	( 4hr project - partially setup )
+		3. Change login and other to honor account expire date 
+			2. Make account expire / token expire a config parameter
+
+	1. if s_ip_ban(p_ip_addr) then -- Should take 'customer_id' for per-customer IP ban.
+
+	https://foundersgrid.com/webs-best-bootstrappers/ -- Bootstrap Business Drip Email
+	http://www.gomailto.com/ -- Email Templates
+	https://code.visualstudio.com/updates/v1_12   Visual Studio Code
+
+	1. Automatic validation of "template" for valid parameters!  Verify all data supplied or 
+		marked as intentionally not supplied.
+
+	3. Revise/update the aws-ses templated email tool/system.
+
+	4. get IAM auth tokens instead of using Root tokens (AWS).
+
+	-----------------------------------------------------------------------------------------------------
+	Automate tests with headless browser
+		https://developers.google.com/web/updates/2017/04/headless-chrome
+	-----------------------------------------------------------------------------------------------------
+
+	ps.GetByNameSrc ( "name", "dflt", G, P, C, S ) -- Where to get from Get/Post/Cookie/Session
+		-- Must put into sql-cfg.json file - on a per-attr basis?
+		-- what about "Session" and logged in Session data?
+
+	( 1hr project )
+		1. Pull Xsrf-token out into it's own "plugin"
+			1. Pull it
+			??2. Config - on every - returns an "xsrf-token" for next request
+
+	( 30 min project - test )
+		1. TODO: Automate password recovery test -- at the level of $ftl/Makefile
+			1.  ,"/api/session/password_reset": { "g": "s_password_reset", "p": [ "username", "auth_token", "email","$ip$", "$url$" ], "nokey":true
+				-- then check in log/email for token
+			,"/api/session/password_reset_pt2": { "g": "s_password_reset_pt2", "p": [ "recovery_token", "$ip$", "$url$" ], "nokey":true
+				-- make call - verify that we get the redirect page.
+			,"/api/session/password_reset_pt3": { "g": "s_password_reset_pt3", "p": [ "password", "again", "recovery_token", "$ip$", "$url$" ], "nokey":true
+				-- make call - use token, verify sucess
+
+
+
+
+		$.ajaxSetup({
+			dataFilter: function(data, type) {
+				var prefixes = ['//', ')]}\'', 'while(1);', 'while(true);', 'for(;;);'], i, l, pos;
+
+				if (type != 'json' && type != 'jsonp') {
+					return data;
+				}
+
+				for (i = 0, l = prefixes.length; i < l; i++) {
+					// xyzzy - make more effecient!
+					pos = data.indexOf(prefixes[i]);
+					if (pos === 0) {
+						return data.substring(prefixes[i].length);
+					}
+				}
+
+				return data;
+			}
+		});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+(((Fixes)))
+-----------------------------------------------------------------------------------------------------
+0. Must subset /ApiTable and /ApiList -> match of Paths[] 
+	- or error -
+??1. SetSession - true/false flag instead of array
+??2. Chagne format for $session$ stuff returned from PostgreSQL - JSON Format
+	../TabServer2/crud.go:4307		 } else if len(h.SetSession) > 0 {
+?3. Automatic Dump of actual "paths" in hash table on 1st miss -> LOG
+	0. Eliminate any paths that are not possible - /ApiTable, /ApiList and /Paths limit what can be used from a sql-cfg*.json file.
+
+-----------------------------------------------------------------------------------------------------
+What I Want
+	1. Session has 'email_address' from login
+		Post Process - ps.ByNameDflt('email_address',"") -=> returns address
+	2. upd_email_address - with input 'email_address' ovrrides what 'ps...' sees - and
+		set-session code updates session after s_upd_email_address call.
+-----------------------------------------------------------------------------------------------------
+
+
+			, { "LoginRequired": {
+				 "Paths": [ "/api/admin/", "/admin/" ]
+				,"StrongLoginReq":   	"no"
+				,"AuthMethod":	    	["Data", "Authentication:Berrer"]
+				,"Final":		    	"no"
+				,"KeyFile": 			"./test-key/sample_key.pub"
+				,"ValidationSource":	"redis"
+			} }
+			, { "Status": { "LineNo":__LINE__
+				, "Paths": "/api/admin/status"
+			} }
+			, { "TabServer2": { "LineNo":__LINE__
+				, "Paths":["/api/admin/"]
+				, "AppName": "auth.2c-why.com"
+				, "AppRoot": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":"Version 0.0.6 Tue Apr 25 18:08:49 MDT 2017 File:__FILE__ Line:__LINE__"
+			} }
+			, { "FileServer": { "LineNo":__LINE__
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9001/www"
+			} }
+
+
+
+
+
+
+HTML5Path --
+	1. Mod so it can run "forward" using a JSON config of paths - each is re-mapped to /
+		/index.html -> /
+		/api/posts -> /
+		/api/posts/new -> /
+		/api/posts/upd/{:id} -> /
+	See:
+		"IndexReplace":  { "type":["string"], "default":"" },
+		"IndexPaths":    { "type":["string"], "isarray":true }, -- Needs to be a set of RE
+		Needs to pre-compile it.
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+	expire '94 days' moved into conifig item
+	call to renew a auth_token - to extend for another 94 days.
+	admin - force password change -
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+((( jwt )))
+-----------------------------------------------------------------------------------------------------
+1. Fix LoginRequired:
+	case "jwt":
+		// xyzzy - TODO --
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+((( Modification Improvement )))
+-----------------------------------------------------------------------------------------------------
+0. How support multiple browsers with login to same account - how multiple valid auth_token at
+	same time?   Auth_token timeout?  God for X amount of time.
+		/.../s_stay_logged_in -- refresh token every 30 min? for 1hr token
+		Put auth_token into own table user_id/auth_token/expire_time
+		Cleanup expire_time on every login/register/logout?
+0. Switch read of sql-cfg*.json -> JsonX
+0. Create an API for use on "localhost" for testing of this - Testing APIs verify localhost!
+	-- host_to_customer_id - check url/host - for "is_localhost" -- if set then allow Testing APIs --
+	/api/localhost_only/x_get_email_token?username=XXX
+	/api/localhost_only/x_get_auth_token?username=XXX
+0. Post-process $remove$: [ "customer_id" ]
+0. Config of ignored-"extra" params
+0. FileServer
+	If404Next	True/False Yes/No - if true - then 404 means just go to next in stack.
+
+
+
+7. run all of this as a CORS set of request with post - and ajax - to test of "cookies" are used.
+	1. Configure with "CORS" component.
+
+6. password recovery procss
+	A: Standard
+		1. Verify not logged in
+		2. Ask for an reocvery email to be sent
+		3. Follow link in email - to Page to Change Password
+		4. Change Password
+		5. verify that new auth_token has been sent
+		6. verify old auth token is invalid
+		7. verify new auth token is valid
+		8. Logout
+		8. Login with new un/pw
+	B: Cut/Paste
+		1. Verify not logged in
+		2. Ask for an reocvery email to be sent
+		3. Observe Form for Cut/Paste of token and Change of Password -- get Token Paste It
+		4. Change Password
+		5. verify that new auth_token has been sent
+		6. verify old auth token is invalid
+		7. verify new auth token is valid
+		8. Logout
+		8. Login with new un/pw
+
+
+
+0. AcceptablePassword -- Check length etc.
+0. GeneratePassword - JS call and Server Call
+0. Option on "registration confirm" to "redirect with login" if valid
+	-- Include in response the redirect if JS/Ajax and no option
+0. Option on "password recover pt2" to "redirect with login" if valid
+	-- Include in response the redirect if JS/Ajax and no option
+
+
+0. Tests that validate HTML5Path stuff - and mods to HTML5Path
+
+0. Start over on the FileServer with "fs.go" again - Version 1.8
+	1. Chagne the underlying type - for starters
+	2. Keep the "file-system" protection stuff
+	3. Add in pluggable "file-system"
+		1. file-system
+		2. Redis cache
+		3. Templated - Inheretance system (Primary from ./www, but if template then search ./template/[Name]/www first
+		4. Return "length" of item found
+
+
+
+tests:
+	1. try to register w/ an already existing username / email
+	2. try to register w/ no password
+	3. try to register w/ a readlly bad password
+	4. try to register w/ a password that is too short
+	5. try to register w/ no email
+	5. try to register w/ no long username
+	5. try to register w/ no long email
+	5. try to register w/ no long etc...
+	6. try to authenticate registration w/ a bad key
+	6. try to authenticate registration w/ a NULL
+	6. try to authenticate registration w/ a LONG
+	7. try "GET" on password authentication.
+		-- should this work with a "Redirect" to the correct location?
+		-- What about POST on the same?
+		-- Should this log you in to the "APP"
+	8. Try to logout w/o being logged in.
+	9. Try to login w/o a username
+	9. Try to login w/o a password
+	9. Try to recover password on a non-existent account
+		-- Should NOT tell user that the account is non-existent.
+		-- Should have a 1 sleep in it to slow down request for non-existent accounts.
+	9. Try to recover password on a account
+
+
+
+http://stackoverflow.com/questions/1960240/jquery-ajax-submit-form -- implement auto-submit jQyery plugin --
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+Mochas:
+	https://semaphoreci.com/community/tutorials/getting-started-with-node-js-and-mocha
+Jest:
+	https://facebook.github.io/jest/
+
+Tests: [
+	{
+		Name: "Test /api/session/validate_auth_token"
+		Request: "http://localhost:9001/api/session/validate_auth_token"
+		Method: "POST"
+		Data: {
+			auth_token: ???? -- select from d.b. ???
+		}
+		ExpectStatusCode: 200
+		ExpectResponse: {
+			Format: JSON
+			MatchRe: [
+			]
+			MatchContains: [
+				{ "status":"success" }
+			]
+		}
+		onResponse: "call-function-named-x"
+	}
+]
+
+
+What I need for web-server testing is
+	[ Fx( in: Data to make request ) -> Out Result ]
+	{
+		"ValidationName": FxValid ( Validate result ),
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. In Pg/Sql - implement username.is.email flag
+
+
+
+
+
+4. Test at level of "wget" and "grep" log files for key info					2hrs
+	5. Validate with "make"
+6. Verify that "session" data per-user is getting set/used correctly			1hr
+7. Verify that "$session$" is passed as an item throgh the stack				1hr
+8. Verify that LoginRequired works corrctly with this							1hr
++9. Verify that cookies that are set get passed on Xml AJAX requests?
+	(Ans: looks likely)
+	+=																			9 hr
+
+1. Email project
+	1. Send email - verify can use accto to access pschlump@gmail.com			1 hr
+	2. Pull out email into an interface											1 hr
+	3. Template it																1 hr
+	4. test it.																	1 hr
+	5. Back port into AesSrp - use same email template names.					2 hr
+	6. Test it																	2 hr
+
+
+
+x. func ValidateQueryParams(ps *goftlmux.Params, h SQLOne, req *http.Request) (err error) {
+	../TabServer2/lib.go:1376
+	-- really need to know if "default" was set at all! - JsonX - to fix
+
+x. Dynamic reload of sql-cfg*.json files
+
+	,"/api/session/stayLoggedIn": { "g": "s_stayLoggedIn", "p": [ ], "nokey":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET"]
+		, "TableList":["t_ip_ban"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$host$": 		{ "required":true, "type":"string", "max_len":40, "min_len":8 }
+			}
+		}
+
+
+		// xyzzy - Create a "post-proces" tab-server that ses session stuff, - then use the existing pg-stored preocedures
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++1. SetSession - post process
+	( GetSession too - pre process )
+	../TabServer2/crud.go line : 4340-ish
+	../TabServer2/lib.go - Look for SetSession - for decleare as map[string]bool
+	1. Figure out how to "set" $session$ data in TabServer2 - do it.
+
+
+2. SendEmail - post process
+	1. Send "email" how - Amazon requires return address to be verified.
+		1. Look it up in AesSrp and pull out to it's own compoent with interface.
+			/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/AesSrp/aws_email_relay.go
+	2. Come up with a map[string]string template system for building email
+	3. Verify email templates 
+	4. Extend Kermit Rule - kermit.nosend.name@... do not send it
+	5. Extend Kermit Rule - kermit.name@... change "to" to pshclump@gmail.com
+
+
+3. Test it
+	Makefile
+
+
+
++0. All the .sql code / tables / procedures
+
++1. /api/session/login etc - in ./sql/sql-cfg.json
+	1. use tab-server - with a speicifc per-user config file.
+
+			, { "TabServer2": { "LineNo":__LINE__
+				, "Paths":["/api/session/"]
+				, "AppName": "auth.2c-why.com"
+				, "AppRoot": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":"Version 0.0.6 Tue Apr 25 18:08:49 MDT 2017 File:__FILE__ Line:__LINE__"
+			} }
+
+	1. Must have "SetSession" implmented in sql-cfg.json
+			
+
+
+
+On Login - 
+	Look for a "session" stored in "t_session" table - if found then copy to Redis
+On Logout -
+	Update session in Redis - copy to "t_session" - delete from redis
+
+On "Old Inactive Session" ( 2days )
+	Update session in Redis - copy to "t_session" - delete from redis
+	-- How to do this --
+	-- Look for search in t_session - for "keys" that may be old --
+	-- Scrub/update all sessions --
+	(Background Process)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Note:
+	1. ./sql/new.sql - code for this.
+	4. Login/Logout date time
+
+
+From: http://www.meetspaceapp.com/2016/04/12/passwords-postgresql-pgcrypto.html
+	INSERT INTO users (email, password) VALUES ('nick@example.com', crypt('12345', gen_salt('bf', 8)));
+
+	,"/api/session/change_others_password": { "g": "s_change_others_password", "p": [ "username", "$user_id$", "password", "again", "$ip$" ]
+		, "nokey":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["POST"]
+		, "TableList":["t_user","t_ip_ban","t_user_auth"]
+		, "valid": {
+			 "username": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"password": 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"again":	 	{ "required":true, "type":"string", "max_len":80, "min_len":4 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			,"$user_id$": 	{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		, "CallAfter": ["CacheEUser"]
+		}
+
+
+-- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done --
+
+*7. What is it with CSRF token - how it works? how/why? -- Should we ditch this?
+	- remove this - 
+		- use a "ETag" file that identifies the site user -
+		- Generate an "ETag" on the JavaScript that sets the "cookie" - 
+	- Rely on the "Origin" stuff with validation of "Origin" in CSRF ? -
+	- Serve the "cookie-set" js code with a SetCookie header?  Very Clever. -  Set the CSRF token as a session/private cookie?
+*5. Change encrypted password to use the standard postgres stuff - instead of custom salt - custom hash.  ./sql
+
++2. LoginRequired - middleware - verifies that we are logged in for anything below this in the processing stack.
+	1. Check that we are logged in using this scheme.
+			is_logged_in := ps.ByNameDflt("$is_logged_in$", "")
+			is_full_login := ps.ByNameDflt("$is_full_login$", "")
+	- set these if logged in. 
+	- unset these if not logged in.
+
++3. Post processing functions to chagne/update $session$ in redis
+	Similar to:
+		, "CallAfter": ["CacheEUser"]
+	but for session.
+	1. How to get the -- "SetSession" code to work with -->>SessionCacheEUser<<--
+
+*3. Convert "206" to new stuff
+
+
+/api/session/getUsreData?name=xxx -- Size limit -- 10k
+/api/session/setUserData?name=xxx -- Size limit -- 10k
+
+Set user data from "login" account?
+
+Why is this better than local storage? -- Why use it at all ?
+
+-- select s_register_new_user(p_username varchar, p_password varchar, p_ip_addr varchar, p_email varchar, p_real_name varchar, p_url varchar, p_app varchar, p_name varchar, p_customer_id varchar)
+-- output:  {"status":"success","$send_email$":{"template":"please_confirm_registration","username":"test01","real_name":"Kermit Frog","email_token":"8f792f88-0eea-4ab4-8d7a-99771bacf61a","app":"test","name":"Kermit Frog","url":"http://www.2c-why.com/","from":"pschlump@gmail.com"},"$session$":{"set":[{"path":["gen","auth"],"value":"y"}]}}
+2. find "DB Check - valid configuration - tables/columns match database" and add in a check for stored procedures "g"
+	params etc.
+	-- Check run in ../../cfg/cfg.go
+		for _, vv := range PostDbConnectChecks {
+	-- Setup for checks for tables - how do we deermine if it is a "procedure" call?
+		/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/TabServer2/ts2_ftl.go
+
+*1. Test at the level of CLI SQL, test_*.sql files								2hrs
+*2. Validate with "make" into a test set											1hr
+*3. Run a server																	1hr
+		
+	if hdlr.ApiLogin == req.URL.Path {
+		if rw, ok := www.(*goftlmux.MidBuffer); ok {
+
+			trx := mid.GetTrx(rw)
+			trx.PathMatched(1, "SessionRedis", []string{hdlr.ApiLogin}, 0, req.URL.Path)
+
+			id, trx_id_found := hdlr.GetTrxCookie(req)
+
+			ps := &rw.Ps
+			username := ps.ByNameDflt("username", "")
+			password := ps.ByNameDflt("password", "")
+
+			if trx_id_found && hdlr.ValidUser(username, password) {
+				fmt.Printf("%sLogged In %s with %s, %s%s\n", MiscLib.ColorGreen, username, password, godebug.LF(), MiscLib.ColorReset)
+
+				// - update session data
+				session := hdlr.RedisGetSession(www, rw, req, id)
+				if session == "" {
+					session = hdlr.RedisSetDefaultSession(www, rw, req, id)
+				}
+				hdlr.SetSession(session, id, "gen", "auth", "y")
+
+				www.Header().Set("Content-Type", "application/json")
+				fmt.Fprintf(www, `{ "status":"success", "id":%q }`, id)
+				return
+			} else {
+
+				// - update session data
+				session := hdlr.RedisGetSession(www, rw, req, id)
+				if session == "" {
+					session = hdlr.RedisSetDefaultSession(www, rw, req, id)
+				}
+				hdlr.SetSession(session, id, "gen", "auth", "n")
+
+				fmt.Printf("%sFAILED TO Log In %s with %s, %s%s\n", MiscLib.ColorRed, username, password, godebug.LF(), MiscLib.ColorReset)
+				www.Header().Set("Content-Type", "application/json")
+				fmt.Fprintf(www, `{ "status":"error" }`)
+				return
+			}
+		}
+
+	} else if hdlr.ApiLogout == req.URL.Path {
+
+		if rw, ok := www.(*goftlmux.MidBuffer); ok {
+
+			trx := mid.GetTrx(rw)
+			trx.PathMatched(1, "SessionRedis", []string{hdlr.ApiLogin}, 0, req.URL.Path)
+
+			id, trx_id_found := hdlr.GetTrxCookie(req)
+
+			if trx_id_found {
+				// - update session data
+				session := hdlr.RedisGetSession(www, rw, req, id)
+				if session == "" {
+					session = hdlr.RedisSetDefaultSession(www, rw, req, id)
+				}
+				hdlr.SetSession(session, id, "gen", "auth", "n")
+			}
+
+			fmt.Printf("%sLogged out %s, %s%s\n", MiscLib.ColorYellow, id, godebug.LF(), MiscLib.ColorReset)
+
+			// xyzzy - update session data
+			// hdlr.SessionIsLoggedOut ( username, id )
+			www.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(www, `{ "status":"success" }`)
+			return
+
+		}
+
+
+1. If "missing" param at "validation" should os.Stderr print in Red!
+	0.
+		0. Setup a missing parameter link
+		1. Setup a missing parameter end point
+		2. Click it and see what happens
+	1.
+		0. Setup a extra parameter link
+		1. Use missing parameter end point
+		2. Click it and see what happens
+
+Observations
+	*1. Did not output that there is a "missing" paramter on (#0) -- Substituted with "null"/Empty string
+	*1. Setup a test
+	*2. Find where it goes to "log" in "mid" - for unused
+	*3. Change reposing
+
+../TabServer2/crud.go:4371 -- This should be logged!
+				fmt.Fprintf ( os.Stderr, "%sWarning(10023): Missing data for %s - using empty string%s", MiscLib.ColorRed, aName, MiscLib.ColorReset)
+
+2. In Pg/Sql - check on one-of valid 
+	./s_password_reset.m4.sql
+	FUNCTION s_password_reset ( p_username varchar, p_auth_token varchar, p_email varchar, p_ip_addr varchar, p_url varchar, p_top varchar )
+
+<!--
+<div class="content container">
+<div class="row">
+<div class="col-sm-6">
+<div class="panel panel-info">
+<div class="panel-heading"> Update a Post </div>
+<div class="panel-body">
+<form>
+<div class="form-group ">
+<label class="form-control-label">Title</label>
+<div>
+<input type="text" name="title" value="bim" placeholder="Title" class="form-control">
+</div>
+</div>
+<div class="form-group ">
+<label class="form-control-label">Categories</label>
+<div>
+<input type="text" name="categories" value="bim" placeholder="Categories" class="form-control">
+</div>
+</div>
+<div class="form-group ">
+<label class="form-control-label">Body</label>
+<div>
+<textarea name="content" placeholder="Body" type="text" class="form-control">timbim bim bim bijm bim</textarea>
+</div>
+</div>
+<button type="submit" class="btn btn-primary">Update</button>
+<a class="btn btn-danger space-before-10px" href="/post">Cancel</a>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+-->
+
+<!--
+			<div>
+				<div class="page-header">
+					<h1> {this.props.title} </h1>
+				</div>
+				<div class="row">
+					<div class="col-sm-10">
+						xxxx-form-xxxx
+					</div>
+				</div>
+			</div>
+-->
+
+*1. register form
+
+*1. script - Extract "key" for use in web for to simulate email link.
+*1. Imlement "registration confirm form"
+*1. Confirm registration with form.
+
+*2. add in jQuery - Ajax - get/display results of form
+*2. login form (Test form with)
+
+*4. logout form
+
+*5. login / chnage-pw - local web
+	*- Verify send back of new "AuthToken" and use of valid auth token.
+
+//	console.log( "Handler for #form01.submit() called." );
+//	event.preventDefault();
+//
+//	var frm = $('#form01');
+//	frm.submit(function (ev) {
+//	$.ajax({
+//		type: frm.attr('method'),
+//		url: frm.attr('action'),
+//		data: frm.serialize(),
+//		success: function (data) {
+//			console.log ( 'data=', data );
+//			var pdata = JSON.parse(data);
+//			if ( pdata.status == "success" && pdata.auth_token ) {
+//				auth_token = pdata.auth_token;
+//			}
+//		}
+//	});
+
+// http://stackoverflow.com/questions/1960240/jquery-ajax-submit-form
+-----------------------------------------------------------------------------------------------------
+$(".checkbox").change(function() {
+    if(this.checked) {
+        //Do stuff
+    }
+});
+
+-----------------------------------------------------------------------------------------------------
+$.ajax({
+url: 'https://api.sandbox.slcedu.org/api/rest/v1/students/test1',
+type: 'GET',
+beforeSend: function (xhr) {
+    xhr.setRequestHeader('Authorization', 'bearer t-7614f875-8423-4f20-a674-d7cf3096290e');
+},
+data: {},
+success: function () { },
+error: function () { },
+});
+
+------------------------------------------------------------------------------------------------------
+And you can set it for all requests with ajaxSetup
+
+$.ajaxSetup({
+    beforeSend: function(xhr) {
+        xhr.setRequestHeader('Authorization', '...');
+    }
+});
+
+------------------------------------------------------------------------------------------------------
+
+*1. Add options
+	SetCookie
+	SetAuthorizationHeader
+	6. use Ajax in forms - onSubmit...
+		1. Save "auth_token" in variable
+		2. Set in other forms to use when changed
+		3. Create some "Options" / Set auth_token as a Cookie - pull in cookie code 
+			/ Set as a Authorization: berrer <item> header
+
+
+0. On success/fail/error on call display JSON results in output-block.
+	<pre>
+		{
+			...
+		}
+	</pre>
+		JSON.stringify takes more optional arguments.
+
+		Try:
+		 JSON.stringify({a:1,b:2,c:{d:1,e:[1,2]}}, null, 4); // Indented 4 spaces
+		 JSON.stringify({a:1,b:2,c:{d:1,e:[1,2]}}, null, "\t"); // Indented with tab
+		From:
+
+*1. Validate Auth Token - just performs a check on auth token
+	<form id="form06" method="POST" action="/api/session/validate_auth_token">
+*1. Validate login with "cookie" set
+	- Do Login (set cookie)
+	- refresh page
+	-- validate login / valid cookie
+
+
+
+*Defects:
+*	LoginRequired - should only apply to the "Path" that are specified, if path fails to match then pass?
+*		Nees a "Final" option where "all paths" must match or fail.
+*	0. Change LoginRequired
+*		LoginSelect: ...
+*		RedisPrefix: ...
+*		CookieName: ...
+*		ValidationMethod: Redis, Pg, Jwt
+*		ValidationSource: Berrer, Cookie, AesSrp
+
+*+2. Validate that LoginRequired can be properly configured for login-only paths for both
+
+0. Catch "Errors" and show an error message. 404, etc.
+*1. change 
+		/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/test001.json
+	to use the new LoginRequired
+*2. Run tests below
+*3. Move on to (session)
+
+
+
+*LoginRequired Tests
+	*0. Cookie Based / PG Verification
+		1. If not logged in
+			1. Can access FileServer at "/" and other urls not related to login	
+			2. Can not access /admin/ URLs
+	*0. Cookie Based / Redis Verification
+		1. If not logged in
+			1. Can access FileServer at "/" and other urls not related to login	
+			2. Can not access /admin/ URLs
+	*0. Auth:berrer / PG Verification
+		1. If not logged in
+			1. Can access FileServer at "/" and other urls not related to login	
+			2. Can not access /admin/ URLs
+	
+	*0. Cookie Based / PG Verification
+		1. If logged in
+			1. Can access FileServer at "/" and other urls not related to login	
+			2. Can access /admin/ URLs
+	*0. Try with: Cookie Based / Redis Verification
+	*0. Try with: Auth:berrer / PG Verification
+
+
+*3. Validate Is Current Logged In - response with info after LoginRequired
+*2. Validate login with "berrer" token set - header
+
+* Add a test with multiple logins to a single account
+*1. Create the base type in ../../RedisSessionData
+*2. Import and use declare it in the goftlmux
+*3. In SessionRedis - if nil , then allocate it
+	*Set defaulit
+	*Pull ID
+	if ID pull from Redis
+	Pull from 
+*4. Test
+
+*5.	Add in parse
+*6.	test
+	*- print out what is in the parsed data 
+	*- show what is set into 'ps'
+
+-----------------------------------------------------------------------------------------------------
+((( Session )))
+-----------------------------------------------------------------------------------------------------
+0. Session Default
+1. User Logged In Key
+		{
+			"user": {
+			}
+			, "general": {
+			}
+			, "$rules$": {
+				"$is_logged_in$": { "server_only": "y", "overwrites_input": "y", "save_to_redis": "y" }
+			}
+			, "$is_logged_in$": "y"
+			, "$dirty$": "y"
+		}
+
+	server_only - never return this to the user.
+	overwrites_input - this will overwrite and replace any post/get/cookie values - ignore them.
+	save_to_redis - if changed then save this back to Redis for next usage.  If "n" then this is a "temporary".
+	$dirty$ - indicates data has changed and stuff may need to be written (non-temporaries) to Redis.
+
+	On *up* look at 'ps' and see what has been set - if matches with session variables then apply - if dirty then save.
+	on *down* at $is_logged_in$ changes - the re-evaluate values.
+
+	-- Set the "session" variable in the global buffer when session is created.
+	func (ses *RedisSessionData) HasSession ( ps ) -> bool 		-- Look in values for $session$
+	func (ses *RedisSessionData) GetValue ( "name" ) -> value 	-- look in general, then if logged in look in user
+	func (ses *RedisSessionData) SetValue ( "name", value )		-- if logged in change in user ????
+	func (ses *RedisSessionData) SaveIfDirty ( Prefix, ID )		-- if dirty flag is set, disregard temps, then save.
+	func (ses *RedisSessionData) GetFromRedis ( Prefix, ID )	-- Pull out the value from redis and return it.
+	func (ses *RedisSessionData) SetPsValues ( ps )				-- take $session$ and set 'ps' with it.
+	func (ses *RedisSessionData) SetIsLoggedIn ( ps )			-- 
+
+
+
+1. SessionRedis (Pt1) 
+	* get session based on cookie, add to $session$
+	- take non-login items and push to goftlmux.Params -- will not overwrite? should overwrite? -- configurable?
+	- Add a new "type" of InjectedSession
+
+	1. $is_logged_in$ is "y" / "n"?
+
+		$is_logged_in$
+			-- Server only
+			-- Never set by user
+			-- Set by code with "auth" permissions group
+		email_address
+			-- Never set by user
+			-- Set by code with "auth" permissions group
+
+2. Session (Pt2)
+	- LoginRequired
+		1. if "$session$"
+			- take "user" params
+			- push these to goftlmux.Params
+3. Update of a "Session" value
+	goftlmux.""Set"" - if InjectedSession / check login / update local value, update $session$, mark as dirty
+4. Back in SessionRedis, if "dirty" then push to Redis
+5. (pt5) - in TabServer2 - Post Processing
+	1. if "$session$" - set - pars it - post process set stuff.
+	2. if login - verify that $session$ sets stuff
+6. in LoginRequired - if $session$ - - verification code that we are logged in if path etc.
+	1. Fix LoginRequired:
+		func (hdlr *LoginRequiredType) GetSessionAuth() (rv string) {
+
+
+Note:
+	Declare A Session Variable
+		- non-login - $is_logged_in$ ==> "n"
+		- login -     $is_logged_in$ ==> "y" -- if successful login
+		-- Always Overwrite
+	-- Accept user input - this can become "default" values so...
+		email_address - from get/put is parameter
+		session - value - copy's it to session
+		so it is saved as a part of the "session" at end.
+
+Test:
+	2. Validate "session" based loginLoginRequired can be properly configured for login-only paths for both
+		0. a localhost_only - /api/xxx/get_session_data
+		0. Check Redis:session:[Cookie] id and verify.
+			pt1
+				1. Login
+				2. Verify the X-Go-FTL cookie value
+				3. Check Redis for Session
+				4. Login
+				5. Check that we are marked in Redis as logged in
+				6. Check that the $session$ value is set with logged in true
+				7. Check that $is_logged_in$ (etc...) are set properly
+			pt2 
+				1. Do a completely new request - with auth_token set as a "cookie"
+				2. Verify $session$ shows logged in and correct
+					1. $session$ 
+					1. Redis
+					1. Can access login only resources
+
+
+*1. Problem with "mux"
+?6. Implement the -> 'ps' stuff
+?7. Add in check for Logged in - if no - the just the "general" stuf -> all non-set keys in 'ps' (unless ovride of key in 'ps')
+?	If Logged in add general + user - do the same.
+?8.	test
+
+?11. Extract the JSON data - pass it to a "Settter" function
+?12. Chage the data - in 'ps'
+?13. Mark it dirty - have it save it back to Session - mark as dirty
+?14. Update it in Redis
+*5. Find "post-process" locaiton
+	../TabServer2/crud.go:4307		 } else if len(h.SetSession) > 0 {
+		, "CallAfter": ["CacheEUser"]
+		, "CallAfter": ["DeCacheEUser"]
+func SendEmailMessage(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+5. Create a "config" item for send/email - just record email
+	/api/localhost_only/x_set_send_email?send=on|off
+	-- Return this info to $send_email$ -- make it a part of the implementation.
+		./output/email/0000.html.email -- 1st email synthetic - template run - not sent.
+		./output/email/0000.text.email -- 1st email synthetic - template run - not sent.
+		./output/email/0000.data.email -- 1st email synthetic - template run - not sent.
+		-- Use a d.b. sequence - count up.
+			CREATE SEQUENCE t_email_test_id_seq
+
+
+-- email -- -- email -- -- email -- -- email -- -- email -- -- email -- -- email -- -- email -- -- email -- -- email --
+*0. Implement templates
+	*2. Run template
+	*3. Get output to log file
+2.																				30-min
+	"mis_piggyXXXX@... -> file
+	"kermitXXX@... -> pschlump@gmail + in file.
+*0. Implement templates
+	*2. Run template
+	*3. Get output to log file
+2.																				30-min
+	"mis_piggyXXXX@... -> file
+	"kermitXXX@... -> pschlump@gmail + in file.
+*0. Verify - log not sed - (kermit or mis_piggy?)
+*2. Add in option to k/p
+1. Template File - with entire template library in it.
+	- see why not rendering template - fix.
+
+	+/api/session/simulate-email
+		+-- generate a pre-determined email so can test templates and send.
+		+s_simulate_email() -- Pg/SQL
+
+//--func (hdlr *TabServer2Type) RedisGetSession(rw *goftlmux.MidBuffer, req *http.Request, id string) (it string) {
+//--
+//--	key := hdlr.RedisSessionPrefix + id
+//--
+//--	if db4 {
+//--		fmt.Printf("RedisGetSession: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+//--	}
+//--
+//--	conn, err := hdlr.gCfg.RedisPool.Get()
+//--	defer hdlr.gCfg.RedisPool.Put(conn)
+//--	if err != nil {
+//--		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+//--		return ""
+//--	}
+//--
+//--	v, err := conn.Cmd("GET", key).Str()
+//--	if err != nil {
+//--		if db4 {
+//--			fmt.Printf("Note on redis - session not found - get(%s): redisPrefix[%s] %s, %s\n", key, hdlr.RedisSessionPrefix, err, godebug.LF())
+//--		}
+//--		return ""
+//--	}
+//--
+//--	return v
+//--
+//--}
+//--
+//--func (hdlr *TabServer2Type) RedisSetDefaultSession(rw *goftlmux.MidBuffer, req *http.Request, id string) (it string) {
+//--
+//--	key := hdlr.RedisSessionPrefix + id
+//--
+//--	value := `{
+//--	"authReq": {
+//--		  "user_id": ""
+//--		, "username": ""
+//--		, "email_address": ""
+//--	}
+//--	, "gen": {
+//--		  "auth": "n"
+//--		, "username": ""
+//--		, "email_address": ""
+//--		, "login_expire": ""
+//--	}
+//--}`
+//--
+//--	if db4 {
+//--		fmt.Printf("RedisSetDefaultSession: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+//--	}
+//--
+//--	conn, err := hdlr.gCfg.RedisPool.Get()
+//--	defer hdlr.gCfg.RedisPool.Put(conn)
+//--	if err != nil {
+//--		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+//--		return
+//--	}
+//--
+//--	err = conn.Cmd("SET", key, value).Err
+//--	if err != nil {
+//--		if db4 {
+//--			fmt.Printf("Note on redis - session not found - get(%s): redisPrefix[%s] %s, %s\n", key, hdlr.RedisSessionPrefix, err, godebug.LF())
+//--		}
+//--		return
+//--	}
+//--
+//--	return value
+//--
+//--}
+//--
+//--func (hdlr *TabServer2Type) SetSession(session, id, top, name, value string) {
+//--
+//--	key := hdlr.RedisSessionPrefix + id
+//--
+//--	mm := make(map[string]map[string]string)
+//--	err := json.Unmarshal([]byte(session), &mm)
+//--	if err != nil {
+//--		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to parse session [%s] [%s]. Reset to default!","LineFile":%q}`+"\n", err, id, session, godebug.LF()))
+//--		hdlr.SetSessionDefault(id)
+//--		return
+//--	}
+//--	_, ok := mm[top]
+//--	if !ok {
+//--		mm[top] = make(map[string]string)
+//--	}
+//--	mm[top][name] = value
+//--
+//--	if db4 {
+//--		fmt.Printf("SetSession: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+//--	}
+//--
+//--	conn, err := hdlr.gCfg.RedisPool.Get()
+//--	defer hdlr.gCfg.RedisPool.Put(conn)
+//--	if err != nil {
+//--		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+//--		return
+//--	}
+//--
+//--	session = godebug.SVar(mm)
+//--
+//--	err = conn.Cmd("SET", key, session).Err
+//--	if err != nil {
+//--		if db4 {
+//--			fmt.Printf("Note on redis - session not found - get(%s): redisPrefix[%s] %s, %s\n", key, hdlr.RedisSessionPrefix, err, godebug.LF())
+//--		}
+//--		return
+//--	}
+//--
+//--}
+//--
+//--func (hdlr *TabServer2Type) SetSessionDefault(id string) {
+//--
+//--	key := hdlr.RedisSessionPrefix + id
+//--
+//--	value := `{
+//--	"authReq": {
+//--		  "user_id": ""
+//--		, "username": ""
+//--		, "email_address": ""
+//--	}
+//--	, "gen": {
+//--		  "auth": "n"
+//--		, "username": ""
+//--		, "email_address": ""
+//--		, "login_expire": ""
+//--	}
+//--}`
+//--
+//--	if db4 {
+//--		fmt.Printf("SetSessionDefault: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+//--	}
+//--
+//--	conn, err := hdlr.gCfg.RedisPool.Get()
+//--	defer hdlr.gCfg.RedisPool.Put(conn)
+//--	if err != nil {
+//--		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+//--		return
+//--	}
+//--
+//--	err = conn.Cmd("SET", key, value).Err
+//--	if err != nil {
+//--		if db4 {
+//--			fmt.Printf("Note on redis - session not found - get(%s): redisPrefix[%s] %s, %s\n", key, hdlr.RedisSessionPrefix, err, godebug.LF())
+//--		}
+//--		return
+//--	}
+//--
+//--}
+//--
+//--func (hdlr *TabServer2Type) GetSession(session, id, top, name string) (value string) {
+//--	mm := make(map[string]map[string]string)
+//--	err := json.Unmarshal([]byte(session), &mm)
+//--	if err != nil {
+//--		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to parse session [%s] [%s]. Reset to default!","LineFile":%q}`+"\n", err, id, session, godebug.LF()))
+//--		hdlr.SetSessionDefault(id)
+//--		return
+//--	}
+//--	gen, ok := mm[top]
+//--	if !ok {
+//--		return
+//--	}
+//--	value, ok = gen[name]
+//--	if !ok {
+//--		return ""
+//--	}
+//--	return
+//--}
+//--
+//--var cookieName = "X-Go-FTL-Trx-Id"
+//--
+//--func (hdlr *TabServer2Type) GetTrxCookie(req *http.Request) (id string, trx_id_found bool) {
+//--	Ck := req.Cookies()
+//--	for _, v := range Ck {
+//--		if v.Name == cookieName {
+//--			trx_id_found = true
+//--			id = v.Value
+//--			break
+//--		}
+//--	}
+//--	fmt.Printf("cookie=%s id=[%s]\n", cookieName, id)
+//--
+//--	if !trx_id_found {
+//--		id0, _ := uuid.NewV4()
+//--		id = id0.String()
+//--	}
+//--	return
+//--}
+//--
+//--/*
+//--	||'"set":['
+//--		||'{"path":["gen","auth"],"value":"y"}'
+//--	||']'
+//--*/
+*1. test 1st email - till it works
+*0. *verify* email of registration and "link"
+	*Error(): Invalid template processing: html/template: "subject" is undefined
+	*Error(): Invalid template processing: html/template: "html_body" is undefined
+	*Error(): Invalid template processing: html/template: "text_body" is undefined
+
+*5. Put output  log into a file - with a sequence returned in JSON
+	*./output/email.ID.item
+
+*8. Redirect?
+*7. Verify "link"
+4. Verify that they work -- add auto tests
+	3. Implement all the other templates
+		1. Get a list .x. Find all template names - verify have files for them.
+		2. Copy in old
+		3. Add to "git"
+		4. hand check them.
+1. Actually send email - with kermit rule.
+	- get the correct token - to send via AWS (SES)
+	Test:
+		+0. Verify sending of email
+*0. Build a test-email.go - program that just verifies key/password to SES and sends a sample email from the CLI.
+	1. Identify what "keys" need to be in the environment to send email - lable in ~/.zhsrc
+	2. Get new valid keys
+	4. Pull out a small sample code
+	5. Send an email
+2. Add to .html - recover password - 2 pages - http://localhost:9001/t02.html
+	1. Request Recover
+	2. Response to recover - with a "Redirect" back to original page if successful.
+		,	( '1', 'register.redirect.to', '/newly-registered.html' )
+		,	( '1', 'recover.redirect.to', '/recover-password.html' )
+*1. Register
+*2. Check that we got email
+*3. Check link manually
+	http://localhost:9001/api/session/confirm_email?auth_token=3a139192-1615-4130-9da4-c1acd32b4e6a
+	1. Test a "registration" with back-link to confirm.
+	+7. Check as "Berrer" token from Web-jQuery test
+	+8. add XSRF-token check?
+*1. May want to chagne URL parameters and redirect on client side.
+	5. Build out rest of jQuery reg/test demo
+*3. Configure what goes on "URL" in redirect.
+*1. Set cookies from URL in
+	/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9001/www/newly-registered.html
+4. Figure out why "register" is switching to return value - applicaiton/json ?
+*8. Configure - "username" is "email" -
+*+7. Recover "username" based on email -
+	8. add XSRF-token check?
+		1. config-item added
+
+		From: https://stormpath.com/blog/angular-xsrf
+
+			Leveraging Angular’s XSRF Feature
+
+			Angular packages the CSRF token approach, making it simpler for us to implement. For every request that your Angular
+			application makes of your server, the Angular $http service will do these things automatically:
+
+				Look for a cookie named XSRF-TOKEN on the current domain.
+
+				If that cookie is found, it reads the value and adds it to the request as the X-XSRF-TOKEN header.
+
+			Thus the client-side implementation is handled for you, automatically! But this does leave the server side pieces in
+			your hands. You will need to do the following parts:
+
+			During login:
+
+				create the CSRF token (with a random, un-guessable string), and associate it with the user session.
+				You will need to send it on the login response as the XSRF-TOKEN cookie.
+
+				Assert that all incoming requests to your API have the X-XSRF-TOKEN header, and that the value of the
+				header is the token that is associated with the user’s session.
+
+			That’s it! With a little bit of backend work, you now have a strategy which protects you from CSRF attacks.
+
+	test_confirm_reg01:  -- Should a "confirm" act as a "login" and create an auth_token and return it?
+		- This should be an option??
+	1. Change password, recovery password should blow Redis -- Post Processing --
+
+1. test the password recovery
+	1. Implement the ,	( '1', 'recover.redirect.to', '/recover-password.html' )
+
+1. redirect form newly-registered.html -> application -- also -- '/recover-password.html' )
+	if CORS - then send with params of "auth-token" 
+
+
+	+1. create accont / confirm it.
+	+2. request - email for password reset
+	+3. verify email - use link -- Look in ./output/test-email - for last log - pull link
+	+4. "$ curl 'link'" > output - verify file
+	+4. see the .html page - verify cookies set
+	+5. Follow link
+	+6. input new pasword/again - verify cookie set
+	+7. make call see that it is chagned.
+
+
+
+
+
+
+
+
+1. test change password from web after login
+	++4. Test: Ad a 2nd "confirm" to s_confirm* - for POST with form.
+	++5. Test: Verify that both "cofirm" act as "LOGIN" and send back complete login stuff if toke is correct.
+
+
+https://github.com/dgrijalva/jwt-go.git
+	1. why is "kermit" not working?
++4. Build auto-test for this (in Makefile)
+	4.  -- automate -- full cycle tests -- (Including seeing results in pschlump@gmail.com)
+		each w/o actually sending (use the log) the email
+*1. Add in an addional variable for session on s_login
+*2. Lookup cookie
+*4. Verify $session has value
+	1. Set in $session$
+	*4. Do register - conferm page should redirect back to original w/ successful register
+		- What about XSRF_TOKEN?
+	*5. Login - get back XSRF_TOKEN? -- Set as a part of "config" for that customer.
+	3. Hand check the "session" for correct values
+XSRF
+	2. Check in LoginRequired
+
+5. Add to LoginRequired - to check X-Xsrf-Token - for all logged in users.
+	+1. XSRF-Token
+		/api/s.../login - returns on - must save and set "X-Xsrf-Token header - checked on all subsiquent
+		calls.
+
+
+
+
+1. modify t02.html to have a /Status type request that is not logged in, and one that requries it. -- Test --
+
+( 1hr project - just edit-it-all )
+	1. Change all the "code" values to unique for all the files - and make a list. 
+		Make all status:fail and have a "code"
+
+6. JWT - token generation / validation -- Check LoginRequired
+	*1. Set up so 1 server :9001 is "auth" and :9011 is webpage - so we can test CORS.
+3. Build index file (index.html)
+
+0. Defect !!
+	TabServer2 is overwriting it's goftlmux - mux table! -- must be unique and use
+				, "Paths":["/api/admin/"]
+	to filter.
+
+
++( 2hr project - partially setup )
+	[ This is a steight forward "get" and check status request ]
+	+[ Implemented / not tested ] 
+	+[ Need to cach results in Redis with TTL based on expire ]
+	+2. Extended JWT
+		*1. , { "LoginRequired": {
+			,"/api/session/validate_auth_token": { "g": "s_validate_auth_token", "p": [ "auth_token", "$url$" ]
+			http://localhost:9001/api/session/validate_auth_token?auth_token=XXXXXX&_ran_=UUUUU
+			1. mod to also return the xsrf_token for this session
+		*1. revalidate(extend) token from 9011 -> 9001
+			,"/api/session/validate_auth_token": { "g": "s_validate_auth_token", "p": [ "auth_token", "$url$" ]
+		*1. "get" code
+
+Sat May  6 06:52:22 MDT 2017
+	2. Cleanup of .html code t02.html
+1. Create/copy in a thumnail - for webpage (favicon.ico)
+
+0. Fix the favicon.ico
+
++( 2hr project - CORS - partially setup )
+	*0. Complete test and verification from 9011 to 9001
+	*0. Complete test and verification from http://dev2.test1.com to http://auth2.2c-why.com -- Setup in /etc/hosts
+	*0. Verify all of this as CORS compatible..
+	*CORS - set specific headers that are allowed? - Limit Headers - Clean/Scurb headers?
+	*0. CORS - Test with a list of specific "origins"  - In Config.
+				, "AllowedOrigins": 	".*"
+				, "AllowedOrigins": 	[ "http://dev2.test1.com:9011" ]
+	*0. CORS - Test with a Redis list of specific "origins"  - verify that prefix works
+		Data setup in ./sr.redis file
+	?0. Chagne to HSET, HGET - in Redis to clean up.
+		"RedisPrefix":          -> "RedisHashKey"
+
+config_data.m4.sql:,	( '1', 'acct.auth_token.expire', '94 days' )
+
+*s_change_password.m4.sql:			, current_timestamp + interval '94 days'
+*s_confirm_email.m4.sql:			, current_timestamp + interval '94 days'
+*s_login.m4.sql:			, current_timestamp + interval '94 days'
+*s_password_reset.m4.sql:			, current_timestamp + interval '94 days'
+*s_validate_auth_token.m4.sql:			set "expire" = current_timestamp + interval '94 days'
+	3. '94 days' - fix to option.
+4. Add and test "Prefix" - plus in jQuery
+
+4. Configuration for DoGet in ../LoginRequired - for what prefixes to strip from JSON.
+	1. Prevent JSON Hacking - Prefixing -- ../Prefix - defaults to this!
+		http://stackoverflow.com/questions/2669690/why-does-google-prepend-while1-to-their-json-responses
+			while(1);{...}
+		Facebook?
+			)]}'
+			[ ... valid JSON ... ]
+		https://security.stackexchange.com/questions/110539/how-does-including-a-magic-prefix-to-a-json-response-work-to-prevent-xssi-attack
+
+2. A "RemoveItem" Post process that just removes stuff like "customer_id".
+	6. Better favicon.ico/.png files.
+	7. In ../Prefix/Prefix.go
+			Error: Invlaid validation for Prefix data {
+					"Paths":              { "type":["string","filepath"], "isarray":true, "required":true },
+					"Prefix":             { "type":["string"], "default":")]}',
+			" },
+					"PrePend":            { "type":["string"], "default":"yes" },
+					"LineNo":             { "type":[ "int" ], "default":"1" }
+					}
+			Error in line 3: invalid character '\n' in string literal
+			" },
+			^
+
+		-- Use "spark" for it.  https://sparkmailapp.com/
+2. in LimitJson - implement auto test.

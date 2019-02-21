@@ -1,0 +1,19 @@
+A post processing filte that takes a set of "paths"
+	and process markdown -> .html on these paths.
+Can also take "data" in JSON and post-process data
+	{
+		makrdown: "# ya this is a tilte\n and a body"
+	}
+into
+	{
+		makrdown: "# ya this is a tilte\n and a body"
+	,	html: "<h1> ya this is a atitle </h1>\n and a body"
+	}
+
+Path: /api/table/t_bla_bla_bla
+Process JSON:	Yes
+JSONCols: [ "bodyText" ]
+HTMLCols: [ "bodyHTML" ]
+
+--
+

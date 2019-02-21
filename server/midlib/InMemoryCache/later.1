@@ -1,0 +1,93 @@
+
+The set of files that if any have chagned then you need to do a cache miss:
+		rw.DependentFNs = append(rw.DependentFNs, name) // xyzzyFileSet - need to be set of files to support caching
+
+
+
+
+
+1. xyzzyPreFetch - Need fetch-rate for hot pre-fetching
+	1. TTExpire - time till expire for 304 type re-chedks
+	2. Average Fetch Rate - calcualted - ( ( nObs * CurAvg ) + NewObs ) / nObs+1 -> Avg Fetch Rate
+	3. "IsNonCached" - PreFetch
+	4. "IsNonCached" - HitRate / DiscardRate
+
+2. xyzzyMultiServer -
+	1. IP of Self
+	2. OwerFlag
+	3. MayHave / MustHave flag
+	4. Age + FetchRate
+	5. If found in cache / but don't have on disk - then act as a Proxy to Fetch it from local IP, and save it.
+		1. Try most recenly added to cache and if not then go to owner
+	func (meta_data *MetaData) FoundOnTheFarm() (foundIt bool, fnInfo os.FileInfo) {
+
+	- Multi user keep time - if not the owner should be (NumOfServersInFarm * ProbOfUse)*AvgFetchTime
+		where ProbOfUse is > 1 ( like 1.8 or someting )
+		If past keep time and not used then it should be deleted - unless owner
+
+3. Keep "avg-time-to-fetch" of items
+
+4. Think about this used across multiple-URLs - http://www.bob.com/, http://www.jane.com/ - how do we
+	keep the files on disk unique - with hash-of-content - do we need to? - interaction?
+
+
+
+// Note: http://betterexplained.com/articles/how-to-optimize-your-site-with-http-caching/
+
+Yes:
+	3. How to test this
+		0. Create a set of files to test with
+		1. Create a server stack to test on
+		2. Fetch a file -
+		3. Verify that the file arrived
+
+
+
+
+
+
+
+
+
+Later:
+	1. range requests -how to do-
+
+	1. Fetch rate on URLs
+	2. Pre-Fetch on URLs
+		Auto-Prime of cache -- as a 2nd modlule
+	3. 304 Expired and Re-Fetch
+		xyzzyExpredReValidate - 2. What about expired items - on disk - and re-fetch and compare - if not changed then 304
+	xyzzyNonCachPreFetch - 3. Url Item Usage Rates - so can identify for  FTL prefetch.  For non-cached items.
+	4. Ignore caching for certain requesting IPs (developer ips)
+	5. Usage Repors on stuff - IPs etc.
+	// xyzzy xyzzy - xyzzyDependencieCheck - check to see if on-disk served and if so if modified or dependencies failed.
+		rw.
+			*ResolvedFn      string                   // Single file name - resolved to local from fileserver		-- working --
+			DependentFNs    []string                 // Set of files that if any have chagned (mod-datetime) then should not cache and let lower levels re-generate
+	1. Add a RateLimite path and a RateLimitIgnore path to config
+		refetch-limiter
+			1. for non-cache items, limit refetch (i.e. cache them) to 1 second.
+	304 from proxy - fetch data / no headers and save
+
+	Cache Control - and Reporting - outside interface
+		/api/cacheStats - login required - need way to access this after /api/crypt
+		/api/cacheFlush
+		/api/cacheDeleteItem
+		/api/cachePreload...
+		/api/cacheConfigure...
+		/api/cacheMonitor...
+		Need a RegisterEndpoints type call as a part of initialization
+			xyzzyOutside
+			1. Add an outsid interface for lower levels that allows them to say
+				1. This is a 3rd part that we are caching for and I chagned the url
+				2. THis is a compressed version of the previous and I built it
+
+	what is the interaction between "inMemoryCache" and multiple servers across a set of machines.
+		1. P2P transfer of data. -- If in Redis, but I don't have file, then I ask one of the servers that has file and save it for myself.
+		2. What about cleanup?  What about cleanup of data in Redis?
+		3. Global config and save "self-ip" in Redis - so can ask for file from p2p via IP. -- Pick random owner and ask that one?
+			-- pick owner based on "load" and ask lowes load one for it.
+
+	Dependency sets
+
+	Push Mods out to Client - AngularJS dev - DevMode / ProdMode

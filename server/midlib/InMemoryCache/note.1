@@ -1,0 +1,34 @@
+
+/*
+
+1. Where is the fix for dependent file sets - if one changed -
+	1. How is this info transmitted from file-server to this point
+		From the ../../goftlmux/bufferhtml.go
+			ResolvedFn          string                   // Single file name - resolved to local from fileserver
+			DependentFNs        []string                 // Set of files that if any have chagned (mod-datetime) then should not cache and let lower levels re-generate
+	2. Add X-File-Server: ... for above items
+	2. How is it used
+	3. If-Newer-Than / If-None-Changed
+	x. CheckIfNewerThan ( date, ResolvedFn, DependentFNs ) -> resovedFn data if newer than, + State Info
+	x. CheckIfNoneChanged ( incHash, ResolvedFn, DependentFNs ) -> resolvedFn data if changed - for re-cache + State Info --
+		1. If a dependentFN is newer than ResolvedFN - then re-generate
+		2. If hash of resolvedFN is not equal to incHash - then re-generate
+	x. CheckCachedItem ( URL ) - Check a list of items that need to be re-fetched /api/table/appConfig - for example - if listed in re-fetch - then next fetch will generate it.
+*2. Add a X-cache: "memory"
+*2. Add a X-cache: "disk"
+2. Add a X-cache: "disk dependent file changed XXX" header.
+3. Test with an underling JSON source that a ETag/sha256 is sent out for, then a If-None-Changed is sent back. -- Regenerate the local JSON then if same hash send a 304.
+	1. Paths to do this with a header alter to remove non-cached items
+	2. Paths to regenerate and then convert to a 304 if ETag allows
+	3. Paths to setup/use a ETag on
+4. Automated Test for this
+5. Pre-fetch in Q of ready to use stuff -- Q length varies on load average
+
+Given:
+	Input URL + Cookie Check
+		1. if "inc" header - lookup in redis -
+			1. Check
+				1. ResolvedFn - date
+				1. ResolvedFn - sha256
+				1. DependentFNs - date
+*/

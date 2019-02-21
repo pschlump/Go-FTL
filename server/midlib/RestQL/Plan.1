@@ -1,0 +1,54 @@
+1. Document and collect the "where" and other items
+2. Create a RestQL.go that un-packs and rewrites into tab-server
+3. Create a JsonX->Query parser 
+4. Nested
+5. Control over caching
+6. PostProcesisng
+7. A jonis to B joins to C type stuff - data subsets
+8. Update capability
+
+## Notes on Go-FTL / TabServer2
+
+1. Add a RestQL - with a single source for queries
+
+	restql=
+	{
+		select: { ... }
+		where: { ... }
+		order_by: { ... }
+		having: { ... }
+		group_by: { ... }
+		subQuery: {
+			...
+			cached: { by: ... }
+		}
+		paged: 
+		pageCached:
+		data: [ meta data like count ]
+		count pulled from -- other table or other select
+		limit: etc.
+	}
+
+	{
+		list_api:
+		list_columns:
+		describe:
+	}
+
+	Return a "cursorId" for cached results!
+
+	-- Think about performance 
+		-- limit # of columns in where to sets of indexed
+		-- warn on non-indexed queries
+		-- Allowable but only if...
+
+
+	
+### Steps
+
+1. Copy upload into Go-FTL
+2. Add in RestQL - create it
+3. Document it
+4. Test it
+
+

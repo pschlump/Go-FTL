@@ -1,0 +1,20 @@
+Test
+	1.	 Create buffer with [{"a":"12"}] in it - very JSON data in .Table in buffer
+	2.	 Create buffer with {"a":"12"} in it - very JSON data in .Table in buffer
+	3.	 Create buffer with {"a"2"} in it - syntax error response
+	4.	 Create buffer with [] in it - veryfy empty row response
+	5.	 Create buffer with `` in it - veryfy empty row response
+	6. Test with longer array of data.
+Test each of these with the configuration flag ConvertRowTo1LongTable both true and false
+
+Add - meta data add on - no_rows and make hash always.
+
+TODO
+-----
+
+1. Add ability to project columns in a table - filter the attributes returned in the data.
+1. Add ability to return data with meta information.
+1. Add ability to select from the JSON data (filter).
+
+	ConvertRowTo1LongTable bool         //
+	Convert1LongTableToRow bool         //

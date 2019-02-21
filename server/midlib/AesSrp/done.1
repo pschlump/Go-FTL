@@ -1,0 +1,119 @@
+
+	*1. Convert to all public libraries - or - pull out image etc.
+	*5. Move www.2c-why.com/gosrp -> /aescccm/gosrp
+
+*2. Move this code into a middlware tool in Go-FTL
+*6. Pull "params" from "gogomxu" into own stuff and add to Go-FTL
+*1. Implement the ./exactMatch stuff in Go-FTL
+*4. Move demo code to Go-FTL
+*5. Pull config from Go-FTL standard config file
+
+Plan
+	*1. Add a /api/status handler/middleware
+	*2. test a a login-only resource
+	3. Clean up Redis data
+	4. Allow Redis shared connect
+	5. Check TTL's on data
+	*6. Config
+	7. Documenation
+	*8. Complete cycle test
+	9. jQuery Login Demo
+	*a. Angular 1.3 Login Demo
+	b. Wordpress Login Demo
+
+
+	//	if req.URL.Path == "/api/get2Fa.svg" {
+	//
+	//		www.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
+	//		www.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
+	//		www.Header().Set("Expires", "0")                                         // Proxies.
+	//		www.Header().Set("Content-Type", "image/svg+xml")                        // For SVG
+	//		fmt.Fprintf(www, `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+	//<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg"
+	//width="90" height="40" preserveAspectRatio="xMinYMin meet" viewBox="0 0 90 40" version="1.1" >
+	//	<text x="5" y="25" style="fill:black;  font-family:serif; font-size:16px; font-weight: 400; ">x%sy</text>
+	//</svg>
+	//`, OneTimeKey)
+	//
+	//	} else {
+
+/*
+	// key is srp:U::bits
+	if tVal, ok := dataStore.RGetValueRaw(hdlr, rw, SandBoxKey("srp:U:", SandBoxPrefix, ":bits")); ok { // xyzzy2016 - hard coded "srp:U:"
+		err = json.Unmarshal([]byte(tVal), &ng_data)
+		if err != nil {
+			rw.Log.Error(fmt.Sprintf("Unable to parse supplided srp:U::bits confiration data from Redis, Data: >>>%s<<<", tVal))
+		}
+	} else {
+		err = json.Unmarshal([]byte(g_tVal), &ng_data)
+		if err != nil {
+			rw.Log.Error(fmt.Sprintf("Unable to parse constant srp:U::bits confiration data, Data: >>>%s<<<", tVal))
+		}
+	}
+*/
+
+
+// ----------------------------------------------------------------------------------------------------------------------------
+// Input:
+//	t - session key
+// Output
+//	OneTimeKey - Key to use for login
+// NOT USED:func respHandlerGet2Factor(www http.ResponseWriter, req *http.Request) {
+// NOT USED:
+// NOT USED:	// DeviceID -> URL + User(email) + Sandbox?
+// NOT USED:	// Validate
+// NOT USED:	// io.WriteString(www, `{"status":"success","key":"4 111 111"}`)
+// NOT USED:	rw, hdlr, ok := GetRwHdlrFromWWW(www, req)
+// NOT USED:	if !ok {
+// NOT USED:		AnError(hdlr, www, req, 500, 5, fmt.Sprintf("Fatal Error - did not get passed a bufferhtml.MidBuffer - AT: %s\n", godebug.LF()))
+// NOT USED:		return
+// NOT USED:	}
+// NOT USED:	ps := rw.Ps
+// NOT USED:
+// NOT USED:	tt := ps.ByNameDflt("t", "")
+// NOT USED:	if tt == "" {
+// NOT USED:		AnError(hdlr, www, req, 400, 5, `Invalid input data`)
+// NOT USED:		return
+// NOT USED:	}
+// NOT USED:	SandBoxPrefix := ps.ByNameDflt("GOFTL_Sandbox", "")
+// NOT USED:
+// NOT USED:	email, err := UserGetEmail(hdlr, rw, tt, SandBoxPrefix)
+// NOT USED:	if err != nil { // check user exists
+// NOT USED:		AnError(hdlr, www, req, 400, 6, `Failed to find an existing user.  Invalid email`)
+// NOT USED:		return
+// NOT USED:	}
+// NOT USED:
+// NOT USED:	w, _ := GenRandNumber(8)
+// NOT USED:	w = "8" + w[0:6]
+// NOT USED:	OneTimeKey := w
+// NOT USED:	// save key with email - with timeout
+// NOT USED:	Save2FactorAuth(hdlr, rw, OneTimeKey, email, SandBoxPrefix)
+// NOT USED:
+// NOT USED:	fmt.Fprintf(www, `{"status":"success","OneTimeKey":%q}`, OneTimeKey)
+// NOT USED:
+// NOT USED:}
+// NOT USED:
+
+	(Check)(real problem is real)
+	+1. Verify can not make request to a /api call if skip the 2fa validate phase - check in /api/cipher xyzzyEEE
+
+
+	CRUD of Device IDs
+		1. create new device id 			-- muxEnc.HandleFunc("/api/createNewDeviceID", respHandlerCreateNewDeviceID)
+		2. delete/inactivate device id 		-- muxEnc.HandleFunc("/api/deleteDeviceID", respHandlerDeleteDeviceID)
+		3. update device id - title 		-- muxEnc.HandleFunc("/api/updateDeviceID", respHandlerUpdateDeviceID)
+		4. get device id's for this user 	-- muxEnc.HandleFunc("/api/getDeviceID", respHandlerGetDeviceID)
+		5. Limit # of device IDs for a user (config) --  "LimitDeviceIDs":           { "type":[ "int" ], "default":"10" },
+
+		*1. Need a date when registeed
+		*2. Allow any number of them - it's an arary
+		*3. Be able to use multiple devices to validate an account
+		*4. User should be able to dis-avow any dvice id, or associate a name with it
+	!	5. How do we test this? -- with the srp-cli code -- how?
+*1. Cabinets in basement
+Today Streach Goal 
+	+++0. Email up and going + mods to aes_srp 
+	*0. Email clogged up - fix - -- implement new email system --
+	*1. Move code into library - clean up
+	*2. put into aessrp - and - finish this.
+	*2. Shutdown AWS completely

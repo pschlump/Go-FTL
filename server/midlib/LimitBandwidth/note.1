@@ -1,0 +1,15 @@
+Limit the bandwith of a particular requestor
+
+1. Must have an "AuthToken" - this determines what the limit is.
+
+2. Limit will be to a frequency - save the data for this AuthToken with an expire in Redis
+	- if not fouind in redis then OK, create new limit-bandwitdth token
+	- if found then
+		return error 429(default configurable) "Too Many Requests"
+			509 "Bandwidth Limit Exceeded" -- unoficall
+
+would be nice to confiure as N/per-sec 
+
+
+Add in limit-via-delay - with 1500 ms delay?, 1st no delay, then if a 2nd before timeout, Sleep for pexpire delay ms.
+

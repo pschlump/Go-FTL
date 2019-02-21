@@ -1,0 +1,11 @@
+(*1hr) (Fix)
+	+1. !!!! you commented out the INIT for CSRF tokens in // xyzzy - put this back in -- loadAllCsrfTokens(hh)
+	- Make CSRF tokens a middlware of its own.
+	https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#General_Recommendation:_Synchronizer_Token_Pattern
+
+1. Single page apps need the Token to ba a JS global so can use for all forms
+2. X-Token how that works
+3. Server side generation needs the per-session token to generate forms with -- Template Data
+
+
+

@@ -1,0 +1,36 @@
+ % go test
+Connected and Authorized to redis-server. OK
+
+----------------------------------- initial test of setup of roles/accessLevels -----------------------------------
+
+rn=[{Name:public BitMask:1} {Name:user BitMask:2} {Name:admin BitMask:4} {Name:root BitMask:8}], rn_h=map[admin:4 root:8 public:1 user:2]
+an=[{Name:root BitMask:15} {Name:public BitMask:0} {Name:anon BitMask:1} {Name:user BitMask:6} {Name:admin BitMask:4}]
+match: if at bottom
+AT: File: /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/AesSrp/aessrp_ext.go LineNo:1217
+salt [42ce852b31aa2beb5e2f89872f944d4b] len(salt) = 32
+v [51a5be478b590a312b5ee9c76c12a360c8d5952721d27a03cb9c6e55097a831883cfbe2cdbafa4aa47d6f62971ff6ce9c6b05886a5d783b9c0fc56c5a14ef795693cc2d3e2a66d12cd82d5fd83579949ee48111ac4e31cd0f3a60d661042c9f2334f0894dff979ca0e1f8cc06624b24370b05d8a65454454ea3f0a93fa05362dac528bdfe8d8eef084349791fe4387f9b0e05e3093656b7c5db4a9b81e9d18161c7e69cf0538261c90a90b287cea73deb1b0ea22cc22c1926de39da71c7751ae27155444341156736e069d21e8d0467256d48790bdecb9ed5990eb417452b4e8b41cdd320116b3a417d840e99abaee8ba91ca1014e865bb267da89503ace0316] len(v) = 512
+Should be non-encrypted keys (regular), File: /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/AesSrp/enc_salt_v.go LineNo:64
+rn [09185274] err=%!s(<nil>)
+rn [78116769] err=%!s(<nil>)
+rn [08411889] err=%!s(<nil>)
+rn [65329126] err=%!s(<nil>)
+rn [30870176] err=%!s(<nil>)
+rn [98897463] err=%!s(<nil>)
+rn [25516090] err=%!s(<nil>)
+rn [08361462] err=%!s(<nil>)
+rn [61740453] err=%!s(<nil>)
+rn [23872279] err=%!s(<nil>)
+rn [82163903] err=%!s(<nil>)
+rn [06181952] err=%!s(<nil>)
+rn [90269696] err=%!s(<nil>)
+rn [06960003] err=%!s(<nil>)
+rn [33423506] err=%!s(<nil>)
+rn [41352869] err=%!s(<nil>)
+rn [92514905] err=%!s(<nil>)
+rn [71405620] err=%!s(<nil>)
+rn [34465894] err=%!s(<nil>)
+rn [09354692] err=%!s(<nil>)
+Len v, salt = 512 32 email t1@example.com, UserName, DeviceId --- settting value at this point
+%!(EXTRA string=t1@example.com, string=)
+PASS
+ok  	github.com/pschlump/Go-FTL/server/midlib/AesSrp	0.021s

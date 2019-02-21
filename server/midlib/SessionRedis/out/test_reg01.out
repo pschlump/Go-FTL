@@ -1,0 +1,9 @@
+delete from "t_user" where "username" = 'test01';
+DELETE 1
+ 
+select s_register_new_user('test01', '123456', '123456', '1.1.1.1', 'kermit.nosend.01@gmail.com', 'Kermit Frog', 'http://www.2c-why.com/', 'test-application' );
+                                                                                                                                                                                                s_register_new_user                                                                                                                                                                                                 
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"status":"success","$send_email$":{"template":"confirm_registration","username":"test01","real_name":"Kermit Frog","email_token":"b700785f-aeae-48ba-89cd-bf61759d5ce0","app":"test-application","url":"http://www.2c-why.com/","from":"pschlump@gmail.com","email_address":"kermit.nosend.01@gmail.com","to":"kermit.nosend.01@gmail.com"},"$session$":{"set":[{"path":["user","$is_logged_in$"],"value":"n"}]}}
+(1 row)
+

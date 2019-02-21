@@ -1,0 +1,9 @@
+select 'EMAIL_'||'RESET_KEY', "email_reset_key"
+from "t_user"
+where "username" = 'test01'
+;
+    ?column?     |           email_reset_key            
+-----------------+--------------------------------------
+ EMAIL_RESET_KEY | b700785f-aeae-48ba-89cd-bf61759d5ce0
+(1 row)
+

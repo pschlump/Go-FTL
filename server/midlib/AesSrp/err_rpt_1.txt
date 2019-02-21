@@ -1,0 +1,270 @@
+func init() {func (hdlr *AesSrpType) SetNext(next http.Handler) {func NewAesSrpServer(n http.Handler, p []string, e []string, gCfg *cfg.ServerGlobalConfigType) *AesSrpType {func (hdlr *AesSrpType) ServeHTTP(www http.ResponseWriter, req *http.Request) {func initRegularMux() (mux *httpmux.ServeMux) {func initMuxEnc() (muxEnc *httpmux.ServeMux) {func respHandlerGetDeviceID(www http.ResponseWriter, req *http.Request) {
+	Code: 1000 LineNo:704
+	Code: 1001 LineNo:711
+	Code: 1002 LineNo:719
+	Code: 1003 LineNo:725
+func respHandlerCreateNewDeviceID(www http.ResponseWriter, req *http.Request) {
+	Code: 1004 LineNo:779
+	Code: 1005 LineNo:786
+	Code: 1006 LineNo:795
+	Code: 1007 LineNo:801
+	Code: 1008 LineNo:815
+func respHandlerUpdateDeviceID(www http.ResponseWriter, req *http.Request) {
+	Code: 1009 LineNo:839
+	Code: 1010 LineNo:846
+	Code: 1011 LineNo:856
+	Code: 1012 LineNo:863
+	Code: 1013 LineNo:884
+func respHandlerDeleteDeviceID(www http.ResponseWriter, req *http.Request) {
+	Code: 1014 LineNo:900
+	Code: 1015 LineNo:907
+	Code: 1016 LineNo:915
+	Code: 1017 LineNo:922
+func respHandlerVersion(www http.ResponseWriter, req *http.Request) {func respHandlerGenTempKeys(www http.ResponseWriter, req *http.Request) {
+	Code: 1018 LineNo:975
+	Code: 1019 LineNo:982
+	Code: 1020 LineNo:990
+	Code: 1021 LineNo:997
+func respHandlerSendSupportMessage(www http.ResponseWriter, req *http.Request) {
+	Code: 1022 LineNo:1025
+	Code: 1023 LineNo:1033
+	Code: 1024 LineNo:1039
+	Code: 1025 LineNo:1045
+func respHandlerGet2FactorFromDeviceID(www http.ResponseWriter, req *http.Request) {
+	Code: 1026 LineNo:1074
+	Code: 1027 LineNo:1087
+	Code: 1028 LineNo:1096
+	Code: 1029 LineNo:1104
+	Code: 1030 LineNo:1112
+	Code: 1031 LineNo:1120
+	Code: 1032 LineNo:1126
+	Code: 1033 LineNo:1135
+	Code: 1034 LineNo:1151
+func respHandlerValid2Factor(www http.ResponseWriter, req *http.Request) {
+	Code: 1035 LineNo:1187
+	Code: 1036 LineNo:1201
+	Code: 1037 LineNo:1207
+	Code: 1038 LineNo:1213
+	Code: 1039 LineNo:1219
+	Code: 1040 LineNo:1277
+	Code: 1041 LineNo:1294
+func respHandlerSetupSandbox(www http.ResponseWriter, req *http.Request) {
+	Code: 1042 LineNo:1308
+func respHandlerConfirmRegistration(www http.ResponseWriter, req *http.Request) {
+	Code: 1043 LineNo:1364
+func respHandlerRecoverPw2(www http.ResponseWriter, req *http.Request) {
+	Code: 1044 LineNo:1445
+func errorHandlerFunc(ww http.ResponseWriter, req *http.Request) {func respHandlerSRPGetNg(www http.ResponseWriter, req *http.Request) {
+	Code: 1045 LineNo:1616
+	Code: 1046 LineNo:1657
+func respHandlerSRPRegister(www http.ResponseWriter, req *http.Request) {
+	Code: 1047 LineNo:1677
+	Code: 1048 LineNo:1705
+	Code: 1049 LineNo:1708
+	Code: 1050 LineNo:1720
+	Code: 1051 LineNo:1724
+	Code: 1052 LineNo:1728
+	Code: 1053 LineNo:1732
+	Code: 1054 LineNo:1736
+	Code: 1055 LineNo:1744
+	Code: 1056 LineNo:1748
+	Code: 1057 LineNo:1752
+	Code: 1058 LineNo:1756
+	Code: 1059 LineNo:1771
+	Code: 1060 LineNo:1779
+	Code: 1061 LineNo:1871
+	Code: 1062 LineNo:1882
+	Code: 1063 LineNo:1887
+func respHandlerCheckEmailAvailable(www http.ResponseWriter, req *http.Request) {
+	Code: 1064 LineNo:1957
+func respHandlerSimulateEmailConfirm(www http.ResponseWriter, req *http.Request) {
+	Code: 1065 LineNo:2030
+	Code: 1066 LineNo:2046
+	Code: 1067 LineNo:2056
+	Code: 1068 LineNo:2066
+	Code: 1069 LineNo:2072
+func respHandlerEmailConfirm(www http.ResponseWriter, req *http.Request) {
+	Code: 1070 LineNo:2098
+	Code: 1071 LineNo:2112
+	Code: 1072 LineNo:2117
+	Code: 1073 LineNo:2127
+func respHandlerChangePassword(www http.ResponseWriter, req *http.Request) {
+	Code: 1074 LineNo:2151
+	Code: 1075 LineNo:2158
+	Code: 1076 LineNo:2165
+	Code: 1077 LineNo:2173
+	Code: 1078 LineNo:2187
+func respHandlerGetPageToken(www http.ResponseWriter, req *http.Request) {
+	Code: 1079 LineNo:2221
+	Code: 1080 LineNo:2255
+func respHandlerRecoverPasswordPt1(www http.ResponseWriter, req *http.Request) {
+	Code: 1081 LineNo:2306
+	Code: 1082 LineNo:2314
+	Code: 1083 LineNo:2323
+	Code: 1084 LineNo:2332
+func respHandlerRecoverPasswordPt2(www http.ResponseWriter, req *http.Request) {
+	Code: 1085 LineNo:2365
+	Code: 1086 LineNo:2405
+	Code: 1087 LineNo:2410
+	Code: 1088 LineNo:2414
+	Code: 1089 LineNo:2418
+	Code: 1090 LineNo:2429
+	Code: 1091 LineNo:2434
+	Code: 1092 LineNo:2442
+	Code: 1093 LineNo:2452
+	Code: 1094 LineNo:2458
+	Code: 1095 LineNo:2462
+	Code: 1096 LineNo:2474
+	Code: 1097 LineNo:2502
+	Code: 1098 LineNo:2506
+func respHandlerAdminSetPassword(www http.ResponseWriter, req *http.Request) {
+	Code: 1099 LineNo:2590
+	Code: 1100 LineNo:2602
+	Code: 1101 LineNo:2608
+	Code: 1102 LineNo:2617
+	Code: 1103 LineNo:2622
+	Code: 1104 LineNo:2627
+	Code: 1105 LineNo:2633
+	Code: 1106 LineNo:2640
+	Code: 1107 LineNo:2648
+func respHandlerAdminSetAttributes(www http.ResponseWriter, req *http.Request) {
+	Code: 1108 LineNo:2683
+	Code: 1109 LineNo:2695
+	Code: 1110 LineNo:2701
+	Code: 1111 LineNo:2710
+	Code: 1112 LineNo:2715
+	Code: 1113 LineNo:2720
+	Code: 1114 LineNo:2726
+func respHandlerForceLogout(www http.ResponseWriter, req *http.Request) {
+	Code: 1115 LineNo:2774
+	Code: 1116 LineNo:2788
+	Code: 1117 LineNo:2797
+	Code: 1118 LineNo:2803
+	Code: 1119 LineNo:2812
+	Code: 1120 LineNo:2817
+	Code: 1121 LineNo:2822
+	Code: 1122 LineNo:2828
+func respHandlerSRPLogout(www http.ResponseWriter, req *http.Request) {
+	Code: 1123 LineNo:2864
+func (hdlr *AesSrpType) ValidUserName(un string) bool {func respHandlerSRPLogin(www http.ResponseWriter, req *http.Request) {
+	Code: 1124 LineNo:3051
+	Code: 1125 LineNo:3055
+	Code: 1126 LineNo:3059
+	Code: 1127 LineNo:3069
+	Code: 1128 LineNo:3075
+	Code: 1129 LineNo:3088
+	Code: 1130 LineNo:3094
+	Code: 1131 LineNo:3108
+	Code: 1132 LineNo:3114
+	Code: 1133 LineNo:3120
+	Code: 1134 LineNo:3136
+	Code: 1135 LineNo:3144
+	Code: 1136 LineNo:3148
+func respHandlerSRPChallenge(www http.ResponseWriter, req *http.Request) {
+	Code: 1137 LineNo:3240
+	Code: 1138 LineNo:3264
+func respHandlerSRPValidate(www http.ResponseWriter, req *http.Request) {
+	Code: 1139 LineNo:3301
+	Code: 1140 LineNo:3335
+	Code: 1141 LineNo:3373
+	Code: 1142 LineNo:3398
+	Code: 1143 LineNo:3523
+func respHandlerCipher(www http.ResponseWriter, req *http.Request) {
+	Code: 1144 LineNo:3693
+	Code: 1145 LineNo:3717
+	Code: 1146 LineNo:3723
+	Code: 1147 LineNo:3739
+	Code: 1148 LineNo:3810
+	Code: 1149 LineNo:3819
+	Code: 1150 LineNo:3825
+	Code: 1151 LineNo:3849
+	Code: 1152 LineNo:3855
+	Code: 1153 LineNo:3864
+	Code: 1154 LineNo:3869
+	Code: 1155 LineNo:3883
+	Code: 1156 LineNo:3889
+	Code: 1157 LineNo:3907
+	Code: 1158 LineNo:3959
+	Code: 1159 LineNo:3995
+	Code: 1160 LineNo:4046
+	Code: 1161 LineNo:4126
+	Code: 1162 LineNo:4131
+	Code: 1163 LineNo:4161
+	Code: 1164 LineNo:4176
+	Code: 1165 LineNo:4196
+	Code: 1166 LineNo:4201
+	Code: 1167 LineNo:4208
+	Code: 1168 LineNo:4214
+	Code: 1169 LineNo:4305
+	Code: 1170 LineNo:4311
+func respHandlerAdminGetOneTimeKey(www http.ResponseWriter, req *http.Request) {
+	Code: 1171 LineNo:4343
+	Code: 1172 LineNo:4353
+	Code: 1173 LineNo:4359
+	Code: 1174 LineNo:4365
+	Code: 1175 LineNo:4370
+	Code: 1176 LineNo:4376
+	Code: 1177 LineNo:4382
+	Code: 1178 LineNo:4391
+func respHandlerSetUserAttrs(www http.ResponseWriter, req *http.Request) {
+	Code: 1179 LineNo:4414
+	Code: 1180 LineNo:4421
+	Code: 1181 LineNo:4434
+	Code: 1182 LineNo:4441
+	Code: 1183 LineNo:4447
+func respHandlerGetUserAttrs(www http.ResponseWriter, req *http.Request) {
+	Code: 1184 LineNo:4475
+	Code: 1185 LineNo:4482
+	Code: 1186 LineNo:4490
+	Code: 1187 LineNo:4499
+func respHandlerAdminSetUserAttrs(www http.ResponseWriter, req *http.Request) {
+	Code: 1188 LineNo:4544
+	Code: 1189 LineNo:4554
+	Code: 1190 LineNo:4560
+	Code: 1191 LineNo:4566
+	Code: 1192 LineNo:4571
+	Code: 1193 LineNo:4577
+	Code: 1194 LineNo:4583
+	Code: 1195 LineNo:4596
+func respHandlerAdminGetUserAttrs(www http.ResponseWriter, req *http.Request) {
+	Code: 1196 LineNo:4643
+	Code: 1197 LineNo:4653
+	Code: 1198 LineNo:4659
+	Code: 1199 LineNo:4665
+	Code: 1200 LineNo:4670
+	Code: 1201 LineNo:4676
+	Code: 1202 LineNo:4682
+func getUUIDAsString() (rv string) {func respHandler1x1Gif(www http.ResponseWriter, req *http.Request) {func SetEmailFromIamI(hdlr *AesSrpType, rw *goftlmux.MidBuffer, SandBoxPrefix string, IamI, email string) (err error) {func UpdateNotStayLoggedIn(hdlr *AesSrpType, rw *goftlmux.MidBuffer, SandBoxPrefix string, IamI, email string) (err error) {func GetEmailFromIamI(hdlr *AesSrpType, rw *goftlmux.MidBuffer, SandBoxPrefix string, IamI string) (email, Etag string, err error) {func ValidateCookies(LoginAuthCookie, LoginHashCookie, validation_secret, email string) bool {func respHandlerMarkPage(www http.ResponseWriter, req *http.Request) {func respHandlerSetupStayLoggedIn(www http.ResponseWriter, req *http.Request) {
+	Code: 1203 LineNo:5187
+	Code: 1204 LineNo:5203
+	Code: 1205 LineNo:5209
+	Code: 1206 LineNo:5216
+	Code: 1207 LineNo:5223
+	Code: 1208 LineNo:5229
+	Code: 1209 LineNo:5260
+	Code: 1210 LineNo:5269
+	Code: 1211 LineNo:5298
+	Code: 1212 LineNo:5303
+	Code: 1213 LineNo:5354
+func respHandlerResumeLogin(www http.ResponseWriter, req *http.Request) {
+	Code: 1214 LineNo:5375
+	Code: 1215 LineNo:5394
+	Code: 1216 LineNo:5401
+	Code: 1217 LineNo:5411
+	Code: 1218 LineNo:5417
+	Code: 1219 LineNo:5427
+	Code: 1220 LineNo:5433
+	Code: 1221 LineNo:5449
+	Code: 1222 LineNo:5461
+	Code: 1223 LineNo:5482
+func (hdlr *QRRedirectHandlerType) ApiKeyToCustUser(apiKey string) (CustomerId, UserId string, err error) {func (hdlr *AesSrpType) UpsertUserInfo(userId string, mdata map[string]string) {func (hdlr *AesSrpType) IsValidAnonUserPath(path string) bool {func respHandlerTest2faReturn(www http.ResponseWriter, req *http.Request) {func EncryptData(hdlr *AesSrpType, www http.ResponseWriter, req *http.Request, Salt base64data.Base64Data, Iter int, KeySize int, tt string, plaintext, key []byte, debugFlag1, debugFlag2 bool) (rv string, err error) {
+	Code: 1224 LineNo:5770
+	Code: 1225 LineNo:5777
+func DecryptData(hdlr *AesSrpType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, SandBoxPrefix, Password, tEmail, tSalt string, encData *sjcl.SJCL_DataStruct, tIter, tKeySize int, tKey string, Session map[string]interface{}, tt string, debugFlag1, debugFlag2 bool) (plaintext, key []byte, err error) {
+	Code: 1226 LineNo:5842
+	Code: 1227 LineNo:5852
+	Code: 1228 LineNo:5859
+	Code: 1229 LineNo:5884
+	Code: 1230 LineNo:5891
+	Code: 1231 LineNo:5901
+	Code: 1232 LineNo:5907

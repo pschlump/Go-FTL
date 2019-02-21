@@ -1,0 +1,71 @@
+
+*2. If Image - collect size info - save in d.b.
+*1. Failed to get file extension
+*2. Mulitple file uplaods - means multiple names - investigate
+*3. How we get "array" params back from processing
+*4. Validate "file-name" stuff
+*1. Validate file size info
+*2. Config to save under UUID name or Orig-Mod name -- via setting template
+*3. Get the drag/drop stuff to work in demo with this (dropzone) http://www.dropzonejs.com/
+
+https://matt.aimonetti.net/posts/2013/07/01/golang-multipart-file-upload-example/ -- Send file to multi-part-upload in go
+//	*3. upload file - get file ID back (id is /u/<name>.png location)
+//		pull code from tab-server configure and test	-- add in a default lifespan on files - 120sec - then delete?
+//		test with drag/drop upload thing in JS
+	+0. Save in d.b.
+		+1. Create DDL/.sql file
+		+2. Create d.b. table
+		+3. Set save/timeout - for discard of files
+
+/*
+m.File={
+	"Value": {},
+	"File": {
+		"file": [
+			{
+				"Filename": "zUSC.jpg",
+				"Header": {
+					"Content-Disposition": [
+						"form-data; name=\"file\"; filename=\"zUSC.jpg\""
+					],
+					"Content-Type": [
+						"image/jpeg"
+					]
+				}
+			}
+		]
+	}
+} AT:File: /Users/corwin/go/src/www.2c-why.com/qr-today/f-upload/upload.go LineNo:224
+*/
+
+/*
+http://stackoverflow.com/questions/19390471/dropzonejs-how-to-get-php-response-after-upload-success
+http://stackoverflow.com/questions/26421731/how-to-get-the-dropzone-js-return-value
+	-- code to pull out response --
+new Dropzone("#myDropzone", {
+    maxFilesize: 2, // MB
+    init: function() {
+        this.on("success", function(file, responseText) {
+            console.log(responseText);
+        });
+    }
+});
+
+http://wilsonchiang.com/modifying-dropzone-js-to-support-error-success-messages-using-json/ -- Mod for better errors
+
+Issue: dropzone and .svg files -- goofy thumnail
+
+http://www.dropzonejs.com/bootstrap.html
+
+
+Image thumbnail previews. Simply register the callback thumbnail(file, data) and display the image wherever you like.
+Multiple files and synchronous uploads.
+Progress updates.
+Support for large files.
+It uses the latest API of browsers with fallback to the normal upload form if the browser is too old.
+callback for image previews.
+
+
+https://github.com/enyo/dropzone
+
+*/

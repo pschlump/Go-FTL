@@ -119,8 +119,8 @@ func (hdlr *LimitJsonHandlerType) ServeHTTP(www http.ResponseWriter, req *http.R
 								fmt.Printf("\tLimitJson: Failed to parse, data=%s err=%s, %s\n", body, err, godebug.LF())
 							}
 							if hdlr.OnErrorDiscard == "yes" {
-								fmt.Fprintf(os.Stderr, "%sData Discarded - due to syntax error%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
-								fmt.Fprintf(os.Stdout, "%sData Discarded - due to syntax error%s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+								fmt.Fprintf(os.Stderr, "%sData Discarded - due to syntax error ->%s<- AT:%s %s\n", MiscLib.ColorRed, body, godebug.LF(), MiscLib.ColorReset)
+								fmt.Fprintf(os.Stdout, "%sData Discarded - due to syntax error ->%s<- AT:%s %s\n", MiscLib.ColorRed, body, godebug.LF(), MiscLib.ColorReset)
 								www.WriteHeader(http.StatusInternalServerError)
 								rw.ReplaceBody([]byte("{}"))
 								rw.SaveDataInCache = false

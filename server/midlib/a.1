@@ -1,0 +1,20 @@
+func init() {
+	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
+		x := &XyzzyType{}
+		meta := make(map[string]JsonX.MetaInfo)
+		JsonX.SetDefaults(&x, meta, "", "", "") // xyzzy - report errors in 'meta'
+		return x
+	}
+	mid.RegInitItem3("XyzzyName", CreateEmpty, `{
+		}`)
+}
+
+func (hdlr *XyzzyType) InitializeWithConfigData(next http.Handler, gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
+	hdlr.Next = next
+	//hdlr.CallNo = callNo // 0 if 1st init
+	return
+}
+
+func (hdlr *XyzzyType) PostInitialize(gCfg *cfg.ServerGlobalConfigType, serverName string, pNo, callNo int) (err error) {
+	return
+}

@@ -1,0 +1,74 @@
+
+Action Items:
+	0. JSON generated from TabServer2 must have "must-revalidate" and "ETag" headers
+	1. Implmeent and test file "marker" - based on ID from Redis with increment
+	2. add to Hash stuff for hash of entire file
+	3. add to Hash stuff for hash when you already have size/modtime
+
+// xyzzy304 if "must-revalidate" cache - then -- regenerate data - and if not changed send 304
+
+1. Proxy
+	Keep stuff in cache until it "expires" based on cach heades - if proxy
+	Then re-validate after this - hash entire file -
+		if hash not changed - then 304
+		update cache time if new caching header from soruce
+2. Local
+	Check request - if dependent files are in order relative to ModTime of output then 304
+3. Marked HTML/CSS/JS file
+	1. Mark it
+	2. Re-Hash entire file	
+	3. Save under ETag hash as dependent file
+	4. Keep for TIME 
+4. When you get a Marked(ETag) then look up file meta-info
+	Use served time instead of file modified time to determine set of dependent fiels and see if nee to re-build file
+
+5. Only re-save a file to cache IF-IFF it has chagned base on full file hash.  If not changed then to not alther time stamp.
+
+6. Config must have
+	{
+		"marked": [ pattern ]
+		"cache": 
+		"ignore":
+	}
+
+7. ON receipt of file ETag for marked fiels is looked up and replaced with Etag for lower levels.
+
+---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+Test Cases
+---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+1. Headers - local file served by file_server -- regular file - just 1 entry in DependentFNs matches with ResolvedFn   
+2. Headers - local file served by file_server -- regular file - built by someting like 'tsc'
+	Locally served file
+	ETag 
+	must-revalidate
+	.html/.css/.js (mime type)
+	Within size limits (below max)
+
+	1. File not saved to disk cache - it is already a local file
+	2. Update of info in Redis
+	3. Alter ETag to be either: EtagFromMarked, EtagFromLocal 
+		if matches a "marked" file then
+			1. Mark file
+			2. Re-hash entire file	
+			3. Update e-tag to reflect
+			4. Save info in Redis
+		else it is a local file
+			3. Update e-tag to reflect
+			4. Save info in Redis
+	
+	Images/Fonts can not be "marked" so must just be EtagFromLocal - use existing hash Etag
+
+2. Headers - proxied file
+	Remotely served file
+	ETag  - maybee
+	must-revalidate - maybee
+	Local File - in ./cache/
+	.html/.css/.js
+	Within size limits (below max)
+
+	1. File has been saved to ./cache/
+	2. If file IS VALID
+		1. change request to access file in disk cahce (Range)
+
+
+

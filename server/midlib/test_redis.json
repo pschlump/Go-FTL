@@ -1,0 +1,7 @@
+{
+	RedisConnectHost: """{{ __env__ REDIS_HOST }}""" ,
+	RedisConnectAuth: """{{ __env__ REDIS_AUTH }}""" ,
+	PGConn: """user=pschlump password={{ __env__ DB_PASS }} sslmode=disable dbname=pschlump port=5432 host=192.168.0.139""" ,
+	DBType: "postgres" ,
+	DBName: """{{ __env__ DB_NAME }}""" ,
+}

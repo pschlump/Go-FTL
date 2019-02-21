@@ -1,0 +1,6 @@
+select s_login('test01', 'bobob4',  '1.1.1.1',  'http://www.2c-why.com/' );
+                                  s_login                                  
+---------------------------------------------------------------------------
+ { "status":"error", "code":"401", "msg":"Invalid username or password." }
+(1 row)
+

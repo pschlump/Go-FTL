@@ -1,0 +1,22 @@
+/Users/corwin/Projects/wp-vuln-scan
+
+https://blog.haschek.at/2017/how-to-defend-your-website-with-zip-bombs.html
+
+For listed paths - any access returns specified file
+with headers.
+
+-- Nice template serer code --
+http://www.alexedwards.net/blog/serving-static-sites-with-go
+
+
+<?php
+// prepare the client to recieve GZIP data. This will not be suspicious since most web servers use GZIP by default
+header("Content-Encoding: gzip");
+header("Content-Length: ".filesize('10G.gzip'));
+// Turn off output buffering
+if (ob_get_level()) ob_end_clean();
+// send the gzipped file to the client
+readfile('10G.gzip');
+
+
+

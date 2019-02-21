@@ -1,0 +1,15 @@
+1. Transform extensions
+
+	.md->.html
+	.sccs->.css
+	.ts->.js
+
+	f: [ .ext ], t [ .out, .other ]		If request .other, and have .ext then run command and build
+										If request .ext and have .other, then if out of date rebuild
+
+[
+	{ "f": ".js", "t": [ ".min.js", ".min.map" ],    "cmd": "uglifyjs --input {{.f}} --output {{.t}} --generate-mapfile" }
+,	{ "f": ".ts", "t": [ ".js" ],                    "cmd": "typescirpt {{.f}} " }
+,	{ "f": ".css", "t": [ ".min.css" ],              "cmd": "pack-css --in {{.f}} --out {{.t}}" }
+]
+

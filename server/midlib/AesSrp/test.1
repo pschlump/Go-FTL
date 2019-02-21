@@ -1,0 +1,40 @@
+0. /api/version
+
+1. /api/srp_register - Start Registration Process 
+	
+	1. Create user - verify in Redis created.
+	2. Create user with username - verify in Redis created.
+	3. Create user As DeviceID - verify in Redis created.
+	4. Check error return values - all of them.
+
+2. Login, Logout ( with email as username )
+
+2. Login, Logout ( with username as username )
+
+2. Login, Logout ( with DeviceId as username )
+
+3. Invalid Login
+
+4. Login, Change Password, Logout
+
+5. Login with new password
+
+6. Recover Password
+
+7. Update attributes of user
+
+8. Access login-required end point (encrypted)
+
+9. Refuse to access - encrypted but bad encryption
+
+10. Stay Logged In
+
+11. 
+
+
+If acct_type is not "user" then
+
+DevcieId - [ list of valid end points to talk to ] == /api/valid2factor
+
+
+
