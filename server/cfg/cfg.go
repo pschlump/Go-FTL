@@ -350,6 +350,7 @@ var ReservedItems = map[string]bool{
 	"$customer_id$":               true,
 	"$username$":                  true,
 	"$session$":                   true,
+	"$ip_sha256$":                 true,
 }
 
 //------------------------------------------------------------------------------------------------------------------------

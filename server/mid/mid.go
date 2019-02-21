@@ -389,7 +389,7 @@ func (hdlr *TopHandler) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 		// xyzzyTrx - set params
 		fmt.Printf("\nParams + Cookies for (%s): %s AT %s\n", req.URL.Path, rw.Ps.DumpParamTable(), godebug.LF())
 
-		// Delete reserved items: is_logged_in := ps.ByNameDflt("$is_logged_in$", "")
+		// Rename reserved items: is_logged_in := ps.ByNameDflt("$is_logged_in$", "")
 		goftlmux.RenameReservedItems(www, req, &rw.Ps, cfg.ReservedItems)
 
 		// func (ps *Params) DumpParamNVF() (rv []common.NameValueFrom) {
@@ -410,6 +410,9 @@ func (hdlr *TopHandler) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Printf("Mid: StatusCode = %d, req.URL.Path=%s, IsHijacked=%v\n", rw.StatusCode, req.URL.Path, rw.IsHijacked)
+
+	fmt.Printf("Req: %s, AT:%s\n", godebug.SVarI(req), godebug.LF())
+
 	fmt.Printf("\nFinal! Params + Cookies for (%s): %s AT %s\n", req.URL.Path, rw.Ps.DumpParamTable(), godebug.LF())
 	uu := rw.Ps.DumpParamUsed("api_table_key")
 	fmt.Printf("\nParams + Cookies for (Shows Used) (%s): %sAT %s\n", req.URL.Path, uu, godebug.LF())
