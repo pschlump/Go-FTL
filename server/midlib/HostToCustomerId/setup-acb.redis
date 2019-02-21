@@ -1,0 +1,8 @@
+auth "lLJSmkccYJiVEwskr1RM4MWIaBM"
+set "htci:localhost:9018" "1"
+set "htci:192.168.0.157:9018" "1"
+set "htci:192.168.0.200:9018" "1"
+set "htci:t1.test1.com:9019" "1"
+set "htci:lonetree-ranch.beefchain.com" "2"
+set "htci:--default--" "1"
+quit

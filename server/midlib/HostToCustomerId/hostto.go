@@ -22,6 +22,27 @@ import (
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
+/*
+192.168.0.199:6379> keys htci:*
+ 1) "htci:www.qr-today.com"
+ 2) "htci:localhost:9018"
+ 3) "htci:192.168.0.157:9018"
+ 4) "htci:localhost:16040"
+ 5) "htci:lonetree-ranch.beefchain.com"
+ 6) "htci:t2.test1.com"
+ 7) "htci:--default--"
+ 8) "htci:localhost:9019"
+ 9) "htci:www.go-ftl.com"
+10) "htci:t1.test1.com"
+11) "htci:192.168.0.200:9018"
+12) "htci:127.0.0.1:9019"
+
+192.168.0.199:6379> get htci:localhost:9018
+"1"
+
+*/
+
+// --------------------------------------------------------------------------------------------------------------------------
 
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
