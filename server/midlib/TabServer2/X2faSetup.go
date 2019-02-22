@@ -208,7 +208,7 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 		}
 
 		fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
-		return rv, false, 200
+		return rv, true, 200
 	}
 
 	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())

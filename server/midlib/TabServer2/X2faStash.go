@@ -88,6 +88,8 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 		// key := fmt.Sprintf("2faStash:%s:%s", ed.UserID, auth_tok_2part)
 		key := fmt.Sprintf("2faStash:User:%s", auth_tok_2part) // xyzzy - 2faStash: to be a "key" in config
+		fmt.Fprintf(os.Stderr, "KEY(1): %s\n", key)
+		fmt.Fprintf(os.Stdout, "KEY(1): %s\n", key)
 		err = conn.Cmd("SETEX", key, 60*4, rv).Err
 		if err != nil {
 			rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
@@ -95,6 +97,8 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		}
 
 		key = fmt.Sprintf("2faStash:%s", ed.UserID)
+		fmt.Fprintf(os.Stderr, "KEY(2): %s\n", key)
+		fmt.Fprintf(os.Stdout, "KEY(2): %s\n", key)
 		val, err := conn.Cmd("GET", key).Str()
 		if err != nil || val == "" {
 			err = conn.Cmd("SETEX", key, 60*4, "1").Err
@@ -172,7 +176,7 @@ func X2faSetupPt2of2(www http.ResponseWriter, req *http.Request, cfgTag string, 
 
 	key := fmt.Sprintf("2faStash:User:%s", auth_tok_2part)
 	rv, err = conn.Cmd("GET", key).Str()
-	if err != nil {
+	if err != nil || rv == "" {
 		rv = fmt.Sprintf(`{"status":"failed","msg":"Login has timed out - please try again.","LineFile":%q}`, godebug.LF())
 		return rv, true, 200
 	}
@@ -202,28 +206,49 @@ func X2faSetupPt2of2(www http.ResponseWriter, req *http.Request, cfgTag string, 
 
 	if ed.Status == "success" && ed.Use2fa == "yes" {
 
-		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+		// all["html_2fa"] = html
+		all["2fa"] = "is *NOT* valid"
 
-		//xyzzy
-		// xyzzy *
-		// 	xyzzy ***
-		// 	xyzzy ***
-		// xyzzy *
-		//xyzzy
-		html, QRImgURL, ID, err := GetQRForSetup(hdlr, www, req, ps, ed.UserID)
-		if err != nil {
-			fmt.Fprintf(www, `{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return "{\"status\":\"failed\"}", true, 200 // xyzzy - better error return
-		}
-
-		all["html_2fa"] = html
-		all["QRImgURL"] = QRImgURL
-		all["X2fa_Temp_ID"] = ID
+		user_id := ed.UserID
 
 		delete(all, "user_id")
 
 		rv = godebug.SVar(all)
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+
+		fmt.Printf("IsValid2fa called\n")
+		fmt.Fprintf(os.Stderr, "IsValid2fa called\n")
+
+		val2fa := ps.ByNameDflt("val2fa", "")
+		godebug.DbPfb(db1x2fa, "val2fa: ->%s<-\n", val2fa)
+
+		var err error
+		godebug.DbPfb(db1x2fa, "%(Cyan) user_id = %q AT: %(LF)\n", user_id)
+
+		// generate local copy based on user_id/auth_token - for all rows in t_2fa and any values in t_2fa_otk
+		LocalVal2fa, err := hdlr.GetValidList(user_id)
+		if err != nil {
+			rv = fmt.Sprintf(`{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
+			fmt.Fprintf(os.Stderr, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`+"\n", err, godebug.LF())
+			return rv, true, 200
+		}
+		godebug.DbPfb(db1x2fa, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
+
+		for _, v := range LocalVal2fa {
+			if v == val2fa {
+				stmt := "delete from \"t_2fa_otk\" where \"user_id\" = $1 and \"one_time_key\" = $2"
+				_, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id, v)
+				if err != nil {
+					fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
+				}
+				all["2fa"] = "is valid. Yea!"
+				rv = godebug.SVar(all)
+				godebug.DbPfb(db1x2fa, "%(Green) SHOULD BE SUCCESS rv = %s AT: %(LF), Parent = %s, p2 = %s\n", rv, godebug.LF(2), godebug.LF(3))
+				return rv, false, 200
+			}
+		}
+
+		fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
 		return rv, true, 200
 	}
 
