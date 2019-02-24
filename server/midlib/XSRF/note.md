@@ -59,9 +59,9 @@ application uses unique cookie name.
 
 1. Set Cookie on 1st get that matches a Root index.html file
 	- Save hash of Cookie value -> Redis with timeout
-	- Have timout specifed in seconds
+	- Have timout specified in seconds
 	- Send back "salt" as a variable or cookie in request
-	- Provide a facility to get XSRF informaiton ( app, userId, cookie, salt )
+	- Provide a facility to get XSRF information ( app, userId, cookie, salt )
 
 2. Validate Request has X-XSRF-TOKEN header on request.
 	- 1. JS on Client takes sha1("app":"userId":"cookie":"salt") -> TOKEN to return in X-XSRF-TOKEN

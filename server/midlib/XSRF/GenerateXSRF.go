@@ -10,7 +10,7 @@
 //
 
 //
-// Generate XSRF token that can be checked and validate to prevent XSRF.
+// Generate XSRF token that can be checked and validate to prevent (Cross Site Request Forgery) XSRF.
 // Normally this token is only generated for the initial load of the first HTML file.
 // It is safe to use the user token for tracking session data in Redis.
 //
@@ -40,63 +40,16 @@ import (
 	"strings"
 	"time"
 
-	JsonX "github.com/pschlump/JSONx"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/HashStrings"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 )
-
-// --------------------------------------------------------------------------------------------------------------------------
-//
-//func init() {
-//
-//	// normally identical
-//	initNext := func(next http.Handler, gCfg *cfg.ServerGlobalConfigType, ppCfg interface{}, serverName string, pNo int) (rv http.Handler, err error) {
-//		pCfg, ok := ppCfg.(*GenerateXSRFHandlerType)
-//		if ok {
-//			pCfg.SetNext(next)
-//			rv = pCfg
-//		} else {
-//			err = mid.FtlConfigError
-//			logrus.Errorf("Invalid type passed at: %s", godebug.LF())
-//		}
-//		gCfg.ConnectToRedis()
-//		pCfg.gCfg = gCfg
-//		return
-//	}
-//
-//	postInit := func(h interface{}, callNo int) error {
-//
-//		hh, ok := h.(*GenerateXSRFHandlerType)
-//		if !ok {
-//			// logrus.Warn(fmt.Sprintf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo))
-//			fmt.Printf("Error: Wrong data type passed, Line No:%d\n", hh.LineNo)
-//			return mid.ErrInternalError
-//		}
-//		hh.cleanCSS = regexp.MustCompile("[ \t\n\r\f]")
-//		tt := time.Now()
-//		tt = tt.Add(time.Duration(hh.MaxAge) * time.Second)
-//		hh.expires = tt.UTC()
-//		return nil
-//	}
-//
-//	// normally identical
-//	createEmptyType := func() interface{} { return &GenerateXSRFHandlerType{} }
-//
-//	cfg.RegInitItem2("GenerateXSRF", initNext, createEmptyType, postInit, `{
-//		}`)
-//}
-//
-//// SetNext normally identical
-//func (hdlr *GenerateXSRFHandlerType) SetNext(next http.Handler) {
-//	hdlr.Next = next
-//}
 
 func init() {
 	CreateEmpty := func(name string) mid.GoFTLMiddleWare {
