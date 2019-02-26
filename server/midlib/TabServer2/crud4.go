@@ -21,9 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -36,7 +34,6 @@ import (
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
-	"github.com/pschlump/uuid"
 )
 
 // Exists reports whether the named file or directory exists.
@@ -138,19 +135,21 @@ func (hdlr *TabServer2Type) RespHandlerRedis(res http.ResponseWriter, req *http.
 	// CallBefore
 	exit := false
 	a_status := 200
+	pptCode := PrePostContinue
 	if !done {
 		if len(h.CallBefore) > 0 {
 			trx.AddNote(1, "Functions to call before running queries.  CallBefore is set.")
 			for _, fx_name := range h.CallBefore {
 				if !exit {
 					trx.AddNote(1, fmt.Sprintf("CallBefore[%s]", fx_name))
-					rv, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
+					rv, pptCode, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				}
 			}
 		}
 	}
-	if exit {
-		fmt.Printf("****************** exit from before operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
+	switch pptCode {
+	case PrePostRVUpdatedSuccess, PrePostRVUpdatedFail, PrePostFatalSetStatus:
+		fmt.Printf("*** exit=%v pptCode=%v from before operations has been signaled ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
 		done = true
 		isError = true
 		ReturnErrorMessageRv(a_status, rv, "Preprocessing signaled error", "18008",
@@ -225,17 +224,19 @@ func (hdlr *TabServer2Type) RespHandlerRedis(res http.ResponseWriter, req *http.
 
 	exit = false
 	a_status = 200
+	pptCode = PrePostContinue
 	if len(h.CallAfter) > 0 {
 		trx.AddNote(1, "CallAfter fore is True - functions will be called.")
 		for _, fx_name := range h.CallAfter {
 			trx.AddNote(1, fmt.Sprintf("CallAfter fore[%s]", fx_name))
 			if !exit {
-				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
+				rv, pptCode, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 			}
 		}
 	}
-	if exit {
-		fmt.Printf("****************** exit from after operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
+	switch pptCode {
+	case PrePostRVUpdatedSuccess, PrePostRVUpdatedFail, PrePostFatalSetStatus:
+		fmt.Printf("*** exit=%v pptCode=%v from before operations has been signaled ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
 		done = true
 		isError = true
 		ReturnErrorMessageRv(a_status, rv, "Postprocessing signaled error", "18007",
@@ -248,26 +249,6 @@ func (hdlr *TabServer2Type) RespHandlerRedis(res http.ResponseWriter, req *http.
 		io.WriteString(res, rv)
 	}
 
-}
-
-// ==============================================================================================================================================================================
-// ==============================================================================================================================================================================
-func PubEMailToSend(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
-
-	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
-
-	conn, err := hdlr.gCfg.RedisPool.Get()
-	if err != nil {
-		logrus.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", true, 500
-	}
-
-	defer hdlr.gCfg.RedisPool.Put(conn)
-
-	// rr.RedisDo("PUBLISH", "emailReadyToSend", fmt.Sprintf(`{"cmd":"readToSend"}`))
-	conn.Cmd("PUBLISH", "emailReadyToSend", fmt.Sprintf(`{"cmd":"readToSend"}`))
-
-	return rv, false, 200
 }
 
 var getTmplCache map[string][]byte
@@ -317,154 +298,12 @@ func (hdlr *TabServer2Type) TemplateEmail(template_name string, mdata map[string
 //	fmt.Printf("init2 in main\n")
 //}
 
-//
-//	Error		Meaning
-//	-----		--------------------------------------
-//	400			Bad Request
-//	401			Unauthorized
-//	402			Payment Required
-//	403			Forbidden
-//	404			Not Found
-//	405			Method Not Allowed
-//	406			Not Acceptable
-//	412			Precondition Failed
-//	417			Expectation Failed
-//	428			Precondition Required
-//
-/*
-	http.
-		StatusBadRequest                   = 400
-		StatusUnauthorized                 = 401
-		StatusPaymentRequired              = 402
-		StatusForbidden                    = 403
-		StatusNotFound                     = 404
-		StatusMethodNotAllowed             = 405
-		StatusNotAcceptable                = 406
-		StatusProxyAuthRequired            = 407
-		StatusRequestTimeout               = 408
-		StatusConflict                     = 409
-		StatusGone                         = 410
-		StatusLengthRequired               = 411
-		StatusPreconditionFailed           = 412
-		StatusRequestEntityTooLarge        = 413
-		StatusRequestURITooLong            = 414
-		StatusUnsupportedMediaType         = 415
-		StatusRequestedRangeNotSatisfiable = 416
-		StatusExpectationFailed            = 417
-		StatusTeapot                       = 418
-
-		StatusInternalServerError     = 500
-		StatusNotImplemented          = 501
-		StatusBadGateway              = 502
-		StatusServiceUnavailable      = 503
-		StatusGatewayTimeout          = 504
-		StatusHTTPVersionNotSupported = 505
-
-*/
-func ConvertErrorToCode(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
-	var exit bool = false
-	var a_status int = 200
-	x, err := sizlib.JSONStringToData(rv)
-	if err != nil {
-		// rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10009): Parsing return value failed. sql-cfg.json[%s] Post Function Call(CacheEUser)",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
-		// res.Header().Set("Content-Type", "text/html")
-		// http.Error(res, "400 Bad Request", http.StatusBadRequest)
-		ReturnErrorMessage(400, "Bad Request", "19043",
-			fmt.Sprintf(`Error(19043): Bad Request (%s) sql-cfg.json[%s] %s %s`, sizlib.EscapeError(err), cfgTag, err, godebug.LF()),
-			res, req, *ps, trx, hdlr) // status:error
-		exit = true
-		a_status = 500
-	} else {
-		if GetSI("status", x) != "success" || isError {
-			// res.Header().Set("Content-Type", "text/html")
-			// http.Error(res, "406 Not Acceptable", http.StatusNotAcceptable)
-			ReturnErrorMessage(406, "Not Acceptable", "19044",
-				fmt.Sprintf(`Error(19044): Not Acceptable (%s) sql-cfg.json[%s] %s %s`, sizlib.EscapeError(err), cfgTag, err, godebug.LF()),
-				res, req, *ps, trx, hdlr) // status:error
-			exit = true
-			a_status = 406
-		}
-	}
-	return rv, exit, a_status
-}
-
 // ==============================================================================================================================================================================
 func GetSI(s string, data map[string]interface{}) string {
 	if x, ok := data[s]; ok {
 		return x.(string)
 	}
 	return ""
-}
-
-// ==============================================================================================================================================================================
-func CacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
-
-	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
-
-	conn, err := hdlr.gCfg.RedisPool.Get()
-	if err != nil {
-		logrus.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", true, 500
-	}
-
-	defer hdlr.gCfg.RedisPool.Put(conn)
-
-	if isError {
-		return rv, true, 500
-	}
-	var exit bool = false
-	var a_status int = 200
-	if db_user_login {
-		fmt.Printf("In CacheEUser\n")
-	}
-	x, err := sizlib.JSONStringToData(rv)
-	if err != nil {
-		// rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10009): Parsing return value failed. sql-cfg.json[%s] Post Function Call(CacheEUser)",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
-		exit = true
-		a_status = 406
-		ReturnErrorMessage(406, "Error(10009): Parsing return value vaivfailed", "10009",
-			fmt.Sprintf(`Error(10009): Parsing return value failed sql-cfg.json[%s] %s - Post function CacheEUser, %s`, cfgTag, err, godebug.LF()),
-			res, req, *ps, trx, hdlr) // status:error
-		rv = ""
-	} else {
-		success := GetSI("status", x)
-		if success == "success" {
-			username := ""
-			if ps.HasName("username") {
-				username = ps.ByName("username")
-			} else { // On password recovery it is returned by the database
-				username = GetSI("username", x) // If not supplied then returns ""
-			}
-			auth_token := GetSI("auth_token", x)
-			privs := GetSI("privs", x)
-			if privs == "" {
-				privs = "[]"
-			}
-			config := GetSI("config", x)
-			user_id := GetSI("user_id", x)
-			customer_id := GetSI("customer_id", x)
-			csrf_token := GetSI("csrf_token", x)
-			rv = fmt.Sprintf(`{"status":"success","username":%q,"auth_token":%q,"customer_id":%q,"csrf_token":%q,"privs":%q,"config":%q}`,
-				username, auth_token, customer_id, csrf_token, privs, config)
-
-			if db_user_login {
-				fmt.Printf("CacheEUser: SUCCESS-Caching it: username=%s auth_token=%s privs=->%s<- user_id=%s\n", username, auth_token, privs, user_id)
-			}
-			dt := fmt.Sprintf(`{"master":%q, "username":%q, "user_id":%q, "XSRF-TOKEN":%q, "customer_id":%q }`, privs, username, user_id, cookieList["XSRF-TOKEN"], customer_id)
-			//rr.RedisDo("SET", "api:USER:"+auth_token, dt)
-			//rr.RedisDo("EXPIRE", "api:USER:"+auth_token, 1*60*60) // Validate for 1 hour
-			conn.Cmd("SET", "api:USER:"+auth_token, dt)
-			conn.Cmd("EXPIRE", "api:USER:"+auth_token, 1*60*60) // Validate for 1 hour
-
-			// rr.RedisDo("PUBLISH", "pubsub", fmt.Sprintf(`{"cmd":"login","username":%q,"auth_token":%q}`, username, auth_token))
-			conn.Cmd("PUBLISH", "pubsub", fmt.Sprintf(`{"cmd":"login","username":%q,"auth_token":%q}`, username, auth_token))
-		} else {
-			exit = true
-			a_status = 401
-			res.WriteHeader(401) // Failed to login
-		}
-	}
-	return rv, exit, a_status
 }
 
 // ==============================================================================================================================================================================
@@ -563,129 +402,6 @@ Try some of these numbers:
 //
 //	return rv, exit, a_status
 //}
-
-// ==============================================================================================================================================================================
-func DeCacheEUser(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
-
-	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
-
-	conn, err := hdlr.gCfg.RedisPool.Get()
-	if err != nil {
-		logrus.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", true, 500
-	}
-
-	defer hdlr.gCfg.RedisPool.Put(conn)
-
-	if isError {
-		return rv, true, 500
-	}
-	var exit bool = false
-	var a_status int = 200
-	if db_user_login {
-		fmt.Printf("In DeCacheEUser\n")
-	}
-	if ps.HasName("auth_token") {
-		auth_token := ps.ByName("auth_token")
-		// rr.RedisDo("DEL", "api:USER:"+auth_token)
-		// rr.RedisDo("PUBLISH", "pubsub", fmt.Sprintf(`{"cmd":"logout","auth_token":%q}`, auth_token))
-		conn.Cmd("DEL", "api:USER:"+auth_token)
-		conn.Cmd("PUBLISH", "pubsub", fmt.Sprintf(`{"cmd":"logout","auth_token":%q}`, auth_token))
-	}
-	return rv, exit, a_status
-}
-
-// ==============================================================================================================================================================================
-func AfterPasswordChange(res http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
-
-	// rw, _ /*top_hdlr*/, _ /*ps*/, _ /*err*/ := GetRwPs(res, req)
-
-	conn, err := hdlr.gCfg.RedisPool.Get()
-	if err != nil {
-		logrus.Info(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", true, 500
-	}
-
-	defer hdlr.gCfg.RedisPool.Put(conn)
-
-	if isError {
-		return rv, true, 500
-	}
-	var exit bool = false
-	var a_status int = 200
-
-	// xyzzy - should this use the d.b. to find every auth_token used by this user and de-auth every one?
-	x, err := sizlib.JSONStringToData(rv)
-	if err != nil {
-		// rv = fmt.Sprintf(`{ "status":"error","msg":"Error(10009): Parsing return value failed. sql-cfg.json[%s] Post Function Call(CacheEUser)",%s, "err":%q }`, cfgTag, godebug.LFj(), err)
-		exit = true
-		a_status = 406
-		ReturnErrorMessage(406, "Error(10009): Parsing return value vaivfailed", "10009",
-			fmt.Sprintf(`Error(10009): Parsing return value failed sql-cfg.json[%s] %s - Post function CacheEUser, %s`, cfgTag, err, godebug.LF()),
-			res, req, *ps, trx, hdlr) // status:error
-		rv = ""
-	} else {
-		success := GetSI("status", x)
-		if success == "success" {
-			// Get rid of old auth in Redis
-			if db_user_login {
-				fmt.Printf("In AfterPasswordChange\n")
-			}
-			auth_token := ps.ByName("auth_token")
-			// rr.RedisDo("DEL", "api:USER:"+auth_token)
-			conn.Cmd("DEL", "api:USER:"+auth_token)
-
-			// fmt.Printf ( "just before extracting data, rv=%s\n", rv );
-			username := GetSI("username", x)
-			auth_token = GetSI("auth_token", x)
-			privs := GetSI("privs", x)
-			user_id := GetSI("user_id", x)
-			customer_id := GetSI("customer_id", x)
-			csrf_token := GetSI("csrf_token", x)
-			rv = fmt.Sprintf(`{"status":"success","username":%q,"auth_token":%q,"csrf_token":%q}`, username, auth_token, csrf_token)
-
-			x_cookie, ok := req.Cookie("XSRF-TOKEN")
-			cookie := ""
-			if ok == nil {
-				cookie = x_cookie.String()
-				if db_user_login {
-					fmt.Printf("AfterPasswordChange Raw : Cookie=%s ok=%v\n", cookie, ok)
-				}
-				cookie = strings.Split(cookie, "=")[1]
-			}
-			if db_user_login {
-				fmt.Printf("AfterPasswordChange Cookie=%s ok=%v\n", cookie, ok)
-			}
-			if ok != nil {
-				t_cookie, _ := uuid.NewV4()
-				cookie = t_cookie.String()
-				expire := time.Now().AddDate(0, 0, 2) // Years, Months, Days==2 // xyzzy - should be a config - on how long to keep cookie
-				secure := false
-				if req.TLS != nil {
-					secure = true
-				}
-				if db_user_login {
-					fmt.Printf("   not ok, generating a new one: %s\n", cookie)
-				}
-				cookieObj := http.Cookie{Name: "XSRF-TOKEN", Value: cookie, Path: "/", Expires: expire, RawExpires: expire.Format(time.UnixDate), MaxAge: 86400, Secure: secure, HttpOnly: false}
-				http.SetCookie(res, &cookieObj)
-			}
-			if db_user_login {
-				fmt.Printf("   OK it is:%s\n", cookie)
-			}
-
-			if db_user_login {
-				fmt.Printf("AfterPasswordChange SUCCESS-Caching it: username=%s auth_token=%s privs=->%s<- user_id=%s XSRF-TOKEN from cookie=%s\n", username, auth_token, privs, user_id, cookie)
-			}
-			dt := fmt.Sprintf(`{"master":%q, "username":%q, "user_id":%q, "XSRF-TOKEN":%q, "customer_id":%q }`, privs, username, user_id, cookie, customer_id)
-			// combine into SETEX, PJS: Thu Feb 21 13:14:26 MST 2019
-			// conn.Cmd("SET", "api:USER:"+auth_token, dt)
-			// conn.Cmd("EXPIRE", "api:USER:"+auth_token, 1*60*60) // Validate for 1 hour
-			conn.Cmd("SETEX", "api:USER:"+auth_token, 1*60*60, dt) // Validate for 1 hour
-		}
-	}
-	return rv, exit, a_status
-}
 
 /*
 	,"/api/test/register_new_user": { "g": "test_register_new_user($1,$2,$3,$4,$5,$6,$7,$8,$9)", "p": [ "username", "password", "$ip$", "email", "real_name", "$url$", "csrf_token", "site", "name" ],

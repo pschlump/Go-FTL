@@ -43,14 +43,14 @@ type RedisData struct {
 // xyzzy - config item
 const timeOutConst = (60 * 60 * 24) + 5
 
-func DumpRV(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
-	fmt.Printf("%srv ->%s<- AT:%s %s\n", MiscLib.ColorYellow, rv, godebug.LF(), MiscLib.ColorReset)
-	return rv, false, 200
-}
-
+/*
+		return "", PrePostFatalSetStatus, true, 500
+		return rv, PrePostFatalSetStatus, true, 500
+	return rv, PrePostContinue, exit, a_status
+*/
 // xyzzy-2fa - X2faSetup
 // type PrePostFlagType int - to replace 'bool' type.
-func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 
 	fmt.Printf("%sX2faSetup! AT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
@@ -82,27 +82,21 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 	err := json.Unmarshal([]byte(rv), &ed)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 	err = json.Unmarshal([]byte(rv), &all)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 
 	if ed.Status == "success" && ed.Use2fa == "yes" {
 
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
-		//xyzzy
-		// xyzzy *
-		// 	xyzzy ***
-		// 	xyzzy ***
-		// xyzzy *
-		//xyzzy
 		html, QRImgURL, ID, err := GetQRForSetup(hdlr, www, req, ps, ed.UserID)
 		if err != nil {
 			fmt.Fprintf(www, `{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return "{\"status\":\"failed\"}", true, 200 // xyzzy - better error return
+			return "{\"status\":\"failed\"}", PrePostRVUpdatedFail, true, 200 // xyzzy - better error return
 		}
 
 		all["html_2fa"] = html
@@ -113,19 +107,25 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 		rv = godebug.SVar(all)
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-		return rv, true, 200
+		return rv, PrePostRVUpdatedSuccess, true, 200
 	}
 
 	fmt.Printf("rv= ->%s<- at:%s\n", rv, godebug.LF())
 
-	return fmt.Sprintf(`{"status":"failed","msg":"failed at %s"}`, godebug.LF()), false, 200
+	return fmt.Sprintf(`{"status":"failed","msg":"failed at %s"}`, godebug.LF()), PrePostRVUpdatedFail, true, 401
 }
 
 // xyzzy-2fa - X2faValidateToken
 // rv - return value string - JSON
 // rexit, if true, then will return with error from parent
 // rstatus - status to return with
-func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rrv string, rexit bool, rstatus int) {
+/*
+		return "", PrePostFatalSetStatus, true, 500
+		return rv, PrePostFatalSetStatus, true, 500
+	return rv, PrePostContinue, exit, a_status
+*/
+// func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rrv string, rexit bool, rstatus int) {
+func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
@@ -154,11 +154,11 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 
 	err := json.Unmarshal([]byte(rv), &ed)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 	err = json.Unmarshal([]byte(rv), &all)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 
 	if ed.Status == "success" { // this means UN/PW are ok, is not a blocked IP address etc.  Account not expired etc.
@@ -189,7 +189,7 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 		if err != nil {
 			rv = fmt.Sprintf(`{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
 			fmt.Fprintf(os.Stderr, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`+"\n", err, godebug.LF())
-			return rv, true, 200
+			return rv, PrePostRVUpdatedFail, false, 200
 		}
 		godebug.DbPfb(db1x2fa, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
 
@@ -203,16 +203,17 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 				all["2fa"] = "is valid. Yea!"
 				rv = godebug.SVar(all)
 				godebug.DbPfb(db1x2fa, "%(Green) SHOULD BE SUCCESS rv = %s AT: %(LF), Parent = %s, p2 = %s\n", rv, godebug.LF(2), godebug.LF(3))
-				return rv, false, 200
+				return rv, PrePostRVUpdatedSuccess, false, 200
 			}
 		}
 
-		fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
-		return rv, true, 200
+		rv = fmt.Sprintf(`{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, rv)
+		return rv, PrePostRVUpdatedFail, true, 200
 	}
 
-	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
-	return rv, true, 200
+	rv = fmt.Sprintf(`{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+	return rv, PrePostRVUpdatedFail, true, 200
 }
 
 const db1x2fa = true

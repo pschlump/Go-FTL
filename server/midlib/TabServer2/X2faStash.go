@@ -18,9 +18,17 @@ type RedirectToData struct {
 	Status string `json:"status"`
 	UserID string `json:"user_id"`
 	Use2fa string `json:"use_2fa"`
+	Msg    string `json:"msg"`
 }
 
-func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rrv string, rexit bool, rstatus int) {
+/*
+(rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
+		return "", PrePostFatalSetStatus, true, 500
+		return rv, PrePostFatalSetStatus, true, 500
+	return rv, PrePostContinue, exit, a_status
+*/
+
+func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 	// 	1. Take 'rv' and pull out of it
 	// 		1.a. the "username"
 	//	2. Stash 'rv' in x2fa:${UN}:${auth_tok_2part} // ttl=4min
@@ -57,21 +65,21 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 	err := json.Unmarshal([]byte(rv), &ed)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 	err = json.Unmarshal([]byte(rv), &all)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 
-	fmt.Printf("ed=%s at:%s\n", godebug.SVar(ed), godebug.LF())
+	fmt.Printf("raw=%s ed=%s at:%s\n", rv, godebug.SVar(ed), godebug.LF())
 
 	if ed.Status == "success" && ed.Use2fa == "yes" {
 
 		id, err := uuid.NewV4()
 		if err != nil {
 			fmt.Fprintf(www, `{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return "{\"status\":\"failed\"}", true, 200
+			return "", PrePostFatalSetStatus, true, 500
 		}
 		auth_tok_2part := id.String()
 		_ = auth_tok_2part
@@ -80,43 +88,42 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		defer hdlr.gCfg.RedisPool.Put(conn)
 		if err != nil {
 			rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return rv, true, 200
+			return "", PrePostFatalSetStatus, true, 500
 		}
 
 		all["auth_tok_2part"] = auth_tok_2part
 		rv = godebug.SVarI(all)
 
-		// key := fmt.Sprintf("2faStash:%s:%s", ed.UserID, auth_tok_2part)
-		key := fmt.Sprintf("2faStash:User:%s", auth_tok_2part) // xyzzy - 2faStash: to be a "key" in config
+		key := fmt.Sprintf("%sStash:User:%s", hdlr.RedisPrefix2fa, auth_tok_2part)
 		fmt.Fprintf(os.Stderr, "KEY(1): %s\n", key)
-		fmt.Fprintf(os.Stdout, "KEY(1): %s\n", key)
+		fmt.Fprintf(os.Stdout, "KEY(1): %s for UserID=%s\n", key, ed.UserID)
 		err = conn.Cmd("SETEX", key, 60*4, rv).Err
 		if err != nil {
 			rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return rv, true, 200
+			return "", PrePostFatalSetStatus, true, 500
 		}
 
-		key = fmt.Sprintf("2faStash:%s", ed.UserID)
-		fmt.Fprintf(os.Stderr, "KEY(2): %s\n", key)
-		fmt.Fprintf(os.Stdout, "KEY(2): %s\n", key)
+		key = fmt.Sprintf("%sStash:Count:%s", hdlr.RedisPrefix2fa, ed.UserID)
+		fmt.Fprintf(os.Stderr, "KEY(2): %s containing user id.\n", key)
+		fmt.Fprintf(os.Stdout, "KEY(2): %s containing user id.\n", key)
 		val, err := conn.Cmd("GET", key).Str()
 		if err != nil || val == "" {
 			err = conn.Cmd("SETEX", key, 60*4, "1").Err
 			if err != nil {
 				rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-				return rv, true, 200
+				return "", PrePostFatalSetStatus, true, 500
 			}
 			val = "0"
 		} else {
 			err = conn.Cmd("EXPIRE", key, 60*4).Err
 			if err != nil {
 				rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-				return rv, true, 200
+				return "", PrePostFatalSetStatus, true, 500
 			}
 			err = conn.Cmd("INCR", key).Err
 			if err != nil {
 				rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-				return rv, true, 200
+				return "", PrePostFatalSetStatus, true, 500
 			}
 		}
 		nVal, err := strconv.ParseInt(val, 10, 64)
@@ -126,17 +133,18 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		nVal++
 
 		rv = fmt.Sprintf(`{"status":"success","auth_tok_2part":%q,"nVal":%d}`, auth_tok_2part, nVal)
-		return rv, false, 200
+		return rv, PrePostContinue, false, 200
 
 	}
 
-	rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, "login not successful", godebug.LF())
-	return rv, true, 200
+	rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, ed.Msg, godebug.LF())
+	fmt.Fprintf(www, `{"status":"failed","msg":"Error [%s]","LineFile":%q}`, ed.Msg, godebug.LF())
+	return "", PrePostFatalSetStatus, true, 200
 
 }
 
 // Part1of2 is X2faStash
-func X2faSetupPt2of2(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (string, bool, int) {
+func X2faSetupPt2of2(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
@@ -168,17 +176,17 @@ func X2faSetupPt2of2(www http.ResponseWriter, req *http.Request, cfgTag string, 
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
 		rv = fmt.Sprintf(`{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-		return rv, true, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 
 	// get the key to pull back the data.
 	auth_tok_2part := ps.ByNameDflt("auth_tok_2part", "")
 
-	key := fmt.Sprintf("2faStash:User:%s", auth_tok_2part)
+	key := fmt.Sprintf("%sStash:User:%s", hdlr.RedisPrefix2fa, auth_tok_2part)
 	rv, err = conn.Cmd("GET", key).Str()
 	if err != nil || rv == "" {
 		rv = fmt.Sprintf(`{"status":"failed","msg":"Login has timed out - please try again.","LineFile":%q}`, godebug.LF())
-		return rv, true, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 
 	// ---------------------------------------------------------------------------------------------------------
@@ -197,60 +205,19 @@ func X2faSetupPt2of2(www http.ResponseWriter, req *http.Request, cfgTag string, 
 
 	err = json.Unmarshal([]byte(rv), &ed)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 	err = json.Unmarshal([]byte(rv), &all)
 	if err != nil {
-		return rv, false, 200
+		return "", PrePostFatalSetStatus, true, 500
 	}
 
 	if ed.Status == "success" && ed.Use2fa == "yes" {
 
-		// all["html_2fa"] = html
-		all["2fa"] = "is *NOT* valid"
-
-		user_id := ed.UserID
-
-		delete(all, "user_id")
-
 		rv = godebug.SVar(all)
-		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-
-		fmt.Printf("IsValid2fa called\n")
-		fmt.Fprintf(os.Stderr, "IsValid2fa called\n")
-
-		val2fa := ps.ByNameDflt("val2fa", "")
-		godebug.DbPfb(db1x2fa, "val2fa: ->%s<-\n", val2fa)
-
-		var err error
-		godebug.DbPfb(db1x2fa, "%(Cyan) user_id = %q AT: %(LF)\n", user_id)
-
-		// generate local copy based on user_id/auth_token - for all rows in t_2fa and any values in t_2fa_otk
-		LocalVal2fa, err := hdlr.GetValidList(user_id)
-		if err != nil {
-			rv = fmt.Sprintf(`{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
-			fmt.Fprintf(os.Stderr, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`+"\n", err, godebug.LF())
-			return rv, true, 200
-		}
-		godebug.DbPfb(db1x2fa, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
-
-		for _, v := range LocalVal2fa {
-			if v == val2fa {
-				stmt := "delete from \"t_2fa_otk\" where \"user_id\" = $1 and \"one_time_key\" = $2"
-				_, err := hdlr.gCfg.Pg_client.Db.Query(stmt, user_id, v)
-				if err != nil {
-					fmt.Printf("Database error %s, attempting to convert premis_id/animal_id to tag.\n", err)
-				}
-				all["2fa"] = "is valid. Yea!"
-				rv = godebug.SVar(all)
-				godebug.DbPfb(db1x2fa, "%(Green) SHOULD BE SUCCESS rv = %s AT: %(LF), Parent = %s, p2 = %s\n", rv, godebug.LF(2), godebug.LF(3))
-				return rv, false, 200
-			}
-		}
-
-		fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
-		return rv, true, 200
+		godebug.DbPfb(db1x2fa, "%(Green) SHOULD BE SUCCESS, Pull back from Redis, rv = %s AT: %(LF), Parent = %s, p2 = %s\n", rv, godebug.LF(2), godebug.LF(3))
+		return rv, PrePostContinue, false, 200
 	}
 
-	return rv, false, 200
+	return "", PrePostFatalSetStatus, true, 500
 }

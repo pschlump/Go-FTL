@@ -71,6 +71,7 @@ func init() {
 		"DisplayURL2fa":                 { "type":[ "string" ], "required":false, "default": "/2fa/2fa-app.html" },
 		"RedisPrefix2fa":                { "type":[ "string" ], "required":false, "default": "2fa:" },
 		"Server2faURL":                  { "type":[ "string" ], "required":false, "default":"http://t432z.com/2fa"  },
+		"StatusForAllErrors":            { "type":[ "string" ], "required":false, "default":"no-use-JSON-msg"  },
 		"LineNo":                        { "type":[ "int" ], "default":"1" }
 		}`)
 }
@@ -302,6 +303,7 @@ type TabServer2Type struct {
 	DisplayURL2fa         string                      // 2fa - see X2faSetup
 	RedisPrefix2fa        string                      // 2fa - see X2faSetup
 	Server2faURL          string                      // 2fa see X2faSetup
+	StatusForAllErrors    string                      // if "yes" then on errors status will be returned and errors will be logged. if "no-use-JSON-msg" then status 200, with JSON message returned.  Error is still logged.
 	LineNo                int                         //
 	gCfg                  *cfg.ServerGlobalConfigType //
 	MuxAuto               map[string]int              // formerly global		-- make private xyzzy --		// Config for automaic reload  - to delete routes removed
@@ -545,7 +547,7 @@ func (hdlr *TabServer2Type) ServeHTTP(www http.ResponseWriter, req *http.Request
 				fmt.Fprintf(os.Stderr, "%s%s%s\n", MiscLib.ColorRed, err, MiscLib.ColorReset)
 				logrus.Errorf("Error: %s - %s, %s", mid.ErrMuxError, err, godebug.LF())
 				trx.ErrorReturn(1, err)
-				www.WriteHeader(http.StatusInternalServerError)
+				www.WriteHeader(http.StatusInternalServerError) // 501
 				return
 			}
 			if !found {

@@ -1091,6 +1091,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 	// CallBefore
 	exit := false
 	a_status := 200
+	pptCode := PrePostContinue
 	if !done {
 		//fmt.Printf ( "At %s\n", godebug.LF() )
 		if len(h.CallBefore) > 0 {
@@ -1098,13 +1099,15 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			for _, fx_name := range h.CallBefore {
 				if !exit {
 					trx.AddNote(1, fmt.Sprintf("CallBefore[%s]", fx_name))
-					rv, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
+					rv, pptCode, exit, a_status = hdlr.CallFunction("before", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				}
 			}
 		}
 	}
-	if exit {
-		fmt.Printf("****************** exit from before operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
+	// if exit {
+	switch pptCode {
+	case PrePostRVUpdatedSuccess, PrePostRVUpdatedFail, PrePostFatalSetStatus:
+		fmt.Printf("*** exit=%v pptCode=%v from before operations has been signaled ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
 		done = true
 		isError = true
 		ReturnErrorMessageRv(a_status, rv, "Preprocessing signaled error", "18008",
@@ -1658,6 +1661,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 
 	exit = false
 	a_status = 200
+	pptCode = PrePostContinue
 	if len(h.CallAfter) > 0 {
 		trx.AddNote(1, "CallAfter is True - functions will be called.")
 		// fmt.Printf ( "At %s\n", godebug.LF() )
@@ -1666,7 +1670,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			if !exit {
 				fmt.Fprintf(os.Stderr, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
 				fmt.Fprintf(os.Stdout, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
-				rv, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
+				rv, pptCode, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
 				// , "CallAfter": ["SendReportsToGenMessage", "SendEmailToGenMessage"]
 				fmt.Fprintf(os.Stderr, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
 				fmt.Fprintf(os.Stdout, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
@@ -1674,9 +1678,10 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 		}
 		// exit = false
 	}
-	if exit {
-		fmt.Printf("****************** exit from after operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
-		fmt.Fprintf(os.Stderr, "****************** exit from after operations has been signaled **********************, rv=%s, %s\n", rv, godebug.LF())
+	switch pptCode {
+	case PrePostRVUpdatedSuccess, PrePostRVUpdatedFail, PrePostFatalSetStatus:
+		fmt.Printf("*** exit=%v pptCode=%v from before operations has been signaled ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
+		fmt.Fprintf(os.Stderr, "*** exit=%v pptCode=%v from before operations has been signaled ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
 		done = true
 		isError = true
 		ReturnErrorMessageRv(a_status, rv, "Postprocessing signaled error", "18007",

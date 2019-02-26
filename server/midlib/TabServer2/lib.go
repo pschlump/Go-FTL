@@ -926,6 +926,7 @@ func readInSQLConfig(path string) (jsonData map[string]SQLOne, err error) {
 		err = hjson.Unmarshal(file, &tmp)
 		if err != nil {
 			fmt.Printf("Error(10012): %v, %s, Config File:%s\n", err, godebug.LF(), path)
+			fmt.Printf("Error(10012):... Data File Parsed AT: %s is:%s\n", godebug.LF(), godebug.SVarI(tmp))
 			fmt.Fprintf(os.Stderr, "%sError(10012): %v, %s, Config File:%s%s\n", MiscLib.ColorRed, err, godebug.LF(), path, MiscLib.ColorReset)
 			return
 		}
