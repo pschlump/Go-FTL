@@ -1,0 +1,39 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://127.0.0.1:3116", "http://[fe80::1]:3116" ],
+        "plugins":[
+            { "Echo": { "LineNo":__LINE__, "Msg":"localhost-3116" } }
+        ]
+    }
+    ,"www.zepher.com": { "LineNo":__LINE__,
+        "listen_to":[ "http://www.zepher.com:3210/" ],
+        "plugins":[
+            { "Echo": { "LineNo":__LINE__, "Msg":"http://www.zepher.com:3210" } }
+        ]
+    }
+    ,"cdn0.zepher.com": { "LineNo":__LINE__,
+        "listen_to":[ "http://cdn0.zepher.com:3210" ],
+        "plugins":[
+            { "Echo": { "LineNo":__LINE__, "Msg":"http://cdn0.zepher.com:3210" } }
+        ]
+    }
+    ,"*else*:3210": { "LineNo":__LINE__,
+        "listen_to":[ "http://*.zepher.com:3210" ],
+        "ip_if_none":[ "192.168.0.157" ],
+        "plugins":[
+            { "Else": { "LineNo":__LINE__, "Msg":"<b> B is a message </b>" } }
+        ]
+    }
+    ,"cdn0.zepher.com@3211": { "LineNo":__LINE__,
+        "listen_to":[ "http://cdn0.zepher.com:3211" ],
+        "plugins":[
+            { "Echo": { "LineNo":__LINE__, "Msg":"http://cdn0.zepher.com:3211" } }
+        ]
+    }
+    ,"*.zepher.com@3211": { "LineNo":__LINE__,
+        "listen_to":[ "http://*.zepher.com:3211" ],
+        "plugins":[
+            { "Echo": { "LineNo":__LINE__, "Msg":"http://*.zepher.com:3211" } }
+        ]
+    }
+}

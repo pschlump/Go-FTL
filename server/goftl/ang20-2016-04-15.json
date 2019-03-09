@@ -1,0 +1,17 @@
+{
+    "working_test_AngularJS_20": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:16000", "http://dev2.test1.com:16000" ],
+        "plugins":[
+            { "DumpResponse": { "LineNo":__LINE__, "FileName":"__FILE__", "Msg":"At Top" } },
+            { "DumpRequest": { "LineNo":__LINE__, "Msg":"Request at top At Top", "Paths":"/api/status", "Final":"yes" } },
+            { "HTML5Path": { "LineNo":__LINE__, "Paths":["/dashboard","/detail/","/heroes"] } },
+            { "TabServer2": { "LineNo":__LINE__,
+				"Paths":["/api/"],
+				"AppName": "www.2c-why.com",
+				"AppRoot": "./test-load-file/",
+				"StatusMessage":"Version 0.0.2 Thu Apr 28 11:13:22 MDT 2016"
+			} },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./quickstart", "Paths":"/"  } }
+        ]
+    }
+}

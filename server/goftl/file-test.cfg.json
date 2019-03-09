@@ -1,0 +1,13 @@
+{
+//// Comment - this is a file test
+	"name": { "LineNo":__LINE__,
+		"listen_to":[ "http://localhost:3111", "http://127.0.0.1:3111" ],
+		"plugins":[
+////			{ "dumpIt": { "LineNo":__LINE__, "Msg":"At Top, after mangl1" } },
+////			{ "mangle1": { "LineNo":__LINE__, "Paths":["/"]  } },
+			{ "dumpIt": { "LineNo":__LINE__, "Msg":"After Proxy" } },
+			{ "simple_proxy": { "LineNo":__LINE__, "Dest":"http://127.0.0.1:8204", "Paths":"/api"  } },
+			{ "simple_file_server": { "LineNo":__LINE__, "Root":"./static", "Paths":"/"  } }
+		]
+	}
+}

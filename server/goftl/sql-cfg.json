@@ -1,0 +1,43 @@
+{  //// This is a comment that should just irritate the world
+	"note:GET": { "f": "Version 0.0.1 of file" },
+	"note:comment": { "f": "Copyright (C) Philip Schlump, 2009-2016." }
+	,"/api/status_db": { "g": "status_db", "p": [ "$ip$" ], "nokey":true
+		, "LineNo":"LineNo: __LINE__ File: __FILE__"
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/status_db2": { "g": "status_db", "p": [ "$ip$" ]
+		, "LineNo":"LineNo: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "valid": {
+			 "$ip$": 				{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/table/test7": {
+		  "query": "select * from prep_info5 ( )"
+		, "LineNo":"430"
+		, "p": [ ], "nokey":true
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "callback": 		{ "optional":true }
+			}
+		}
+	,"/api/table/get_monitor_data": {
+		  "query": "select * from prep_info5 ( )"
+		, "LineNo":"430"
+		, "p": [ ], "nokey":false
+		, "TableList":["t_monitor_results"]
+		, "valid": {
+			 "auth_token": 		{ "required":true, "type":"uuid" }
+			,"callback": 		{ "optional":true }
+			}
+		}
+	,"/api/bobbob": { "g": "status_db", "p": [ "$ip$" ], "nokey":true
+		, "LineNo":"LineNo: __LINE__ File: __FILE__"
+		, "TableList":["t_user","e_user"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+}

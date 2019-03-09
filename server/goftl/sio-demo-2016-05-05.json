@@ -1,0 +1,19 @@
+{
+    "working_test_SocketIO_demo": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:16001" ],
+        "plugins":[
+            { "SocketIO": { "LineNo":__LINE__,
+				"Paths":["/socket.io/","/socket.io"],
+				"MessagePrefix":"listen",
+				"ApiEnableRR":"yes"
+			} },
+            { "TabServer2": { "LineNo":__LINE__,
+				"Paths":["/api/"],
+				"AppName": "www.2c-why.com",
+				"AppRoot": "./test-load-file/",
+				"StatusMessage":"Version 0.0.2 Fri May  6 19:08:45 MDT 2016"
+			} },
+			{ "file_server": { "LineNo":__LINE__, "Root":"/Users/corwin/Projects/demo-Go-FTL-Socket-IO", "Paths":"/"  } }
+        ]
+    }
+}

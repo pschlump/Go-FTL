@@ -1,0 +1,13 @@
+{
+	"auto_save": "y",
+	"demo_file": "./email-log.log",
+	"demo_mode": "n",
+	"reply_to": "pschlump@gmail.com",
+	"return_path": "pschlump@gmail.com",
+	"source": "pschlump@gmail.com",
+	"template_dir": "../tmpl",
+	"valid_apps": [
+		"qr-today.com",
+		"auth-demo"
+	]
+}

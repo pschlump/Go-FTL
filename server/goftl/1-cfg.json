@@ -1,0 +1,5 @@
+{
+    "http://localhost:3111": { "LineNo":__LINE__,
+        "static_dirs": "./www" 
+    }
+}

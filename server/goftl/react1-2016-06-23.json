@@ -1,0 +1,32 @@
+{
+    "react1": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:16021", "http://dev2.test1.com:16021" ],
+        "plugins":[
+            { "DumpRequest": { "LineNo":__LINE__, "Msg":"Request at top At Top", "Paths":"/api/status", "Final":"yes" } },
+            { "GoTemplate": { "LineNo":__LINE__,
+				"Paths":["/api/table/p_document"],
+				"TemplateParamName":     "__template__",
+				"TemplateName":          "search-docs.tmpl",
+				"TemplateLibraryName":   "./tmpl/library.tmpl",
+				"TemplateRoot":          "./tmpl"
+			} },
+			{ "Rewrite": { 
+				"Paths":  [ "/api/comments" ],
+				"MatchReplace": [
+					{ "Match": "http://([^/]*)/api/comments(\\?)?(.*)",
+					  "Replace": "http://${1}/api/table/comments${2}${3}"
+					}
+				],
+				"LoopLimit":     50, 
+				"RestartAtTop":  false
+			} },
+            { "TabServer2": { "LineNo":__LINE__,
+				"Paths":["/api/"],
+				"AppName": "www.go-ftl.com",
+				"AppRoot": "/Users/corwin/Projects/www.go-ftl.com_doc/_site/data/",
+				"StatusMessage":"Version 0.0.4 Sun May 22 19:12:43 MDT 2016"
+			} },
+			{ "file_server": { "LineNo":__LINE__, "Root":"/Users/corwin/Projects/react2", "Paths":"/"  } }
+        ]
+    }
+}

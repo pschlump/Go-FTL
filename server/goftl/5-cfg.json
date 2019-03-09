@@ -1,0 +1,12 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3111" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":5, "msg":"At Top" } },
+			{ "header": { "LineNo":6, "name":"X-Test1", "value":"path is {{.path}} now is {{.now}}" } },
+            { "jsonp": { "LineNo":7, "paths":[ "/api/status" ] } },
+            { "dumpIt": { "LineNo":8, "msg":"After Proxy" } },
+            { "proxy1": { "LineNo":9, "to":"http://127.0.0.1:8204", "paths":["/"]  } }
+        ]
+    }
+}

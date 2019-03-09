@@ -1,0 +1,62 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3116" ],
+        "plugins":[
+			{ "redisList": { "LineNo":__LINE__,
+				"Paths":             "/api/list/user",
+				"Prefix":            "srp:U:",
+				"UserRoles":         [ "anon,$key$" ]
+			} },
+			{ "Redirect": { "LineNo":__LINE__,
+				"Paths": [ "/api/ios-app",                    "/app/android-app" ],
+				"To": [ "http://localhost:3116/ios-app.html", "http://localhost:3116/android-app.html" ]
+			} },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"Paths": "/api/" 
+				,"EncReqPaths": [ "/api/" ]
+				,"MatchPaths": [ "/" ]
+				,"SecurityRoles":[ "anon", "user", "admin", "root" ]
+				,"SecurityAccessLevelsName": {
+					 "anon":["anon"]
+					,"user":["user","anon"]
+					,"admin":["admin","user","anon"]
+					,"root":["root","admin","user","anon"]
+				}
+				,"SecurityPrivilages":{
+					 "admin":[ "MayChangeOtherPassword", "MayChangeOtherAttributes", "MayCreateAdminAccounts" ]
+					,"root":["*"]
+				}
+				, "HalfLogin": [ "owner_email" ]
+			} },
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/binky" } },
+			{ "redisList": { "LineNo":__LINE__,
+				"Paths":             "/api/list/user",
+				"Prefix":            "srp:U:",
+				"UserRoles":         [ "anon,$key$", "user,$key$,confirmed", "admin,$key$,confirmed,disabled", "root,name,confirmed,disabled,disabled_reason,login_date_time,login_fail_time,n_failed_login,num_login_times,privs,register_date_time" ]
+
+			} },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./angular-login-example/build", "Paths":"/"  } }
+        ]
+    }
+    ,"www.zepher.com": { "LineNo":__LINE__,
+        "listen_to":[ "http://www.zepher.com:3210/" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.test1.com", "Paths":"/"  } }
+        ]
+    }
+    ,"cdn0.zepher.com": { "LineNo":__LINE__,
+        "listen_to":[ "http://cdn0.zepher.com:3210/" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.test2.com", "Paths":"/"  } }
+        ]
+    }
+    ,"cdn0.zepher.com@3211": { "LineNo":__LINE__,
+        "listen_to":[ "http://cdn0.zepher.com:3211/" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.test2.com", "Paths":"/"  } }
+        ]
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "localhost-3126": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3126" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/", "Fmt":["logit"] } },
+			{ "mangle": { "LineNo":__LINE__, "Paths":"/", "To":"http://www.zepher.com:3126" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.test1.com", "Paths":"/"  } }
+        ]
+    },
+    "zepher.com-3126": { "LineNo":__LINE__,
+        "listen_to":[ "http://www.zepher.com:3126" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/", "Fmt":["logit"] } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.test1.com", "Paths":"/"  } }
+        ]
+    }
+    , "ad-server.com": { "LineNo":__LINE__,
+        "listen_to":[ "http://www.ad-server.com:3126" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/", "Fmt":["logit"] } },
+			{ "cookie": { "LineNo":__LINE__, "Paths":"/js/j1.js", "Name":"bobj1", "Value":"ok" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.ad-server.com", "Paths":"/"  } }
+        ]
+    }
+}

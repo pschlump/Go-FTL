@@ -1,0 +1,201 @@
+{
+	"http://www.llc-blockchain.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ m4_ifdef([[[m4_prod]]],[[[ "http://localhost:14009", "http://www.llc-blockchain.com", "http://llc-blockchain.com" ]]],[[[ "https://dev2.test1.com:18991" ]]]) ]
+		, "certs": [
+			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/cert.pem",
+			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/key.pem"
+		]
+		, "plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_llc_blockchain()
+			} }
+		]
+	}
+	, "http://www.go-ftl.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:14000" m4_ifdef([[[m4_prod]]],[[[, "http://www.go-ftl.com", "http://go-ftl.com"]]],[[[ ]]]) ],
+        "plugins":[
+			{ "HTML5Path": { "LineNo":{{ __line_no__ }}
+				, "Paths":["(/.*\\.html)/.*"]
+			} }
+			, { "GoTemplate": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/table/p_document"]
+				, "TemplateParamName":     "__template__"
+				, "TemplateName":          "search-docs.tmpl"
+				, "TemplateLibraryName":   "./tmpl/library.tmpl"
+				, "TemplateRoot":          "./tmpl"
+			} }
+			, { "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/docs/" 
+				, "StripPrefix":"/docs"
+				, "Root": m4_go_ftl_doc()
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root": m4_go_ftl()
+			} }
+		]
+	}
+	, "http://www.2c-why.com/": { "LineNo":{{ __line_no__ }},
+		"listen_to":[ "http://localhost:14001" m4_ifdef([[[m4_prod]]],[[[, "http://www.2c-why.com", "http://2c-why.com"]]],[[[ ]]]) ],
+		"plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_2c_why()
+			} }
+		]
+	}
+	, "http://blog.2c-why.com/": { "LineNo":{{ __line_no__ }},
+		"listen_to":[ "http://localhost:14002" m4_ifdef([[[m4_prod]]],[[[, "http://blog.2c-why.com"]]]) ],
+		"plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_blog_2c_why()
+			} }
+		]
+	}
+	, "http://amazing-grace-ii.info/": { "LineNo":{{ __line_no__ }},
+		"listen_to":[ "http://localhost:14003" m4_ifdef([[[m4_prod]]],[[[, "http://amazing-grace-ii.info", "http://www.amazing-grace-ii.info", "http://blog.amazing-grace-ii.info"]]]) ],
+		"plugins":[
+			{ "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/"
+				, "Root":m4_agii_www()
+			} }
+		]
+	}
+	, "http://t432z.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:14004" m4_ifdef([[[m4_prod]]],[[[, "http://www.t432z.com", "http://t432z.com"]]]) ],
+        "plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_t432z()
+			} }
+		]
+	}
+	, "http://pschlump.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:14005" m4_ifdef([[[m4_prod]]],[[[, "http://www.pschlump.com", "http://pschlump.com"]]]) ],
+        "plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_pschlump()
+			} }
+		]
+	}
+	, "http://excellent-answers.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:14006" m4_ifdef([[[m4_prod]]],[[[, "http://www.excellent-answers.com", "http://excellent-answers.com"]]]) ],
+        "plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_excellent_answers()
+			} }
+		]
+	}
+	, "http://crs-studio.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:14007" m4_ifdef([[[m4_prod]]],[[[, "http://www.crs-studio.com", "http://crs-studio.com"]]]) ],
+        "plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_crs_studio()
+			} }
+		]
+	}
+	, "http://blog.crs-studio.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:14008" m4_ifdef([[[m4_prod]]],[[[, "http://blog.crs-studio.com"]]]) ],
+        "plugins":[
+			{ "JSONp": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/saveEmailMessage" ]
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": m4_TabServerCfg()
+				, "ApiTableKey": m4_api_table_key()
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root":m4_blog_crs_studio()
+			} }
+		]
+	}
+}

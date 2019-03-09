@@ -1,0 +1,17 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3114" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "Msg":"At Top" } },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"Paths": "/api/" ,
+				"MatchPaths": [ "/" ],
+				"RedisConnectHost":  "192.168.0.133",
+				"RedisConnectAuth":  "lLJSmkccYJiVEwskr1RM4MWIaBM"
+				} },
+            { "dumpIt": { "LineNo":__LINE__, "Msg":"After Proxy" } },
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./static", "Paths":"/"  } }
+        ]
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": { "LineNo":2,
+        "listen_to":[ "http://localhost:3111" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":6, "msg":"At Top, after mangl1" } },
+            { "mangle1": { "LineNo":6, "paths":["/"]  } },
+            { "dumpIt": { "LineNo":7, "msg":"After Proxy" } },
+            { "proxy1": { "LineNo":8, "to":"http://127.0.0.1:8204", "paths":["/"]  } }
+        ]
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3114" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "msg":"At Top" } },
+            { "RejectExt": { "LineNo":__LINE__, "paths":[ ".cfg", ".ini", ".git" ] } },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"paths":[ "/api/srp_change_password", "/api/srp_admin_set_password", "/api/srp_logout", "/api/cipher" ],
+				"next_paths":[ "/static/", 
+						"/api/srp_simulate_email_confirm",
+						"/api/srp_register",
+						"/api/srp_email_confirm",
+						"/api/srp_login",
+						"/api/srp_challenge",
+						"/api/srp_validate",
+						"/api/srp_getNg",
+						"/api/srp_recover_password_pt1",
+						"/api/srp_recover_password_pt2"
+					]
+				} },
+			{ "header": { "LineNo":__LINE__, "name":"AuthorizedLogin", "value":"true; {{.username}}" } },
+            { "dumpIt": { "LineNo":__LINE__, "msg":"After Proxy" } },
+			{ "simple_file_server": { "LineNo":__LINE__, "Root":"./static", "Paths":"/"  } }
+        ]
+    }
+}

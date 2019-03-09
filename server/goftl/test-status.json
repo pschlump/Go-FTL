@@ -1,0 +1,9 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3114" ],
+        "plugins":[
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./static", "Paths":"/"  } }
+        ]
+    }
+}

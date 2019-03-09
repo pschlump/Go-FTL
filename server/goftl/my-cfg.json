@@ -1,0 +1,27 @@
+{
+
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "https://localhost:3001" ],
+        "proxy_to":[ "http://localhost:3002" ],
+        "plugins":[
+            { "log": { "LineNo":__LINE__, "filename": "./log/3001.log" } },
+            { "jsonp": { "LineNo":__LINE__, "paths":[ "/abc" ] } },
+            { "buffer": { "LineNo":__LINE__ } }
+        ]
+    },
+
+    "server": { "LineNo":__LINE__,
+        "listen_to":[ "https://www.test1.com:3001", "http://www.test1.com:3001", "http://*.test1.com", "test1.com" ],
+		"certs": [ "cert.pem", "key.pem" ],
+        "static_dirs":[ "~/www/abc", "~/base/abc" ],
+        "proxy_path":{
+			"LineNo":__LINE__,
+			"paths":[ "/api/login", "/api/logout" ],
+			"to": [ "http://localhost:3004/{{.full_uri}}" ]
+        },
+        "plugins":[
+            { "log": { "LineNo":__LINE__, "filename": "./log/3001.log" } }
+        ]
+    }
+
+}

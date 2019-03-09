@@ -1,0 +1,79 @@
+{
+    "working_test_for_aes_srp": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3118", "http://192.168.0.157:3118" ],
+        "plugins":[
+            { "DumpResponse": { "LineNo":__LINE__, "Msg":"At Top" } },
+            { "DumpRequest": { "LineNo":__LINE__, "Msg":"Request at top At Top", "Paths":"/api/status", "Final":"yes" } },
+			{ "Redirect": { "LineNo":__LINE__,
+				"Paths": [ "/api/ios-app",                    "/app/android-app" ],
+				"To": [
+					{ "To":"http://localhost:3118/ios-app.html" },
+					{ "To":"http://localhost:3118/android-app.html" }
+				]
+			} },
+            { "JSONp": { "LineNo":__LINE__, "Paths":[ "/api/" ] } },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"Paths": "/api/" ,
+				"MatchPaths": [ "/" ],
+				"AllowReregisterDeviceID": true,
+				"SecurityConfig": {
+					"AccessLevels": {
+						"admin": [ "admin" ],
+						"anon": [ "public" ],
+						"public": [ "*" ],
+						"root": [ "root", "admin", "user", "public" ],
+						"user": [ "user", "admin" ]
+					},
+					"MayAccessApi": {
+						"DeviceID": [
+							"/api/srp_register",
+							"/api/srp_login",
+							"/api/srp_challenge",
+							"/api/srp_validate",
+							"/api/srp_getNg",
+							"/api/send_support_message",
+							"/api/version",
+							"/api/srp_logout",
+							"/api/cipher",
+							"/api/get2FactorFromDeviceID"
+						],
+						"anon-user": [
+							"/api/list/user"
+						],
+						"admin":  [ "*" ],
+						"anon":   [ "*" ],
+						"public": [ "*" ],
+						"root":   [ "*" ],
+						"user":   [ "*" ]
+					},
+					"Privilages": {
+						"admin": [ "MayChangeOtherPassword", "MayCreateAdminAccounts", "MayChangeOtherAttributes" ]
+					},
+					"Roles": [ "public", "user", "admin", "root" ]
+				}
+				} },
+            { "DumpResponse": { "LineNo":__LINE__, "Msg":"After Proxy" } },
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "RedisList": { "LineNo":__LINE__, 
+				"Paths":             "/api/list/user",
+				"Prefix":            "srp:U:",
+				"Filter":			 [ " privs == 'user' " ],
+				"UserRoles":         [
+					"anon,$key$",
+					"anon-user,$key$,confirmed",
+					"user,$key$,confirmed,login_date_time",
+					"admin,$key$,confirmed,disabled,login_date_time",
+					"root,name,confirmed,disabled,disabled_reason,login_date_time,login_fail_time,n_failed_login,num_login_times,privs,register_date_time"
+				]
+
+			} },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./angular-login-example/build", "Paths":"/"  } }
+        ]
+    }
+    , "docs": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3119", "http://192.168.0.157:3119" ],
+        "plugins":[
+			{ "file_server": { "LineNo":__LINE__, "Root":"../Go-FTL-Docs/site", "Paths":"/"  } }
+        ]
+    }
+}

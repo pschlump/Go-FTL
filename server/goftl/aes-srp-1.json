@@ -1,0 +1,16 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3114" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "msg":"At Top" } },
+            { "RejectExt": { "LineNo":__LINE__, "paths":[ ".cfg", ".ini", ".git" ] } },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"paths":[ "/api/" ],
+				"next_paths":[ "/" ]
+				} },
+			{ "header": { "LineNo":__LINE__, "name":"AuthorizedLogin", "value":"true; {{.username}}" } },
+            { "dumpIt": { "LineNo":__LINE__, "msg":"After Proxy" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./static", "Paths":"/"  } }
+        ]
+    }
+}

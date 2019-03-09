@@ -1,0 +1,17 @@
+{
+    "localhost-13004": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:13004" ],
+        "plugins":[
+            { "DumpRequest": { "LineNo":__LINE__, "Msg":"Request Before Rewrite", "Paths":"/", "Final":"no" } },
+			{ "Rewrite": { "LineNo":__LINE__, "Paths":"/",
+					"MatchReplace": [
+						{ "Match": "http://(localhost:[^/]*)/(.*)\\?(.*)",
+					      "Replace": "http://localhost:13004/rw/${2}?rewriten_from=${1}&${3}"
+						}
+					]
+			} },
+            { "DumpRequest": { "LineNo":__LINE__, "Msg":"Request After Rewrite", "Paths":"/", "Final":"no" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./www.test1.com", "Paths":"/"  } }
+        ]
+    }
+}

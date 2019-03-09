@@ -1,0 +1,22 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3116" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "Msg":"At Top" } },
+            { "DumpReq": { "LineNo":__LINE__, "Msg":"Request at top At Top", "Paths":"/api/status", "Final":"yes" } },
+			{ "Redirect": { "LineNo":__LINE__,
+				"Paths": [ "/api/ios-app",                    "/app/android-app" ],
+				"To": [ "http://localhost:3116/ios-app.html", "http://localhost:3116/android-app.html" ]
+			} },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"Paths": "/api/" ,
+				"MatchPaths": [ "/" ],
+				"RedisConnectHost":  "192.168.0.133",
+				"RedisConnectAuth":  "lLJSmkccYJiVEwskr1RM4MWIaBM"
+				} },
+            { "dumpIt": { "LineNo":__LINE__, "Msg":"After Proxy" } },
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/status" } },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./angular-login-example/build", "Paths":"/"  } }
+        ]
+    }
+}

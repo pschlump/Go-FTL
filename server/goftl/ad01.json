@@ -1,0 +1,11 @@
+{
+    "ad01": { "LineNo":__LINE__,
+        "listen_to":[ "http://www.client.com:3111" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "msg":"At Top, after mangl" } },
+            { "mangle": { "LineNo":__LINE__, "paths":["/"], "MatchArg":["_rnd_"], "ReplaceUrls":["http://cdn0.client.com", "http://cdn1.client.com"] }},
+            { "dumpIt": { "LineNo":__LINE__, "msg":"After Proxy" } },
+            { "proxy1": { "LineNo":__LINE__, "to":"http://127.0.0.1:8204", "paths":["/"]  } }
+        ]
+    }
+}

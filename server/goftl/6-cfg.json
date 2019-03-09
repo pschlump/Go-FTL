@@ -1,0 +1,15 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3111" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "msg":"At Top, after mangl2" } },
+			{ "mangle2": { "LineNo":__LINE__ } },
+            { "dumpIt": { "LineNo":__LINE__, "msg":"At Top, after mangl1" } },
+			{ "mangle1": { "LineNo":__LINE__ } },
+			{ "header": { "LineNo":__LINE__, "name":"X-Test1", "value":"path is {{.path}} now is {{.now}}" } },
+            { "jsonp": { "LineNo":__LINE__, "paths":[ "/api/status" ] } },
+            { "dumpIt": { "LineNo":__LINE__, "msg":"After Proxy" } },
+            { "proxy1": { "LineNo":__LINE__, "to":"http://127.0.0.1:8204", "paths":["/"]  } }
+        ]
+    }
+}

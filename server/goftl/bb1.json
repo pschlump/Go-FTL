@@ -1,0 +1,36 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:3116" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "Msg":"At Top" } },
+            { "DumpReq": { "LineNo":__LINE__, "Msg":"Request at top At Top", "Paths":"/api/status", "Final":"yes" } },
+			{ "inMemoryCache": {
+				"Paths":        "/",
+				"IgnoreUrls":   "/api"
+			} },
+			{ "redisList": { "LineNo":__LINE__,
+				"Paths":             "/api/list/user",
+				"Prefix":            "srp:U:",
+				"UserRoles":         [ "anon,$key$" ]
+			} },
+			{ "Redirect": { "LineNo":__LINE__,
+				"Paths": [ "/api/ios-app",                    "/app/android-app" ],
+				"To": [ "http://localhost:3116/ios-app.html", "http://localhost:3116/android-app.html" ]
+			} },
+            { "SrpAesAuth": { "LineNo":__LINE__,
+				"Paths": "/api/" ,
+				"EncReqPaths": [ "/api/" ],
+				"MatchPaths": [ "/" ]
+				} },
+            { "dumpIt": { "LineNo":__LINE__, "Msg":"After Proxy" } },
+            { "Status": { "LineNo":__LINE__, "Paths":"/api/binky" } },
+			{ "redisList": { "LineNo":__LINE__,
+				"Paths":             "/api/list/user",
+				"Prefix":            "srp:U:",
+				"UserRoles":         [ "anon,$key$", "user,$key$,confirmed", "admin,$key$,confirmed,disabled", "root,name,confirmed,disabled,disabled_reason,login_date_time,login_fail_time,n_failed_login,num_login_times,privs,register_date_time" ]
+
+			} },
+			{ "file_server": { "LineNo":__LINE__, "Root":"./angular-login-example/build", "Paths":"/"  } }
+        ]
+    }
+}

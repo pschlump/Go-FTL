@@ -1,0 +1,10 @@
+{
+    "name": { "LineNo":__LINE__,
+        "listen_to":[ "https://0.0.0.0:3111" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":__LINE__, "msg":"At Top" } },
+            { "jsonp": { "LineNo":__LINE__, "paths":[ "/api/status" ] } },
+            { "proxy_to": { "LineNo":__LINE__, "to":"http://127.0.0.1:8204", "paths":["/"]  } }
+        ]
+    }
+}
