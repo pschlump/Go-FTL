@@ -1,0 +1,18 @@
+
+[Unit]
+Description=GoFTL Server :80 and localhost ports
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/home/pschlump/Projects/go-ftl/go-flt_80.pid
+User=pschlump
+Group=pschlump
+
+ExecStart=/home/pschlump/Projects/go-ftl/go-ftl.run.sh start	/home/pschlump/Projects/go-ftl 80
+ExecReload=/home/pschlump/Projects/go-ftl/go-ftl.run.sh reload	/home/pschlump/Projects/go-ftl 80
+ExecStop=/home/pschlump/Projects/go-ftl/go-ftl.run.sh stop		/home/pschlump/Projects/go-ftl 80
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+Systemd for Redis
+	https://gist.github.com/geschke/ab6afa91b2d9dfcd5c25
+
+
+---- Newer ---------------------------------------------------------------------------------------
+[Unit]
+Description=Redis Datastore Server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/redis/redis.pid
+User=redis
+Group=redis
+
+ExecStart=/usr/local/bin/redis-server /etc/redis/redis.conf
+ExecReload=/bin/kill -USR2 $MAINPID
+ExecStop=/usr/local/bin/redis-cli shutdown
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
