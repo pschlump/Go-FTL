@@ -13,7 +13,7 @@ pg: setup_make t_dual.sql \
 	t_config.sql t_email_test_id_seq.sql t_email_id_seq.sql config_data.sql \
 	t_ip_ban.sql t_customer.sql t_host_id_seq.sql t_host_to_customer.sql t_auth_token.sql t_user.sql \
 	s_ip_ban.sql s_get_config_item.sql s_get_xsrf_mode.sql s_get_customer_id_from_url.sql s_nvl.sql \
-	s_login.sql s_register_new_user.sql s_logout.sql \
+	s_login.sql s_register_new_user.sql s_register_full.sql s_logout.sql \
 	s_confirm_email.sql s_password_reset.sql s_change_password.sql status_db.sql s_stayLoggedIn.sql \
 	s_validate_token.sql s_echo_builtin.sql s_missing_param_test.sql s_validate_auth_token.sql \
 	s_validate_logged_in.sql cleanup.sql s_simulate_email.sql s_get_username_from_email.sql \
@@ -62,6 +62,10 @@ t_host_to_customer.sql: t_host_to_customer.m4.sql
 s_register_new_user.sql: s_register_new_user.m4.sql t_user.sql config_data.sql t_ip_ban.sql
 	m4 -P setup.m4 s_register_new_user.m4.sql >s_register_new_user.sql
 	echo "\i s_register_new_user.sql" >>all.sql
+
+s_register_full.sql: s_register_full.m4.sql t_user.sql config_data.sql t_ip_ban.sql
+	m4 -P setup.m4 s_register_full.m4.sql >s_register_full.sql
+	echo "\i s_register_full.sql" >>all.sql
 
 s_logout.sql: s_logout.m4.sql t_auth_token.sql t_user.sql t_ip_ban.sql
 	m4 -P setup.m4 s_logout.m4.sql >s_logout.sql
