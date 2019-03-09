@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	// "github.com/mediocregopher/radix.v2/redis"
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux" //
 	"github.com/pschlump/godebug"                //
 	"github.com/pschlump/json"                   //	"encoding/json"

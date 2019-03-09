@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/RedisSessionData"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	Modifed from: "encoding/json"

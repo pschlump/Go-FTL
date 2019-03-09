@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/sizlib"
@@ -1664,19 +1664,16 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 	pptCode = PrePostContinue
 	if len(h.CallAfter) > 0 {
 		trx.AddNote(1, "CallAfter is True - functions will be called.")
-		// fmt.Printf ( "At %s\n", godebug.LF() )
 		for _, fx_name := range h.CallAfter {
 			trx.AddNote(1, fmt.Sprintf("CallAfter [%s]", fx_name))
 			if !exit {
 				fmt.Fprintf(os.Stderr, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
 				fmt.Fprintf(os.Stdout, "CallAfter [%s] rv before ->%s<-\n", fx_name, rv)
 				rv, pptCode, exit, a_status = hdlr.CallFunction("after", fx_name, res, req, cfgTag, rv, isError, cookieList, ps, trx)
-				// , "CallAfter": ["SendReportsToGenMessage", "SendEmailToGenMessage"]
 				fmt.Fprintf(os.Stderr, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
 				fmt.Fprintf(os.Stdout, "CallAfter exit at bottom rv= %s exit=%v\n", rv, exit)
 			}
 		}
-		// exit = false
 	}
 	switch pptCode {
 	case PrePostRVUpdatedSuccess, PrePostRVUpdatedFail, PrePostFatalSetStatus:
@@ -1686,6 +1683,8 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 		isError = true
 		ReturnErrorMessageRv(a_status, rv, "Postprocessing signaled error", "18007",
 			fmt.Sprintf(`Error(18007): Postprocessing signaled error. sql-cfg.json[%s] %s`, cfgTag, godebug.LF()), res, req, *ps, trx, hdlr) // status:error
+	case PrePostSuccessWriteRV:
+		isError = false
 	}
 
 	fmt.Fprintf(os.Stderr, "%s AT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)
@@ -1716,3 +1715,5 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 	}
 
 }
+
+/* vim: set noai ts=4 sw=4: */

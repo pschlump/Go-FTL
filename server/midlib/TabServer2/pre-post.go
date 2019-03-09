@@ -24,6 +24,7 @@ const (
 	PrePostRVUpdatedFail    PrePostFlagType = 21 // rv written, use 'status' - processing complete.	exit=true
 	PrePostContinue         PrePostFlagType = 2  // go to next processing, neither 'rv' or 'satus' relevant.  if 'rv' modified but is passed to next call.
 	PrePostFatalSetStatus   PrePostFlagType = 23 // Fatal Error: set status.	exit=true, rv written by pre-post already.
+	PrePostSuccessWriteRV   PrePostFlagType = 30 // rv is updated, please write.
 )
 
 // xyzzy - String() function for these constants! - so can log it.

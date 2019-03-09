@@ -95,3 +95,5 @@ func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, r
 
 	return rv, PrePostContinue, false, 200
 }
+
+/* vim: set noai ts=4 sw=4: */

@@ -131,3 +131,5 @@ func SendEmailMessage(res http.ResponseWriter, req *http.Request, cfgTag string,
 	return rv, PrePostContinue, exit, a_status
 
 }
+
+/* vim: set noai ts=4 sw=4: */

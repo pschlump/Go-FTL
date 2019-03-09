@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/hjson/hjson-go"
 	"github.com/pschlump/Go-FTL/server/common"
 	"github.com/pschlump/Go-FTL/server/goftlmux"

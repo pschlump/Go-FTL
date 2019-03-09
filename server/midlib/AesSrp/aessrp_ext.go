@@ -126,7 +126,7 @@ import (
 
 	JsonX "github.com/pschlump/JSONx"
 
-	"github.com/Sirupsen/logrus"                 //
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"                 //
 	"github.com/pschlump/AesCCM"                 //
 	"github.com/pschlump/AesCCM/base64data"      //
 	"github.com/pschlump/AesCCM/sjcl"            //

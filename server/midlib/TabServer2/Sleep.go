@@ -47,3 +47,5 @@ func Sleep(res http.ResponseWriter, req *http.Request, cfgTag string, rv string,
 
 	return rv, PrePostContinue, false, 200
 }
+
+/* vim: set noai ts=4 sw=4: */

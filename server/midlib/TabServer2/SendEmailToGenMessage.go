@@ -12,13 +12,11 @@ package TabServer2
 // File: TabServer2/crud.go
 //
 
-// xyzzy-JWT
-
 import (
 	"fmt"
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/godebug"
@@ -36,3 +34,5 @@ func SendEmailToGenMessage(res http.ResponseWriter, req *http.Request, cfgTag st
 	conn.Cmd("PUBLISH", "emailReadyToSend", fmt.Sprintf(`{"cmd":"readToSend","from":"tab-server1"}`))
 	return rv, PrePostContinue, exit, a_status
 }
+
+/* vim: set noai ts=4 sw=4: */

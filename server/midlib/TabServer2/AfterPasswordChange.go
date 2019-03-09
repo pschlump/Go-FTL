@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/Go-FTL/server/tr"
@@ -121,3 +121,5 @@ func AfterPasswordChange(res http.ResponseWriter, req *http.Request, cfgTag stri
 	}
 	return rv, PrePostContinue, exit, a_status
 }
+
+/* vim: set noai ts=4 sw=4: */

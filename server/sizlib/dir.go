@@ -4,15 +4,15 @@ package sizlib
 
 // _ "github.com/mattn/go-oci8"			// OCI
 
+// _ "../odbc" // _ "code.google.com/p/odbc"
+// _ "github.com/lib/pq"
+// _ "../pq" // _ "github.com/lib/pq"
+// _ "github.com/mattn/go-oci8"			// OCI
+// "database/sql"
+
+// "github.com/jackc/pgx" //  https://github.com/jackc/pgx
+
 import (
-	// _ "../odbc" // _ "code.google.com/p/odbc"
-	// _ "github.com/lib/pq"
-	// _ "../pq" // _ "github.com/lib/pq"
-	// _ "github.com/mattn/go-oci8"			// OCI
-	// "database/sql"
-
-	// "github.com/jackc/pgx" //  https://github.com/jackc/pgx
-
 	_ "github.com/lib/pq"
 	"github.com/taskcluster/slugid-go/slugid"
 

@@ -22,7 +22,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/HashStrings"
@@ -203,7 +203,8 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 				all["2fa"] = "is valid. Yea!"
 				rv = godebug.SVar(all)
 				godebug.DbPfb(db1x2fa, "%(Green) SHOULD BE SUCCESS rv = %s AT: %(LF), Parent = %s, p2 = %s\n", rv, godebug.LF(2), godebug.LF(3))
-				return rv, PrePostRVUpdatedSuccess, false, 200
+				// return rv, PrePostRVUpdatedSuccess, false, 200
+				return rv, PrePostSuccessWriteRV, false, 200
 			}
 		}
 

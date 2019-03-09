@@ -214,6 +214,7 @@ func RowsToInterface(rows *sql.Rows) ([]map[string]interface{}, string, int) {
 				// if len==16 && odbc - then - convert from UniversalIdentifier to string (UUID convert?)
 				if len(value.([]byte)) == 16 {
 					// var u *uuid.UUID
+					//
 					if uuid.IsUUID(fmt.Sprintf("%s", value.([]byte))) {
 						u, err := uuid.Parse(value.([]byte))
 						if err != nil {

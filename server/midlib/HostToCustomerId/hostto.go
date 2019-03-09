@@ -11,13 +11,12 @@ import (
 	"net/http"
 	"os"
 
-	JsonX "github.com/pschlump/JSONx"
-
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/godebug"
 )
 
@@ -114,8 +113,8 @@ func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw
 	key := hdlr.RedisPrefix + req.Host
 
 	if db4 {
-		fmt.Printf("redisGetCustomerId: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
-		fmt.Fprintf(os.Stderr, "redisGetCustomerId: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+		fmt.Printf("redisGetCustomerId: key= [%s], %s\n", key, godebug.LF())
+		fmt.Fprintf(os.Stderr, "redisGetCustomerId: key= [%s], %s\n", key, godebug.LF())
 	}
 
 	conn, err := hdlr.gCfg.RedisPool.Get()
@@ -127,7 +126,12 @@ func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw
 
 	v, err := conn.Cmd("GET", key).Str()
 	if err != nil {
-		fmt.Printf("Error on redis - invalid host (will use default) - get(%s): host[%s] redisPrefix[%s] %s, %s\n", key, req.Host, hdlr.RedisPrefix, err, godebug.LF())
+		fmt.Printf("Error on Redis - invalid host (will use default) - get(%s): host[%s] redisPrefix[%s] %s, %s\n", key, req.Host, hdlr.RedisPrefix, err, godebug.LF())
+		fmt.Printf("    *** This error indicates that you should 1) connect to redis, 2) `set \"%s\" \"1\"\n", key)
+		fmt.Printf("    *** Or use the correct customer id insteadof \"1\"\n\n")
+		fmt.Fprintf(os.Stderr, "Error on Redis - invalid host (will use default) - get(%s): host[%s] redisPrefix[%s] %s, %s\n", key, req.Host, hdlr.RedisPrefix, err, godebug.LF())
+		fmt.Fprintf(os.Stderr, "    *** This error indicates that you should 1) connect to redis, 2) `set \"%s\" \"1\"\n", key)
+		fmt.Fprintf(os.Stderr, "    *** Or use the correct customer id insteadof \"1\"\n\n")
 		// lookup default from Redis at this point.
 		key = "htci:--default--"
 		v, err = conn.Cmd("GET", key).Str()

@@ -14,3 +14,5 @@ func DumpRV(www http.ResponseWriter, req *http.Request, cfgTag string, rv string
 	fmt.Printf("%srv ->%s<- AT:%s %s\n", MiscLib.ColorYellow, rv, godebug.LF(), MiscLib.ColorReset)
 	return rv, PrePostContinue, false, 200
 }
+
+/* vim: set noai ts=4 sw=4: */

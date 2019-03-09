@@ -34,8 +34,10 @@ Note:
 			  "last_fork_hash": "8cfaabc0b64ce7df52474e45b258046529648fc1c7b69ebb622989e69c7fb33f"
 			}
 
-xyzzy4141 - Oracle Project
-	1. Put Oracle in ~/go/src/www.2c-why.com/RandomOracle
+Notes:
+
+	Oracle Project: working now.
+		1. Put Oracle in ~/go/src/www.2c-why.com/RandomOracle
 
 */
 
@@ -54,7 +56,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -838,8 +840,8 @@ func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 
 	ps := &rw.Ps
 
-	Auth := ps.ByNameDflt("auth_key", "")
-	godebug.DbPfb(db1, "auth_key: ->%s<- compare to hdlr.AuthKey ->%s<-\n", Auth, hdlr.AuthKey)
+	auth_key := ps.ByNameDflt("auth_key", "")
+	godebug.DbPfb(db1, "auth_key: ->%s<- compare to hdlr.AuthKey ->%s<-\n", auth_key, hdlr.AuthKey)
 
 	user_id := ps.ByNameDflt("user_id", "")
 	godebug.DbPfb(db1, "user_id: ->%s<-\n", user_id)
@@ -851,8 +853,8 @@ func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	godebug.DbPfb(db1, "auth_token: ->%s<-\n", auth_token)
 
 	// only run if hdlr.AuthKey is set to same as "auth_key". for this call.
-	if hdlr.AuthKey != "" && Auth != hdlr.AuthKey {
-		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key","LineFile":%q}`, godebug.LF())
+	if hdlr.AuthKey != "" && auth_key != hdlr.AuthKey {
+		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key","LineFile":%q,"auth_key":%q}`, godebug.LF(), auth_key)
 		return
 	}
 
