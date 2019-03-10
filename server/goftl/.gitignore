@@ -1,4 +1,5 @@
 output/
+static/
 x/
 cookies.txt
 cert.pem
