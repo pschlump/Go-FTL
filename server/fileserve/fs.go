@@ -71,7 +71,6 @@ import (
 	"strings"
 	"time"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -80,7 +79,8 @@ import (
 	"github.com/pschlump/Go-FTL/server/urlpath"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/hash-file/lib"
+	hashlib "github.com/pschlump/hash-file/lib"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 type UrlModifyFunc func(fcfg *FileServerType, www http.ResponseWriter, req *http.Request, urlIn string, g *FSConfig, rulNo int) (urlOut string, rootOut string, stat RuleStatus, err error)
@@ -474,6 +474,20 @@ var htmlReplacer = strings.NewReplacer(
 
 const sniffLen = 512 // from sniff.go
 
+//var builtinTypesLower = map[string]string{
+//	".css":  "text/css; charset=utf-8",
+//	".gif":  "image/gif",
+//	".htm":  "text/html; charset=utf-8",
+//	".html": "text/html; charset=utf-8",
+//	".jpg":  "image/jpeg",
+//	".js":   "application/javascript",
+//	".wasm": "application/wasm",
+//	".pdf":  "application/pdf",
+//	".png":  "image/png",
+//	".svg":  "image/svg+xml",
+//	".xml":  "text/xml; charset=utf-8",
+//}
+
 // ============================================================================================================================================
 // if name is empty, filename is unknown. (used for mime type, before sniffing)
 // if modtime.IsZero(), modtime is unknown.
@@ -493,25 +507,41 @@ func serveContent(www http.ResponseWriter, req *http.Request, name string, modti
 	code := http.StatusOK
 
 	// If Content-Type isn't set, use the file's extension to find it, but if the Content-Type is unset explicitly, do not sniff the type.
-	ctypes, haveType := www.Header()["Content-Type"]
+	ctypeList, haveType := www.Header()["Content-Type"]
+	godebug.DbPfb(dbFt1, "%(Red) %(AT) ctypeList = %s haveType = %v\n", godebug.SVar(ctypeList), haveType)
 	var ctype string
+	ctypeSet := false
 	if !haveType {
 		// pjs - this will need to be a little bit more complex with caching and things like ".less" and ".jsx" - may need to save "Content-Type" in meta-cache
-		ctype = mime.TypeByExtension(filepath.Ext(name))
+		// PJS : Sun Mar 10 09:51:30 MDT 2019 -- name is not a full path, just "app.js" for /js/app.js etc. !!!! ERROR !!!
+		// PJS : ERROR - if file is not found, should be 404, not empty fiel with text/html mime type.
+		ext := filepath.Ext(name)
+		// var ok bool
+		// ctype, ok = builtinTypesLower[ext]
+		// godebug.DbPfb(dbFt1, "%(Red) %(AT) !!!! IMPORTANT /pt1 v2 !!!! ctype=[%s] name=[%s] ext=[%s]\n", ctype, name, ext)
+		// if !ok {
+		ctype = mime.TypeByExtension(ext)
+		godebug.DbPfb(dbFt1, "%(Red) %(AT) !!!! IMPORTANT /pt2 v2 !!!! ctype=[%s] name=[%s] ext=[%s]\n", ctype, name, ext)
 		if ctype == "" {
+			godebug.DbPfb(dbFt1, "%(Red) %(AT) ctype = sniffing!\n")
 			// read a chunk to decide between utf-8 text and binary
 			var buf [sniffLen]byte
 			n, _ := io.ReadFull(content, buf[:])
 			ctype = http.DetectContentType(buf[:n])
+			godebug.DbPfb(dbFt1, "%(Red) %(AT) from sniff ctype = %s\n", ctype)
 			_, err := content.Seek(0, os.SEEK_SET) // rewind to output whole file
 			if err != nil {
+				godebug.DbPfb(dbFt1, "%(Red) %(AT) failed, seeker can't seek: ctype = %s\n", ctype)
 				http.Error(www, "seeker can't seek", http.StatusInternalServerError)
 				return
 			}
+			godebug.DbPfb(dbFt1, "%(Red) %(AT) successful sniff - ctype = %s\n", ctype)
 		}
-		www.Header().Set("Content-Type", ctype)
-	} else if len(ctypes) > 0 {
-		ctype = ctypes[0]
+		// }
+		godebug.DbPfb(dbFt1, "%(Red) %(AT) Have - from sniff/extension: ctype = %s\n", ctype)
+	} else if len(ctypeList) > 0 {
+		ctype = ctypeList[0]
+		godebug.DbPfb(dbFt1, "%(Red) %(AT) Have CTYPE from call: ctype = %s\n", ctype)
 	}
 
 	size, err := sizeFunc()
@@ -528,6 +558,7 @@ func serveContent(www http.ResponseWriter, req *http.Request, name string, modti
 	}
 
 	// fmt.Printf("NewETag=%s\n", NewETag)
+	godebug.DbPfb(dbEtag1, "%(Red) %(AT) NewETag = %s\n", NewETag)
 	www.Header().Set("ETag", NewETag)
 	www.Header().Set("Cache-Control", "must-revalidate, post-check=0, pre-check=0") // HTTP 1.1.
 
@@ -568,6 +599,7 @@ func serveContent(www http.ResponseWriter, req *http.Request, name string, modti
 			pr, pw := io.Pipe()
 			mw := multipart.NewWriter(pw)
 			www.Header().Set("Content-Type", "multipart/byteranges; boundary="+mw.Boundary())
+			ctypeSet = true
 			sendContent = pr
 			defer pr.Close() // cause writing goroutine to fail and exit if CopyN doesn't finish.
 			go func() {
@@ -597,6 +629,9 @@ func serveContent(www http.ResponseWriter, req *http.Request, name string, modti
 		}
 	}
 
+	if !ctypeSet {
+		www.Header().Set("Content-Type", ctype)
+	}
 	www.WriteHeader(code)
 
 	if req.Method != "HEAD" {
@@ -711,6 +746,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 
 	if db1 {
 		fmt.Printf("AT %s\n", godebug.LF())
+		fmt.Fprintf(os.Stderr, "AT %s\n", godebug.LF())
 	}
 	// fmt.Fprintf(os.Stderr, "name [%s] at=%s\n", name, godebug.LF())
 	if rw, ok := www.(*goftlmux.MidBuffer); ok {
@@ -887,7 +923,7 @@ func (fcfg *FileServerType) ServeFile(www http.ResponseWriter, req *http.Request
 			}
 			if found, fileInfo = lib.ExistsGetFileInfo(name); !found {
 				logrus.Error(fmt.Sprintf("Error: 404: file not found %s\n", name))
-				fmt.Fprintf(os.Stderr, "%sAT %s ->%s<-%s\n", MiscLib.ColorCyan, godebug.LF(), name, MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "%sAT FILE NOT FOUND - will return 404 %s ->%s<-%s\n", MiscLib.ColorCyan, godebug.LF(), name, MiscLib.ColorReset)
 				http.NotFound(www, req)
 				return
 			}
@@ -1162,5 +1198,7 @@ func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
 const dbD = false
 const dbE = false
 const db11 = true // strip prerix fcfg
+const dbFt1 = true
+const dbEtag1 = false
 
 /* vim: set noai ts=4 sw=4: */
