@@ -31,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -39,6 +38,7 @@ import (
 	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -61,6 +61,7 @@ func init() {
 		"AllowOriginFunc":		{ "type":["string"] },
 		"OptionsPassthrough": 	{ "type":[ "bool" ], "default":"false" },
 		"RedisPrefix":          { "type":[ "string" ], "required":false, "default":"" },
+		"GetOriginURI":         { "type":[ "string" ], "required":false, "default":"/api/cors/GetOrigin" },
 		"Debug01": 				{ "type":[ "bool" ], "default":"true" },
 		"MaxAge":      	  		{ "type":[ "int" ], "default":"86400" },
 		"LineNo":        		{ "type":[ "int" ], "default":"1" }
@@ -247,6 +248,41 @@ func (hdlr *CORSType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[
 var _ mid.GoFTLMiddleWare = (*CORSType)(nil)
 
 // --------------------------------------------------------------------------------------------------------------------------
+func ValidateWithRedisPrefix(req *http.Request, rw *goftlmux.MidBuffer, hdlr *CORSType) bool {
+
+	type RedisCORSType struct {
+		Valid        string            `json:"Valid"`
+		AddToRequest map[string]string `json:"AddToRequest"`
+	}
+
+	origin := req.Header.Get("origin")
+	// prefix := hdlr.RedisPrefix
+	// fmt.Printf("CORS: Validating with redis : Prefix [%s] origin [%s], %s\n", prefix, origin, godebug.LF())
+	val, err := hdlr.RedisGetValidOrigin(hdlr.RedisPrefix + origin)
+	if err != nil {
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s request from origin(%s) that did not validate.","LineFile":%q}`+"\n", err, origin, godebug.LF()))
+		return false
+	}
+	// fmt.Printf("CORS: AT %s\n", godebug.LF())
+	var dv RedisCORSType
+	err = json.Unmarshal([]byte(val), &dv)
+	if err != nil {
+		// fmt.Printf("CORS: AT %s\n", godebug.LF())
+		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s xyzzy.","LineFile":%q}`+"\n", err, godebug.LF()))
+		return false
+	}
+	// fmt.Printf("CORS: dv.Valid [%s] AT %s\n", dv.Valid, godebug.LF())
+	if dv.Valid == "yes" {
+		// add in AddToRequest to the request params.
+		ps := &rw.Ps
+		for key, value := range dv.AddToRequest {
+			// fmt.Printf("CORS: key/value = %s/%s AT %s\n", key, value, godebug.LF())
+			goftlmux.AddValueToParams(key, value, 'i', goftlmux.FromInject, ps)
+		}
+		return true
+	}
+	return false
+}
 
 type ValidationFunc func(req *http.Request, rw *goftlmux.MidBuffer, hdlr *CORSType) bool
 
@@ -254,47 +290,14 @@ var ValidationMap map[string]ValidationFunc
 
 func init() {
 	ValidationMap = make(map[string]ValidationFunc)
-	ValidationMap["redis_prefix"] = func(req *http.Request, rw *goftlmux.MidBuffer, hdlr *CORSType) bool {
+	ValidationMap["redis_prefix"] = ValidateWithRedisPrefix
+}
 
-		type RedisCORSType struct {
-			Valid        string            `json:"Valid"`
-			AddToRequest map[string]string `json:"AddToRequest"`
-		}
-
-		origin := req.Header.Get("origin")
-		// prefix := hdlr.RedisPrefix
-		// fmt.Printf("CORS: Validating with redis : Prefix [%s] origin [%s], %s\n", prefix, origin, godebug.LF())
-		val, err := hdlr.RedisGetValidOrigin(hdlr.RedisPrefix + origin)
-		if err != nil {
-			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s request from origin(%s) that did not validate.","LineFile":%q}`+"\n", err, origin, godebug.LF()))
-			return false
-		}
-		// fmt.Printf("CORS: AT %s\n", godebug.LF())
-		var dv RedisCORSType
-		err = json.Unmarshal([]byte(val), &dv)
-		if err != nil {
-			// fmt.Printf("CORS: AT %s\n", godebug.LF())
-			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s xyzzy.","LineFile":%q}`+"\n", err, godebug.LF()))
-			return false
-		}
-		// fmt.Printf("CORS: dv.Valid [%s] AT %s\n", dv.Valid, godebug.LF())
-		if dv.Valid == "yes" {
-			// add in AddToRequest to the request params.
-			ps := &rw.Ps
-			for key, value := range dv.AddToRequest {
-				// fmt.Printf("CORS: key/value = %s/%s AT %s\n", key, value, godebug.LF())
-				goftlmux.AddValueToParams(key, value, 'i', goftlmux.FromInject, ps)
-			}
-			return true
-		}
-		return false
-	}
+func SetValidationFunction(name string, fx ValidationFunc) {
+	ValidationMap[name] = fx
 }
 
 func (hdlr *CORSType) RedisGetValidOrigin(key string) (val string, err error) {
-
-	// func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw *goftlmux.MidBuffer, req *http.Request) (customer_id string) {
-
 	conn, err := hdlr.gCfg.RedisPool.Get()
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
@@ -311,7 +314,6 @@ func (hdlr *CORSType) RedisGetValidOrigin(key string) (val string, err error) {
 	val = v
 	err = nil
 	return
-
 }
 
 // allowOriginFunc   func(origin string) bool // Optional origin validation function
@@ -326,6 +328,7 @@ type CORSType struct {
 	AllowOriginFunc    string                      `gfDefault:""`
 	AllowedHeaders     []string                    `gfDefault:""`
 	MaxAge             int                         `gfDefault:"86400"`
+	GetOriginURI       string                      `gfDefault:"/api/cors/GetOrigin"`
 	OptionPassthrough  bool                        `gfDefault:"false"`
 	LineNo             int                         `gfDefault:"1"`
 	allowedOriginsAll  bool                        // Set to true when allowed origins contains a "*"
@@ -352,7 +355,30 @@ func (hdlr *CORSType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	if pn := lib.PathsMatchN(hdlr.CookiePolyfilPaths, req.URL.Path); pn >= 0 {
 		www.Header().Set("Content-Type", "application/javascript")
 		fmt.Fprintf(www, cookiePolyfilJs)
-	} else if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
+		return
+	}
+	if pn := lib.PathsMatchN([]string{hdlr.GetOriginURI}, req.URL.Path); pn >= 0 {
+		headers := www.Header()
+		origin := req.Header.Get("Origin")
+		headers.Set("Access-Control-Allow-Origin", origin)
+		if len(hdlr.exposedHeaders) > 0 {
+			headers.Set("Access-Control-Expose-Headers", strings.Join(hdlr.exposedHeaders, ", ")) // xyzzy
+		}
+		if hdlr.allowCredentials {
+			headers.Set("Access-Control-Allow-Credentials", "true")
+		}
+		// DONE: check Redis vorig: to see if this is a valid origin.
+		isValid := false
+		if rw, ok := www.(*goftlmux.MidBuffer); ok {
+			isValid = ValidateWithRedisPrefix(req, rw, hdlr)
+		}
+		hdlr.logf("  Success Get Origin: %s : Actual response added headers: %v", hdlr.GetOriginURI, headers)
+		www.Header().Set("Content-Type", "application/json")
+		www.WriteHeader(http.StatusOK)
+		fmt.Fprintf(www, `{"status":"success","origin":%q,"valid":%v}`+"\n", origin, isValid)
+		return
+	}
+	if pn := lib.PathsMatchN(hdlr.Paths, req.URL.Path); pn >= 0 {
 		if rw, ok := www.(*goftlmux.MidBuffer); ok {
 
 			trx := mid.GetTrx(rw)
@@ -384,9 +410,9 @@ func (hdlr *CORSType) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 			fmt.Printf("%s\n", mid.ErrNonMidBufferWriter)
 			www.WriteHeader(http.StatusInternalServerError)
 		}
-	} else {
-		hdlr.Next.ServeHTTP(www, req)
+		return
 	}
+	hdlr.Next.ServeHTTP(www, req)
 
 }
 
@@ -405,6 +431,7 @@ func (hdlr *CORSType) handleActualRequest(www http.ResponseWriter, rw *goftlmux.
 		hdlr.logf("  Actual request no headers added: missing origin")
 		return
 	}
+
 	if !hdlr.isOriginAllowed(origin, rw, req) {
 		hdlr.logf("  Actual request no headers added: origin '%s' not allowed", origin)
 		return
