@@ -17,7 +17,6 @@ import (
 	"os"
 	"strings"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -28,6 +27,7 @@ import (
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/SqlEr"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -70,6 +70,8 @@ func init() {
 		"KeyFilePrivate":                { "type":[ "string" ] },
 		"DisplayURL2fa":                 { "type":[ "string" ], "required":false, "default": "/2fa/2fa-app.html" },
 		"RedisPrefix2fa":                { "type":[ "string" ], "required":false, "default": "2fa:" },
+		"CustomerURL":                  { "type":[ "string" ], "default":"http://www.TabServer2-CustomerURL-not-set.com" },
+		"QrSuccessTemplateFn":          { "type":[ "string" ], "default":"./tmpl/qr_success.tmpl" },
 		"Server2faURL":                  { "type":[ "string" ], "required":false, "default":"http://t432z.com/2fa"  },
 		"StatusForAllErrors":            { "type":[ "string" ], "required":false, "default":"no-use-JSON-msg"  },
 		"LineNo":                        { "type":[ "int" ], "default":"1" }
@@ -303,6 +305,8 @@ type TabServer2Type struct {
 	DisplayURL2fa         string                      // 2fa - see X2faSetup
 	RedisPrefix2fa        string                      // 2fa - see X2faSetup
 	Server2faURL          string                      // 2fa see X2faSetup
+	CustomerURL           string                      //
+	QrSuccessTemplateFn   string                      //
 	StatusForAllErrors    string                      // if "yes" then on errors status will be returned and errors will be logged. if "no-use-JSON-msg" then status 200, with JSON message returned.  Error is still logged.
 	LineNo                int                         //
 	gCfg                  *cfg.ServerGlobalConfigType //

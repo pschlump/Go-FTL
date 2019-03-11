@@ -12,6 +12,7 @@
 package TabServer2
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/hex"
 	"fmt"
@@ -21,13 +22,16 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
+	template "text/template"
 
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/HashStrings"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/json"         //	"encoding/json"
+	"github.com/pschlump/json" //	"encoding/json"
+	"github.com/pschlump/ms"
 	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
 )
@@ -93,7 +97,7 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
-		html, QRImgURL, ID, err := GetQRForSetup(hdlr, www, req, ps, ed.UserID)
+		html, QRImgURL, ID, qr_ttl, err := GetQRForSetup(hdlr, www, req, ps, ed.UserID)
 		if err != nil {
 			fmt.Fprintf(www, `{"status":"error","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
 			return "{\"status\":\"error\"}", PrePostRVUpdatedFail, true, 200 // xyzzy - better error return
@@ -102,6 +106,7 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		all["html_2fa"] = html
 		all["QRImgURL"] = QRImgURL
 		all["X2fa_Temp_ID"] = ID
+		all["qr_ttl"] = fmt.Sprintf("%v", qr_ttl)
 
 		delete(all, "user_id")
 
@@ -406,7 +411,7 @@ type RanData struct {
 	Epoc   int    `json:"ep"`
 }
 
-func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Request, ps *goftlmux.Params, user_id string) (html, QRImgURL, ID string, err error) {
+func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Request, ps *goftlmux.Params, user_id string) (html, QRImgURL, ID string, qr_ttl int, err error) {
 	fmt.Printf("getQRForSetup called -- TabServer2Type\n")
 	fmt.Fprintf(os.Stderr, "getQRForSetup called -- TabServer2Type\n")
 
@@ -419,7 +424,7 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", "", "", fmt.Errorf("Random Generation Failed")
+		return "", "", "", 0, fmt.Errorf("Random Generation Failed")
 	}
 	RanHash := fmt.Sprintf("%x", RanHashBytes)
 	// func GenRandNumber(nDigits int) (buf string, err error) {
@@ -445,7 +450,7 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 		fmt.Printf("status=%d\n", status)
 		fmt.Fprintf(os.Stderr, "status=%d\n", status)
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to set QR Redirect","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", "", "", fmt.Errorf("Unable to set QR Redirect, Error [%s] AT: %s", err, godebug.LF())
+		return "", "", "", 0, fmt.Errorf("Unable to set QR Redirect, Error [%s] AT: %s", err, godebug.LF())
 	} else {
 		godebug.DbPfb(db1, "%(Green) body from shortner : %s AT: %(LF)\n", body)
 	}
@@ -458,7 +463,7 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", "", "", fmt.Errorf("Failed to connect to Redis, Error [%s] AT: %s", err, godebug.LF())
+		return "", "", "", 0, fmt.Errorf("Failed to connect to Redis, Error [%s] AT: %s", err, godebug.LF())
 	}
 
 	key := fmt.Sprintf("%s%s", hdlr.RedisPrefix2fa, ID)
@@ -476,15 +481,15 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 		T2faID: t_2fa_ID,
 		URL:    host,
 	})
-	ttl := timeOutConst // 60 * 60 // 1 hour
+	ttl := timeOutConst // 60 * 60 // 1 hour	// xyzzySetConfig - in seconds
+	qr_ttl = ttl
 
 	err = conn.Cmd("SETEX", key, ttl, val).Err
 	if err != nil {
 		if db4 {
-			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
+			fmt.Printf("Error on redis - get(%s): %s\n", key, err)
 		}
-		fmt.Fprintf(www, `{"status":"error","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
-		return
+		return "", "", "", 0, fmt.Errorf(`{"status":"error","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
 	}
 
 	// ----------------------------------------------------------------------------------------------------------------------------------------
@@ -493,14 +498,14 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 		rv, err := GenRandNumber(6)
 		if err != nil {
 			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random value.","LineFile":%q}`+"\n", err, godebug.LF()))
-			return "", "", "", fmt.Errorf("Unabgle to generate randome value AT: %s", err, godebug.LF())
+			return "", "", "", 0, fmt.Errorf("Unabgle to generate randome value AT: %s", err, godebug.LF())
 		}
 
 		stmt := "insert into \"t_2fa_otk\" ( \"user_id\", \"one_time_key\" ) values ( $1, $2 )"
 		_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, user_id, rv)
 		if err != nil {
 			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-			return "", "", "", fmt.Errorf("PG error %s AT: %s", err, godebug.LF())
+			return "", "", "", 0, fmt.Errorf("PG error %s AT: %s", err, godebug.LF())
 		}
 	}
 
@@ -510,13 +515,18 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, t_2fa_ID, user_id, RanHash)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-		return "", "", "", fmt.Errorf("PG error %s AT: %s", err, godebug.LF())
+		return "", "", "", 0, fmt.Errorf("PG error %s AT: %s", err, godebug.LF())
 	}
 
 	// ----------------------------------------------------------------------------------------------------------------------------------------
 	// Send back results.
-	html = fmt.Sprintf(
-		`<div class="getQRForSetup">
+	// ----------------------------------------------------------------------------------------------------------------------------------------
+	// Use temlate to send back results.
+	// xyzzyTemplate -template- $(project)/tmpl/qr
+	// /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/tmpl/qr_success_resp.tmpl
+	if false {
+		html = fmt.Sprintf(
+			`<div class="getQRForSetup">
 			<img src=%q>
 			<div>
 				Scan the QR code above to setup your mobile device or browse<br>
@@ -524,6 +534,18 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 				and enter %v.
 			</div>
 		</div>`, QRImgUrl, hdlr.Server2faURL, ID, hdlr.Server2faURL, ID)
+	} else {
+		mdata := make(map[string]interface{})
+
+		mdata["QRImgUrlQuoted"] = fmt.Sprintf("%q", QRImgUrl)
+		mdata["ID"] = ID // Decimal Int
+		mdata["hdlr_Server2faURL"] = hdlr.Server2faURL
+		mdata["hdlr_CustomerURL_UrlEncoded"] = url.QueryEscape(hdlr.CustomerURL)
+		mdata["QR_valid_for"] = qr_ttl // Seconds as an integer
+		mdata["qr_ttl"] = "seconds"
+
+		html = RunTemplate(hdlr.QrSuccessTemplateFn, "qr_success", mdata)
+	}
 
 	return
 }
@@ -637,6 +659,54 @@ func (hdlr *TabServer2Type) UpdateQRMarkAsUsed(qrId string) error {
 		fmt.Fprintf(os.Stderr, "Success: %s data[%s]\n", stmt, qrId)
 	}
 	return nil
+}
+
+// ===================================================================================================================================================
+// Run a template and get the results back as a stirng.
+// This is the primary template runner for sending email.
+func RunTemplate(TemplateFn string, name_of string, g_data map[string]interface{}) string {
+
+	rtFuncMap := template.FuncMap{
+		"Center":      ms.CenterStr,   //
+		"PadR":        ms.PadOnRight,  //
+		"PadL":        ms.PadOnLeft,   //
+		"PicTime":     ms.PicTime,     //
+		"FTime":       ms.StrFTime,    //
+		"PicFloat":    ms.PicFloat,    //
+		"nvl":         ms.Nvl,         //
+		"Concat":      ms.Concat,      //
+		"title":       strings.Title,  // The name "title" is what the function will be called in the template text.
+		"ifDef":       ms.IfDef,       //
+		"ifIsDef":     ms.IfIsDef,     //
+		"ifIsNotNull": ms.IfIsNotNull, //
+		// "g":           global_g,       //
+		// "set":         global_set,     //
+	}
+
+	var b bytes.Buffer
+	foo := bufio.NewWriter(&b)
+
+	t, err := template.New("simple-tempalte").Funcs(rtFuncMap).ParseFiles(TemplateFn)
+	// t, err := template.New("simple-tempalte").ParseFiles(TemplateFn)
+	if err != nil {
+		fmt.Printf("Error(12004): parsing/reading template, %s\n", err)
+		return ""
+	}
+
+	err = t.ExecuteTemplate(foo, name_of, g_data)
+	if err != nil {
+		fmt.Fprintf(foo, "Error(12005): running template=%s, %s\n", name_of, err)
+		return ""
+	}
+
+	foo.Flush()
+	s := b.String() // Fetch the data back from the buffer
+
+	// LogIt()
+	fmt.Fprintf(os.Stdout, "Template Output is: ----->%s<-----\n", s)
+
+	return s
+
 }
 
 // status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
