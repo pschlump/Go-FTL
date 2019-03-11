@@ -56,7 +56,6 @@ import (
 	"os"
 	"strconv"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -65,6 +64,7 @@ import (
 	"github.com/pschlump/HashStrings"
 	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
 )
 
@@ -321,7 +321,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	RanHashBytes, err := GenRandBytes(32)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","msg":"Random Generation Failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Random Generation Failed","LineFile":%q}`, godebug.LF())
 		return
 	}
 	RanHash := fmt.Sprintf("%x", RanHashBytes)
@@ -343,7 +343,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
 	if status != 200 {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to set QR Redirect","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to update QR code destination.","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Unable to update QR code destination.","LineFile":%q}`, godebug.LF())
 		return
 	} else {
 		godebug.DbPfb(db1, "%(Green) body from shortner : %s AT: %(LF)\n", body)
@@ -357,7 +357,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","msg":"Failed to connect to Redis.","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Failed to connect to Redis.","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -383,7 +383,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 		if db4 {
 			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
 		}
-		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -393,7 +393,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 		rv, err := GenRandNumber(6)
 		if err != nil {
 			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random value.","LineFile":%q}`+"\n", err, godebug.LF()))
-			fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+			fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 			return
 		}
 
@@ -401,7 +401,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 		_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, user_id, rv)
 		if err != nil {
 			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-			fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+			fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 			return
 		}
 	}
@@ -412,7 +412,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, t_2fa_ID, user_id, RanHash)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -485,7 +485,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -496,7 +496,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 		if db4 {
 			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
 		}
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 	var rr RedisData
@@ -504,7 +504,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	if rr.Fp == "fingerprint-not-set-yet" {
 		rr.Fp = fp
 	} else {
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -516,7 +516,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 		if db4 {
 			fmt.Printf("Error on redis - get(%s): %s\n", key, err)
 		}
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -524,7 +524,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.Fp, rr.T2faID)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -533,7 +533,7 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.UserID)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -607,7 +607,7 @@ func get2MinHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -617,7 +617,7 @@ func get2MinHash(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter
 	fmt.Fprintf(os.Stderr, "\n\nHashBytes [%x], AT:\n", RanHashBytes, godebug.LF())
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 	RanHash := fmt.Sprintf("%x", RanHashBytes)
@@ -653,7 +653,7 @@ func IsValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter,
 
 	// only run if hdlr.AuthKey is set to same as "auth_key". for this call.
 	if hdlr.AuthKey != "" && Auth != hdlr.AuthKey {
-		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"invalid auth_key","LineFile":%q}`, godebug.LF())
 		return
 	}
 
@@ -662,7 +662,7 @@ func IsValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter,
 	if auth_token != "" && user_id == "" {
 		user_id, err = hdlr.GetUserIDFromAuthToken(auth_token)
 		if err != nil {
-			fmt.Fprintf(www, `{"status":"failed","msg":"Unable to convert auth_token[%s] to user_id Error: %s","LineFile":%q}`, auth_token, err, godebug.LF())
+			fmt.Fprintf(www, `{"status":"error","msg":"Unable to convert auth_token[%s] to user_id Error: %s","LineFile":%q}`, auth_token, err, godebug.LF())
 			return
 		}
 	}
@@ -670,7 +670,7 @@ func IsValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter,
 	// generate local copy based on user_id/auth_token - for all rows in t_2fa and any values in t_2fa_otk
 	LocalVal2fa, err := hdlr.GetValidList(user_id)
 	if err != nil {
-		fmt.Fprintf(www, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
 		return
 	}
 	godebug.DbPfb(db1, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
@@ -687,7 +687,7 @@ func IsValid2fa(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter,
 		}
 	}
 
-	fmt.Fprintf(www, `{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+	fmt.Fprintf(www, `{"status":"error","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
 }
 
 func (hdlr *X2faType) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
@@ -714,7 +714,7 @@ func (hdlr *X2faType) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
 	if e0 != nil {
 		err = e0
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		// fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		// fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 	hash = fmt.Sprintf("%x", RanHashBytes)
@@ -854,7 +854,7 @@ func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 
 	// only run if hdlr.AuthKey is set to same as "auth_key". for this call.
 	if hdlr.AuthKey != "" && auth_key != hdlr.AuthKey {
-		fmt.Fprintf(www, `{"status":"failed","msg":"invalid auth_key","LineFile":%q,"auth_key":%q}`, godebug.LF(), auth_key)
+		fmt.Fprintf(www, `{"status":"error","msg":"invalid auth_key","LineFile":%q,"auth_key":%q}`, godebug.LF(), auth_key)
 		return
 	}
 
@@ -863,20 +863,20 @@ func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	if auth_token != "" && user_id == "" {
 		user_id, err = hdlr.GetUserIDFromAuthToken(auth_token)
 		if err != nil {
-			fmt.Fprintf(www, `{"status":"failed","msg":"Unable to convert auth_token[%s] to user_id Error: %s","LineFile":%q}`, auth_token, err, godebug.LF())
+			fmt.Fprintf(www, `{"status":"error","msg":"Unable to convert auth_token[%s] to user_id Error: %s","LineFile":%q}`, auth_token, err, godebug.LF())
 			return
 		}
 	}
 
 	current2MinHash, ttlLeft, err := hdlr.Get2MinHashFunc()
 	if err != nil {
-		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to get 2Min hash Error: %s","LineFile":%q}`, err, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Unable to get 2Min hash Error: %s","LineFile":%q}`, err, godebug.LF())
 		return
 	}
 
 	user_hash, fp, err := hdlr.GetPerDeviceHash(user_id, t2faId)
 	if err != nil {
-		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to get per-device hash Error: %s","LineFile":%q}`, err, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Unable to get per-device hash Error: %s","LineFile":%q}`, err, godebug.LF())
 		return
 	}
 
@@ -887,7 +887,7 @@ func gen1TimeCodes(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	val2 := val1[len(val1)-6:]
 	val, err := strconv.ParseInt(val2, 16, 64)
 	if err != nil {
-		fmt.Fprintf(www, `{"status":"failed","msg":"Failed to parse[%s] as base 16 int Error: %s","LineFile":%q}`, val2, err, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Failed to parse[%s] as base 16 int Error: %s","LineFile":%q}`, val2, err, godebug.LF())
 		return
 	}
 	val = val % 1000000

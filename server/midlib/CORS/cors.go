@@ -247,13 +247,13 @@ func (hdlr *CORSType) PreValidate(gCfg *cfg.ServerGlobalConfigType, cfgData map[
 
 var _ mid.GoFTLMiddleWare = (*CORSType)(nil)
 
+type RedisCORSType struct {
+	Valid        string            `json:"Valid"`
+	AddToRequest map[string]string `json:"AddToRequest"`
+}
+
 // --------------------------------------------------------------------------------------------------------------------------
 func ValidateWithRedisPrefix(req *http.Request, rw *goftlmux.MidBuffer, hdlr *CORSType) bool {
-
-	type RedisCORSType struct {
-		Valid        string            `json:"Valid"`
-		AddToRequest map[string]string `json:"AddToRequest"`
-	}
 
 	origin := req.Header.Get("origin")
 	// prefix := hdlr.RedisPrefix

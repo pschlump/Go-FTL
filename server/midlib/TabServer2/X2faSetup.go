@@ -22,13 +22,13 @@ import (
 	"os"
 	"strconv"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/HashStrings"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/json" //	"encoding/json"
+	"github.com/pschlump/json"         //	"encoding/json"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
 )
 
@@ -95,8 +95,8 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 		html, QRImgURL, ID, err := GetQRForSetup(hdlr, www, req, ps, ed.UserID)
 		if err != nil {
-			fmt.Fprintf(www, `{"status":"failed","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
-			return "{\"status\":\"failed\"}", PrePostRVUpdatedFail, true, 200 // xyzzy - better error return
+			fmt.Fprintf(www, `{"status":"error","msg":"Error [%s]","LineFile":%q}`, err, godebug.LF())
+			return "{\"status\":\"error\"}", PrePostRVUpdatedFail, true, 200 // xyzzy - better error return
 		}
 
 		all["html_2fa"] = html
@@ -107,12 +107,13 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 
 		rv = godebug.SVar(all)
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-		return rv, PrePostRVUpdatedSuccess, true, 200
+		// return rv, PrePostRVUpdatedSuccess, true, 200
+		return rv, PrePostSuccessWriteRV, true, 200
 	}
 
 	fmt.Printf("rv= ->%s<- at:%s\n", rv, godebug.LF())
 
-	return fmt.Sprintf(`{"status":"failed","msg":"failed at %s"}`, godebug.LF()), PrePostRVUpdatedFail, true, 401
+	return fmt.Sprintf(`{"status":"error","msg":"failed at %s"}`, godebug.LF()), PrePostRVUpdatedFail, true, 401
 }
 
 // xyzzy-2fa - X2faValidateToken
@@ -187,8 +188,8 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 		// generate local copy based on user_id/auth_token - for all rows in t_2fa and any values in t_2fa_otk
 		LocalVal2fa, err := hdlr.GetValidList(user_id)
 		if err != nil {
-			rv = fmt.Sprintf(`{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
-			fmt.Fprintf(os.Stderr, `{"status":"failed","msg":"PG Database Error: %s","LineFile":%q}`+"\n", err, godebug.LF())
+			rv = fmt.Sprintf(`{"status":"error","msg":"PG Database Error: %s","LineFile":%q}`, err, godebug.LF())
+			fmt.Fprintf(os.Stderr, `{"status":"error","msg":"PG Database Error: %s","LineFile":%q}`+"\n", err, godebug.LF())
 			return rv, PrePostRVUpdatedFail, false, 200
 		}
 		godebug.DbPfb(db1x2fa, "%(Cyan) Local Values Array = %s AT: %(LF)\n", godebug.SVarI(LocalVal2fa))
@@ -208,12 +209,12 @@ func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string
 			}
 		}
 
-		rv = fmt.Sprintf(`{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+		rv = fmt.Sprintf(`{"status":"error","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
 		fmt.Fprintf(www, rv)
 		return rv, PrePostRVUpdatedFail, true, 200
 	}
 
-	rv = fmt.Sprintf(`{"status":"failed","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
+	rv = fmt.Sprintf(`{"status":"error","msg":"Two Factor Did Not Match","LineFile":%q}`, godebug.LF())
 	return rv, PrePostRVUpdatedFail, true, 200
 }
 
@@ -243,7 +244,7 @@ func (hdlr *TabServer2Type) Get2MinHashFunc() (hash string, ttlLeft int, err err
 	if e0 != nil {
 		err = e0
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to generate random data.","LineFile":%q}`+"\n", err, godebug.LF()))
-		// fmt.Fprintf(www, `{"status":"failed","LineFile":%q}`, godebug.LF())
+		// fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
 	}
 	hash = fmt.Sprintf("%x", RanHashBytes)
@@ -437,8 +438,12 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 
 	theData := `{"data":"data written to system in file"}`
 	// a432z.com - URL from config???
+	fmt.Printf("http://t432z.com/upd/?url=%s&id=%s&data=%s&_ran_=%s\n", hdlr.DisplayURL2fa, qrId, theData, ran)
+	fmt.Fprintf(os.Stderr, "http://t432z.com/upd/?url=%s&id=%s&data=%s&_ran_=%s\n", hdlr.DisplayURL2fa, qrId, theData, ran)
 	status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
 	if status != 200 {
+		fmt.Printf("status=%d\n", status)
+		fmt.Fprintf(os.Stderr, "status=%d\n", status)
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to set QR Redirect","LineFile":%q}`+"\n", err, godebug.LF()))
 		return "", "", "", fmt.Errorf("Unable to set QR Redirect, Error [%s] AT: %s", err, godebug.LF())
 	} else {
@@ -478,7 +483,7 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 		if db4 {
 			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
 		}
-		fmt.Fprintf(www, `{"status":"failed","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
 		return
 	}
 
