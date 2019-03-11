@@ -1,0 +1,17 @@
+{{define "mod_date"}}
+	Sun Apr 30 14:49:25 MDT 2017
+	Mon Mar 11 07:49:11 MDT 2019
+	Copyright (C) Philip Schlump, 2017-2019.
+{{end}}
+{{define "qr_success"}}
+		<div class="getQRForSetup">
+			<img src={{.QRImgUrlQuoted}}>
+			<div>
+				Scan the QR code above to setup your mobile device or browse<br>
+				on your mobile device to <a href="{{.hdlr_Server2faURL}}/msetup.html?id={{.ID}}&url={{.hdlr_CustomerURL_UrlEncoded}}">{{.hdlr_Server2faURL}}/msetup.html</a><br>
+				and enter {{.ID}}.
+
+				This QR code is valid for <span id="countDownMinutes">{{.QR_valid_for}}</span> <span id="qr_ttl">seconds</span>.
+			</div>
+		</div>
+{{end}}
