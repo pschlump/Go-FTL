@@ -173,6 +173,10 @@ func RowsToInterface(rows *sql.Rows) ([]map[string]interface{}, string, int) {
 
 	id = ""
 
+	if rows == nil {
+		return nil, "", 0
+	}
+
 	// Get column names
 	columns, err := rows.Columns()
 	//:pgx:columns, err := GetColumns(rows)

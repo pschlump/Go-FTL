@@ -108,12 +108,15 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		all["X2fa_Temp_ID"] = ID
 		all["qr_ttl"] = fmt.Sprintf("%v", qr_ttl)
 
-		delete(all, "user_id")
+		// delete(all, "user_id")
 
 		rv = godebug.SVar(all)
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 		// return rv, PrePostRVUpdatedSuccess, true, 200
 		return rv, PrePostSuccessWriteRV, true, 200
+	} else if ed.Status == "error" {
+		fmt.Printf("Error from underlying code - exit early - rv= ->%s<- at:%s\n", rv, godebug.LF())
+		return rv, PrePostRVUpdatedFail, true, 401
 	}
 
 	fmt.Printf("rv= ->%s<- at:%s\n", rv, godebug.LF())
@@ -272,9 +275,9 @@ func GenRandBytesOracle() (buf []byte, ttl, epoc int, err error) {
 	if FirstRequest {
 		ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
 		// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
-		status, body = DoGet(URL, "_ran_", ran)
+		status, body = DoGet(URL, "_ran_", ran) // Get Random from Oralce
 	} else {
-		status, body = DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch.
+		status, body = DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch. // random from oracle
 		// xyzzy use TimeRemain, ThisEpoc, LastResult
 	}
 
@@ -554,8 +557,8 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 // err = hdlr.PullQRFromDB(rr.Tag)
 func (hdlr *TabServer2Type) PullQRURLFromDB() (qr_enc_id, qr_url string, err error) {
 	// Xyzzy - sould replace with stored proc. that updates state in same transaction.
-	stmt := "select \"qr_enc_id\", \"url_path\" from \"v1_avail_qr\" where \"state\" = 'avail' limit 1"
-	// insert into "v1_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
+	stmt := "select \"qr_enc_id\", \"url_path\" from \"t_avail_qr\" where \"state\" = 'avail' limit 1"
+	// insert into "t_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
 	// 	  ( '170', '4q', 'http://127.0.0.1:9019/qr/00170.4.png', './td_0008/q00170.4.png', 'http://t432z.com/q/4q' )
 	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt)
 	if err != nil {
@@ -649,7 +652,7 @@ func DoGet(uri string, args ...string) (status int, rv string) {
 }
 
 func (hdlr *TabServer2Type) UpdateQRMarkAsUsed(qrId string) error {
-	stmt := "update \"v1_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
+	stmt := "update \"t_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
 	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) - stmt [%s] data[%s]\n", stmt, qrId)
 	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, qrId)
 	if err != nil {

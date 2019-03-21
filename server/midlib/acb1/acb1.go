@@ -269,7 +269,7 @@ func (hdlr *Acb1Type) GetAllRows(tag string) (rowData string, err error) {
 			, t2."qr_id"
 			, t2."qr_enc_id"
 			, t2."state" as "qr_state"
-		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
+		from "v1_trackAdd" as t1 left outer join "t_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
 		where "tag" = $1
 		order by "ord_seq" desc
 		`
@@ -329,7 +329,7 @@ func (hdlr *Acb1Type) GetMostRecentHash(tag string) (hash, ord_seq, qr_enc_id st
 }
 
 func (hdlr *Acb1Type) UpdateQRMarkAsUsed(qrId string) error {
-	stmt := "update \"v1_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
+	stmt := "update \"t_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
 	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) - stmt [%s] data[%s]\n", stmt, qrId)
 	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, qrId)
 	if err != nil {
@@ -356,8 +356,8 @@ func (hdlr *Acb1Type) UpdateAnimalWithQR(tag, qrId string) error {
 // err = hdlr.PullQRFromDB(rr.Tag)
 func (hdlr *Acb1Type) PullQRFromDB(tag string) (qr_enc_id string, err error) {
 	// Xyzzy - sould replace with stored proc. that updates state in same transaction.
-	stmt := "select \"qr_enc_id\" from \"v1_avail_qr\" where \"state\" = 'avail' limit 1"
-	// insert into "v1_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
+	stmt := "select \"qr_enc_id\" from \"t_avail_qr\" where \"state\" = 'avail' limit 1"
+	// insert into "t_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
 	// 	  ( '170', '4q', 'http://127.0.0.1:9019/qr/00170.4.png', './td_0008/q00170.4.png', 'http://t432z.com/q/4q' )
 	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt)
 	if err != nil {
@@ -688,7 +688,7 @@ select t1.*
 	, t2."qr_id"
 	, t2."qr_enc_id"
 	, t2."state" as "qr_state"
-from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
+from "v1_trackAdd" as t1 left outer join "t_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
 ;
 */
 func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req *http.Request, mdata map[string]string) {
@@ -702,7 +702,7 @@ func listBy(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, req
 			, t2."qr_id"
 			, t2."qr_enc_id"
 			, t2."state" as "qr_state"
-		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
+		from "v1_trackAdd" as t1 left outer join "t_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
 		`
 	_ = stmt
 
@@ -782,7 +782,7 @@ func getInfo(hdlr *Acb1Type, rw *goftlmux.MidBuffer, www http.ResponseWriter, re
 			, t2."qr_id"
 			, t2."qr_enc_id"
 			, t2."state" as "qr_state"
-		from "v1_trackAdd" as t1 left outer join "v1_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
+		from "v1_trackAdd" as t1 left outer join "t_avail_qr" as t2 on t1."qr_id" = t2."qr_enc_id"
 		where "tag" = $1
 		order by "ord_seq" desc
 		`

@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib" //
@@ -30,6 +29,7 @@ import (
 	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
 )
 
@@ -453,9 +453,8 @@ func (hdlr *TopHandler) ServeHTTP(www http.ResponseWriter, req *http.Request) {
 	rw.FinalFlush()
 
 	if dumpBody {
-		// fmt.Printf("At: %s\n", godebug.LF())
 		body := rw.GetBody()
-		fmt.Printf("\nBody: %s\n\n", body)
+		fmt.Printf("\nAT: %s Body: %s\n\n", godebug.LF(), body)
 	}
 	if !rw.IsHijacked {
 		// fmt.Printf("At: %s\n", godebug.LF())

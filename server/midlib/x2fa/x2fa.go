@@ -192,7 +192,7 @@ func init() {
 }
 
 func (hdlr *X2faType) UpdateQRMarkAsUsed(qrId string) error {
-	stmt := "update \"v1_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
+	stmt := "update \"t_avail_qr\" set \"state\" = 'used' where \"qr_enc_id\" = $1"
 	godebug.DbPfb(db1, "%(Yellow) AT: %(LF) - stmt [%s] data[%s]\n", stmt, qrId)
 	_, err := hdlr.gCfg.Pg_client.Db.Exec(stmt, qrId)
 	if err != nil {
@@ -207,8 +207,8 @@ func (hdlr *X2faType) UpdateQRMarkAsUsed(qrId string) error {
 // err = hdlr.PullQRFromDB(rr.Tag)
 func (hdlr *X2faType) PullQRFromDB(tag string) (qr_enc_id string, err error) {
 	// Xyzzy - sould replace with stored proc. that updates state in same transaction.
-	stmt := "select \"qr_enc_id\" from \"v1_avail_qr\" where \"state\" = 'avail' limit 1"
-	// insert into "v1_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
+	stmt := "select \"qr_enc_id\" from \"t_avail_qr\" where \"state\" = 'avail' limit 1"
+	// insert into "t_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
 	// 	  ( '170', '4q', 'http://127.0.0.1:9019/qr/00170.4.png', './td_0008/q00170.4.png', 'http://t432z.com/q/4q' )
 	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt)
 	if err != nil {
@@ -544,8 +544,8 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 // err = hdlr.PullQRFromDB(rr.Tag)
 func (hdlr *X2faType) PullQRURLFromDB() (qr_enc_id, qr_url string, err error) {
 	// Xyzzy - sould replace with stored proc. that updates state in same transaction.
-	stmt := "select \"qr_enc_id\", \"url_path\" from \"v1_avail_qr\" where \"state\" = 'avail' limit 1"
-	// insert into "v1_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
+	stmt := "select \"qr_enc_id\", \"url_path\" from \"t_avail_qr\" where \"state\" = 'avail' limit 1"
+	// insert into "t_avail_qr" ( "qr_id", "qr_enc_id", "url_path", "file_name", "qr_encoded_url_path" ) values
 	// 	  ( '170', '4q', 'http://127.0.0.1:9019/qr/00170.4.png', './td_0008/q00170.4.png', 'http://t432z.com/q/4q' )
 	rows, err := hdlr.gCfg.Pg_client.Db.Query(stmt)
 	if err != nil {

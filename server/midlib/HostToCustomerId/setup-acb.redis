@@ -1,8 +1,26 @@
 auth "lLJSmkccYJiVEwskr1RM4MWIaBM"
+
 set "htci:localhost:9018" "1"
 set "htci:192.168.0.157:9018" "1"
 set "htci:192.168.0.200:9018" "1"
 set "htci:t1.test1.com:9019" "1"
-set "htci:lonetree-ranch.beefchain.com" "2"
 set "htci:--default--" "1"
+
+set "htci:lonetree-ranch.beefchain.com" "2"
+set "htci:192.168.0.200:9018" "2"
+
+set "htci:192.154.97.75:9017" "2"
+set "htci:192.154.97.75:9019" "2"
+set "htci:192.154.97.75:9021" "2"
+set "htci:192.154.97.75:9023" "2"
+set "htci:192.154.97.75:9025" "2"
+set "htci:192.154.97.75:9027" "2"
+set "htci:192.154.97.75:9029" "2"
+
+set "htci:2fa.agroledge.com:9017" "2"
+set "htci:auth.agroledge.com:9019" "2"
+set "htci:email.agroledge.com:9021" "2"
+set "htci:livemon.agroledge.com:9023" "2"
+set "htci:qrgen.agroledge.com:9025" "2"
+
 quit
