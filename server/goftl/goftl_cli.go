@@ -44,6 +44,7 @@ type HandlersStruct struct {
 // https://gobyexample.com/command-line-flags
 var GlobalCfgFN = flag.String("globalCfgFile", "global-config.json", "Full path to global config file")
 var CfgFN = flag.String("cfgFile", "ftl-config.json", "Full path to config file")
+var Version = flag.Bool("version", false, "Report version of code and exit")
 
 // Note is not used for anything, but it can make it easy to find the server with ps -ef | grep "note-text"
 var Note = flag.String("note", "", "arbitrary note text, for use with ps -ef")
@@ -53,6 +54,8 @@ func init() {
 	flag.StringVar(GlobalCfgFN, "g", "global-config.json", "Full path to global config file")
 	flag.StringVar(CfgFN, "c", "ftl-config.json", "Full path to config file")
 }
+
+var GitCommit string
 
 //------------------------------------------------------------------------------------------------------------------------------
 func RedisClient() (client *redis.Client, conFlag bool) {
@@ -86,6 +89,11 @@ func RedisClient() (client *redis.Client, conFlag bool) {
 func main() {
 
 	flag.Parse()
+
+	if *Version {
+		fmt.Printf("Version (Git Commit): %s\n", GitCommit)
+		os.Exit(0)
+	}
 
 	globalCfgFN := cfg.ResolvLocalFile(*GlobalCfgFN)
 	cfg.ReadGlobalConfigFile(globalCfgFN)

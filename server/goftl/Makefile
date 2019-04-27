@@ -1,7 +1,7 @@
 
 all: 
 	rm -f goftl
-	go build
+	./cmp-local.sh
 
 corp_reg_test1:
 	echo " Ya " "gen_filename=${gen_filename}" >>,,,
@@ -26,7 +26,7 @@ loc206.jsonx: 206loc.m4 dot206.m4.json
 deploy74: build_linux copyTo74
 
 build_linux:
-	GOOS=linux go build -o go-ftl.linux .
+	./cmp-prod.sh go-ftl.linux
 
 copyTo74:
 	scp go-ftl.linux pschlump@192.154.97.74:/tmp
