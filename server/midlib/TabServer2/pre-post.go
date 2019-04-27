@@ -25,6 +25,7 @@ const (
 	PrePostContinue         PrePostFlagType = 2  // go to next processing, neither 'rv' or 'satus' relevant.  if 'rv' modified but is passed to next call.
 	PrePostFatalSetStatus   PrePostFlagType = 23 // Fatal Error: set status.	exit=true, rv written by pre-post already.
 	PrePostSuccessWriteRV   PrePostFlagType = 30 // rv is updated, please write.
+	PrePostDone             PrePostFlagType = 40 // All Done -- success or fail -- all done.
 )
 
 // xyzzy - String() function for these constants! - so can log it.
@@ -54,6 +55,9 @@ func init() {
 		"X2faValidateToken":       X2faValidateToken,
 		"X2faStash":               X2faStash,
 		"X2faSetupPt2of2":         X2faSetupPt2of2,
+		"KickQRGen":               KickQRGen,
+		"KickEmail":               KickEmail,
+		"SetupQRCodeRedirect":     SetupQRCodeRedirect,
 		// -- add support for "push-to-login" at this point.
 		// "ChargeCreditCard":        ChargeCreditCard,
 	}

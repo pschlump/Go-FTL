@@ -68,12 +68,14 @@ func init() {
 		"EmailConfigFileName":           { "type":[ "string" ], "default": "./email-config.json" },
 		"EmailTemplateDir":              { "type":[ "string" ], "default": "./tmpl/" },
 		"KeyFilePrivate":                { "type":[ "string" ] },
-		"DisplayURL2fa":                 { "type":[ "string" ], "required":false, "default": "/2fa/2fa-app.html" },
+		"DisplayURL2fa":                { "type":[ "string" ], "required":false, "default": "/msetup.html" },
 		"RedisPrefix2fa":                { "type":[ "string" ], "required":false, "default": "2fa:" },
-		"CustomerURL":                  { "type":[ "string" ], "default":"http://www.TabServer2-CustomerURL-not-set.com" },
-		"QrSuccessTemplateFn":          { "type":[ "string" ], "default":"./tmpl/qr_success.tmpl" },
-		"Server2faURL":                  { "type":[ "string" ], "required":false, "default":"http://t432z.com/2fa"  },
+		"CustomerURL":                   { "type":[ "string" ], "default":"http://www.TabServer2-CustomerURL-not-set.com" },
+		"QrSuccessTemplateFn":           { "type":[ "string" ], "default":"./tmpl/qr_success.tmpl" },
+		"Server2faURL":                  { "type":[ "string" ], "required":false, "default":"http://2fa.simple-auth.com"  },
 		"StatusForAllErrors":            { "type":[ "string" ], "required":false, "default":"no-use-JSON-msg"  },
+		"QRShortURL":                   { "type":[ "string" ], "required":false, "default":"http://t432z.com/"  },
+		"QRShortAuthToken":             { "type":[ "string" ], "required":false, "default":"qr-short-auth-token"  },
 		"LineNo":                        { "type":[ "int" ], "default":"1" }
 		}`)
 }
@@ -307,6 +309,8 @@ type TabServer2Type struct {
 	Server2faURL          string                      // 2fa see X2faSetup
 	CustomerURL           string                      //
 	QrSuccessTemplateFn   string                      //
+	QRShortURL            string                      //
+	QRShortAuthToken      string                      //
 	StatusForAllErrors    string                      // if "yes" then on errors status will be returned and errors will be logged. if "no-use-JSON-msg" then status 200, with JSON message returned.  Error is still logged.
 	LineNo                int                         //
 	gCfg                  *cfg.ServerGlobalConfigType //

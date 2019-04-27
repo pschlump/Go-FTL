@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/mid"
 	"github.com/pschlump/Go-FTL/server/sizlib"
@@ -33,6 +32,7 @@ import (
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
 	"github.com/pschlump/ms"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 // ====================================================================================================================================================================
@@ -1301,7 +1301,12 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 					} else if tx, ok := data[0]["x"]; ok {
 						// fmt.Printf("Just Before!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 						if tx == nil {
-							rv = `{"status":"error","msg":"Stored procedure return a NULL value."}`
+							rv = fmt.Sprintf(`{"status":"error","msg":"Stored procedure (%s) returned a NULL value."}`, h.G)
+							/*
+								success AJAX {msg: "Stored procedure return a NULL value.", status: "error"}
+								pvp-index.js?_ran_=008:453 Top of Succ Func {msg: "Stored procedure return a NULL value.", status: "error"}
+								pvp-index.js?_ran_=008:518 user registered error {msg: "Stored procedure return a NULL value.", status: "error"}
+							*/
 							// fmt.Printf("caught NULL return value,!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 						} else {
 							rv = data[0]["x"].(string)
@@ -1685,6 +1690,11 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 			fmt.Sprintf(`Error(18007): Postprocessing signaled error. sql-cfg.json[%s] %s`, cfgTag, godebug.LF()), res, req, *ps, trx, hdlr) // status:error
 	case PrePostSuccessWriteRV:
 		isError = false
+	case PrePostDone:
+		fmt.Printf("*** exit=%v pptCode=%v PrePostDone ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
+		fmt.Fprintf(os.Stderr, "*** exit=%v pptCode=%v PrePostDone ***, rv=%s, %s\n", exit, pptCode, rv, godebug.LF())
+		done = true
+		isError = true
 	}
 
 	fmt.Fprintf(os.Stderr, "%s AT: %s%s\n", MiscLib.ColorGreen, godebug.LF(), MiscLib.ColorReset)

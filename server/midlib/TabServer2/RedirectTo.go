@@ -15,7 +15,7 @@ package TabServer2
 import (
 	"fmt"
 	"net/http"
-	"net/url"
+	"os"
 
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
@@ -30,9 +30,8 @@ func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv st
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
 	type RedirectToData struct {
-		Status     string   `json:"status"`
-		RedirectTo string   `json:"$redirect_to$"`
-		Variables  []string `json:"$redirect_vars$"`
+		Status     string `json:"status"`
+		RedirectTo string `json:"$redirect_to$"`
 	}
 
 	var ed RedirectToData
@@ -49,19 +48,11 @@ func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv st
 
 	if ed.Status == "success" && ed.RedirectTo != "" {
 
-		to := ed.RedirectTo
-		fmt.Printf("%sAT: %s%s -- to %s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset, to)
-		if len(ed.Variables) > 0 {
-			fmt.Printf("%sAT: %s%s -- variables %s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset, ed.Variables)
-			sep := "?"
-			for _, vv := range ed.Variables {
-				if xx, ok := all[vv]; ok {
-					to += fmt.Sprintf("%s%s=%s", sep, url.QueryEscape(vv), url.QueryEscape(fmt.Sprintf("%v", xx)))
-					sep = "&"
-				}
-			}
-		}
-		fmt.Printf("%sAT: %s%s -- to %s\n", MiscLib.ColorCyan, godebug.LF(), MiscLib.ColorReset, to)
+		to := RunTemplateString(ed.RedirectTo, all)
+
+		fmt.Fprintf(os.Stderr, "\n%sThis One%s to=%s ed=%s all=%s at:%s\n", MiscLib.ColorGreen, MiscLib.ColorReset, to, godebug.SVarI(ed), godebug.SVarI(all), godebug.LF())
+		fmt.Fprintf(os.Stdout, "\n%sThis One%s to=%s ed=%s all=%s at:%s\n", MiscLib.ColorGreen, MiscLib.ColorReset, to, godebug.SVarI(ed), godebug.SVarI(all), godebug.LF())
+		fmt.Printf("%sAT:%s to = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, to, godebug.LF())
 
 		res.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
 		res.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
@@ -69,7 +60,7 @@ func RedirectTo(res http.ResponseWriter, req *http.Request, cfgTag string, rv st
 		res.Header().Set("Content-Type", "text/html")                            //
 		res.Header().Set("Location", to)
 		res.WriteHeader(http.StatusTemporaryRedirect)
-		return rv, PrePostRVUpdatedSuccess, true, http.StatusTemporaryRedirect
+		return rv, PrePostDone, true, http.StatusTemporaryRedirect
 	}
 
 	return rv, PrePostContinue, false, 200

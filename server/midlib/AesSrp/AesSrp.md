@@ -41,7 +41,7 @@ As a part of the login authentication a two factor authentication is required.
 
 A full cycle of user authentication is implemented. 
 
-1. Register with email confirmation.
+1. Register with email confirmation and setup of Two Factor Authentication (2FA).
 2. Login.
 3. Logout.
 3. Automatic Logout based on timeout.
@@ -335,6 +335,10 @@ SRP also provides perfect future security since each key from each login is gene
 
 1. Cookies and headers are not encrypted.  
 2. This only encrypts the RESTful requests and responses.
+
+For these reasons this protocol should be run over TLS (https) and the security provided should be
+in addition to standard TLS encryption.
+
 
 #### File: aessrp_ext.go Line No: 3089, 528, 3566, 4118
 

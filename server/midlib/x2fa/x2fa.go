@@ -381,7 +381,7 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 	err = conn.Cmd("SETEX", key, ttl, val).Err
 	if err != nil {
 		if db4 {
-			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
+			fmt.Printf("Error on redis - user not found - invalid 2fa-key - get(%s): %s\n", key, err)
 		}
 		fmt.Fprintf(www, `{"status":"error","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
 		return
@@ -481,20 +481,24 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	fp := ps.ByNameDflt("fp", "")
 	godebug.DbPfb(db1, "fp: ->%s<-\n", fp)
 
+	fpfull := ps.ByNameDflt("fpfull", "")
+	godebug.DbPfb(db1, "fpfull: ->%s<-\n", fpfull)
+
 	conn, err := hdlr.gCfg.RedisPool.Get()
 	defer hdlr.gCfg.RedisPool.Put(conn)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Data on this user timed out.  Retry registration."}`, godebug.LF())
 		return
 	}
 
 	key := fmt.Sprintf("%s%s", hdlr.RedisPrefix, id)
+	// Examle of generated data in Redis.
 	// val := fmt.Sprintf("{\"hash\":%q, \"t_2fa_id\":%q, \"fp\":%q, \"user_id\":%q}", RanHash, t_2fa_ID, "fingerprint-not-set-yet", user_id)
 	v, err := conn.Cmd("GET", key).Str()
 	if err != nil {
 		if db4 {
-			fmt.Printf("Error on redis - user not found - invalid relm - bad prefix - get(%s): %s\n", key, err)
+			fmt.Printf("Error on redis - user not found - invalid 2fa-key - get(%s): %s\n", key, err)
 		}
 		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
 		return
@@ -503,8 +507,10 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	err = json.Unmarshal([]byte(v), &rr)
 	if rr.Fp == "fingerprint-not-set-yet" {
 		rr.Fp = fp
+	} else if rr.Fp == fp {
+		// rr.Fp = fp
 	} else {
-		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Can not update an existing FP - use re-learn."}`, godebug.LF())
 		return
 	}
 
@@ -516,28 +522,27 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 		if db4 {
 			fmt.Printf("Error on redis - get(%s): %s\n", key, err)
 		}
-		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Unable to extend TTL in Redis on account."}`, godebug.LF())
 		return
 	}
 
-	stmt := "update \"t_2fa\" set \"fp\" = $1 where \"id\" = $2"
-	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.Fp, rr.T2faID)
+	stmt := "update \"t_2fa\" set \"fp\" = $2, \"fpfull\" = $3 where \"id\" = $1"
+	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.T2faID, rr.Fp, fpfull)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Failed to save fingerprint data for device to PG."}`, godebug.LF())
 		return
 	}
 
-	// xyzzy - update t_user.acct_state = 'ok' - when 2fa setup.
+	// update t_user.acct_state = 'ok' - when 2fa setup.
 	stmt = "update \"t_user\" set \"acct_state\" = 'ok' where \"id\" = $1"
 	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.UserID)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
-		fmt.Fprintf(www, `{"status":"error","LineFile":%q}`, godebug.LF())
+		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Failed to update account state so logins can occure."}`, godebug.LF())
 		return
 	}
 
-	// xyzzy902
 	fmt.Fprintf(www, `{"status":"success","hash":%q,"URL":%q}`, rr.Hash, rr.URL)
 }
 

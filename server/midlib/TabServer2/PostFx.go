@@ -1,41 +1,231 @@
+package TabServer2
+
 //
 // Go-FTL / TabServer2
 //
 // Copyright (C) Philip Schlump, 2012-2017. All rights reserved.
 //
-// Do not remove the following lines - used in auto-update.
-// Version: 0.5.9
-// BuildNo: 1811
-// FileId: 1011
-//
-
-package TabServer2
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	mathRand "math/rand"
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
-	template "text/template"
 
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/tr"
-	"github.com/pschlump/HashStrings"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/json" //	"encoding/json"
-	"github.com/pschlump/ms"
+	"github.com/pschlump/json"         //	"encoding/json"
 	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
-	"github.com/pschlump/uuid"
 )
 
+var hdrl_QRUrl = "http://127.0.0.1:9999/kick"
+var hdrl_EmailUrl = "http://127.0.0.1:9998/kick"
+
+//
+//  "SetupQRCodeRedirect", "KickQRGen", "KickEmail"
+//
+func KickQRGen(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
+	ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
+	hdlr.DoGet(hdrl_QRUrl, "_ran_", ran)
+	return rv, PrePostSuccessWriteRV, true, 200
+}
+
+func KickEmail(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
+	ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
+	hdlr.DoGet(hdrl_EmailUrl, "_ran_", ran)
+	return rv, PrePostSuccessWriteRV, true, 200
+}
+
+type SetupQRData struct {
+	Status      string `json:"status"`
+	Use2fa      string `json:"use_2fa"`
+	RanHash     string `json:"hash"`
+	X2faId      string `json:"2fa_unique_id"`
+	URL2faSetup string `json:"URL_2fa_setup"`
+	UserID      string `json:"user_id"`
+	QRImgURL    string `json:"QRImgURL"`
+	QrID        string `json:"qr_id"`
+	QrEncID     string `json:"qr_enc_id"`
+}
+
+// -- done --
+// var QRShortURL = "http://t432z.com" // xyzzy make this a config item. (see :97)
+// /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/TabServer2/PostFx.go
+// /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/TabServer2/X2faSetup.go
+//	 	var QRShortURL = "http://t432z.com" // xyzzy make this a config item. (see :97)
+
+// Setup REDIS with data on timeout after registration.
+// Setup QR code on qr-short.
+func SetupQRCodeRedirect(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
+
+	var ed SetupQRData
+	var all map[string]interface{}
+
+	err := json.Unmarshal([]byte(rv), &ed)
+	if err != nil {
+		return "", PrePostFatalSetStatus, true, 500
+	}
+	err = json.Unmarshal([]byte(rv), &all)
+	if err != nil {
+		return "", PrePostFatalSetStatus, true, 500
+	}
+
+	if ed.Status == "success" && ed.Use2fa == "yes" {
+
+		// ----------------------------------------------------------------------------------------------------------------------------------------
+		// Push ID + random hash to Redis w/ TTL
+		// id0, _ := uuid.NewV4()
+		// t_2fa_ID := id0.String()
+		t_2fa_ID := ed.X2faId
+		RanHash := ed.RanHash
+
+		// ----------------------------------------------------------------------------------------------------------------------------------------
+		// get QR code from avail list
+		/*
+					||', "QRImgURL":'||to_json(l_qr_data.url_path)
+					||', "qr_id":'||to_json(l_qr_data.qr_id)
+					||', "qr_enc_id":'||to_json(l_qr_data.qr_enc_id)
+			var qrId, QRImgUrl string
+			qrId, QRImgUrl, err = hdlr.PullQRURLFromDB()
+			godebug.DbPfb(db102, "%(Green) URL path: %s AT: %(LF)\n", QRImgUrl)
+			if err != nil {
+				godebug.DbPfb(true, "%(Red) QR Failed to get id=[%s] url=[%s] err=%s AT: %(LF)\n", qrId, QRImgUrl, err)
+				return rv, PrePostRVUpdatedFail, true, http.StatusExpectationFailed // 417
+			}
+			if qrId == "" {
+				godebug.DbPfb(true, "%(Red) QR Failed to get id=[%s] url=[%s] err=%s AT: %(LF)\n", qrId, QRImgUrl, err)
+				return rv, PrePostRVUpdatedFail, true, http.StatusExpectationFailed // 417
+			}
+		*/
+		qrId := ed.QrEncID // xyzzy - cleanup
+		// QRImgURL := ed.QRImgURL // xyzzy - cleanup
+
+		// ------------------------------------------------------------------------------------------------------
+		// QR Short - setup
+		// ------------------------------------------------------------------------------------------------------
+		// update t432z.com URL shorter for this QR
+		ran := ed.RanHash // xyzzy - cleanup
+		godebug.DbPfb(db102, "%(Cyan)AT: %(LF) ran ed.RanHash [%v]\n", ran)
+
+		theData := url.QueryEscape(fmt.Sprintf(`{"t_2fa_ID":%q}`, t_2fa_ID))
+
+		// a432z.com - URL from config???
+
+		var qrShortURL_upd string
+		if hdlr.QRShortURL[len(hdlr.QRShortURL)-1:] == "/" {
+			qrShortURL_upd = fmt.Sprintf("%supd/", hdlr.QRShortURL)
+		} else {
+			qrShortURL_upd = fmt.Sprintf("%s/upd/", hdlr.QRShortURL)
+		}
+
+		var sep string
+		if strings.Contains(hdlr.DisplayURL2fa, "?") {
+			sep = "&"
+		} else {
+			sep = "?"
+		}
+
+		var http string
+		if req.TLS == nil {
+			http = "http"
+		} else {
+			http = "https"
+		}
+
+		// Single Encode url=
+		// toURL := url.QueryEscape(fmt.Sprintf("%s%sid=%s&url=%s://%s/api/x2fa/set-fp", hdlr.DisplayURL2fa, sep, RanHash, http, req.Host))
+		// Doulbe Encoe url=
+		toURL := url.QueryEscape(fmt.Sprintf("%s%sid=%s&url=%s", hdlr.DisplayURL2fa, sep, RanHash,
+			url.QueryEscape(fmt.Sprintf("%s://%s/api/x2fa/set-fp", http, req.Host)),
+		))
+
+		fmt.Fprintf(os.Stderr, "%s?url=%s&id=%s&data=%s&_ran_=%s\n", qrShortURL_upd, toURL, qrId, theData, ran)
+		fmt.Fprintf(os.Stdout, "%s?url=%s&id=%s&data=%s&_ran_=%s\n", qrShortURL_upd, toURL, qrId, theData, ran)
+
+		status, body := hdlr.DoGet(qrShortURL_upd, "url", toURL, "id", qrId, "data", theData, "_ran_", ran)
+		if status != 200 {
+			fmt.Fprintf(os.Stderr, "\n%sQR Redirect Setup: status=%d AT:%s%s\n\n", MiscLib.ColorRed, status, godebug.LF(), MiscLib.ColorReset)
+			fmt.Fprintf(os.Stdout, "\n%sQR Redirect Setup: status=%d AT:%s%s\n\n", MiscLib.ColorRed, status, godebug.LF(), MiscLib.ColorReset)
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to set QR Redirect","LineFile":%q}`+"\n", err, godebug.LF()))
+			// return "", "", "", 0, fmt.Errorf("Unable to set QR Redirect, Error [%s] AT: %s", err, godebug.LF())
+			return rv, PrePostRVUpdatedFail, true, 401
+		} else {
+			godebug.DbPfb(db102, "%(Green) body from shortner : %s AT: %(LF)\n", body)
+			if body != qrId {
+				godebug.DbPfb(db102, "%(Red) DID NOT MATCH!!!!: got [%s] != expected [%s] AT: %(LF)\n", body, qrId)
+			}
+		}
+
+		// ------------------------------------------------------------------------------------------------------
+		// Redis
+		// ------------------------------------------------------------------------------------------------------
+		conn, err := hdlr.gCfg.RedisPool.Get()
+		defer hdlr.gCfg.RedisPool.Put(conn)
+		if err != nil {
+			logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+			// return "", "", "", 0, fmt.Errorf("Failed to connect to Redis, Error [%s] AT: %s", err, godebug.LF())
+			return rv, PrePostRVUpdatedFail, true, 401
+		}
+
+		// ID = fmt.Sprintf("%d", mathRand.Intn(10000000)) // xyzzy201 - add in Checksum byte
+		ID := ed.RanHash
+		key := fmt.Sprintf("%s%s", hdlr.RedisPrefix2fa, ID)
+		var host string
+		host = ""
+		if req.TLS != nil {
+			host = "https://" + req.Host
+		} else {
+			host = "http://" + req.Host
+		}
+		val := godebug.SVar(RedisData{
+			Hash:   RanHash,
+			Fp:     "fingerprint-not-set-yet",
+			UserID: ed.UserID,
+			T2faID: t_2fa_ID,
+			URL:    host,
+		})
+		ttl := timeOutConst // 60 * 60 // 1 hour	// xyzzySetConfig - in seconds
+
+		err = conn.Cmd("SETEX", key, ttl, val).Err
+		if err != nil {
+			if db4 {
+				fmt.Printf("Error on redis - get(%s): %s\n", key, err)
+			}
+			// return "", "", "", 0, fmt.Errorf(`{"status":"error","msg":"Unable to set value in Redis.","LineFile":%q}`, godebug.LF())
+			return rv, PrePostRVUpdatedFail, true, 401
+		}
+
+		delete(all, "x2fa_unique_id")
+
+		// ----------------------------------------------------------------------------------------------------------------------------------------
+		// Results back to user.
+		// ----------------------------------------------------------------------------------------------------------------------------------------
+		rv = godebug.SVar(all)
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
+		// return rv, PrePostRVUpdatedSuccess, true, 200
+		return rv, PrePostSuccessWriteRV, true, 200
+	} else if ed.Status == "error" {
+		fmt.Printf("Error from underlying code - exit early - rv= ->%s<- at:%s\n", rv, godebug.LF())
+		return rv, PrePostRVUpdatedFail, true, 401
+	}
+
+	fmt.Printf("rv= ->%s<- at:%s\n", rv, godebug.LF())
+	return fmt.Sprintf(`{"status":"error","msg":"failed at %s"}`, godebug.LF()), PrePostRVUpdatedFail, true, 401
+}
+
+//
+
+//
+
+//
+
+//
+
+/*
 type RedisData struct {
 	Hash   string `json:"hash"`
 	Fp     string `json:"fp"`
@@ -47,24 +237,17 @@ type RedisData struct {
 // xyzzy - config item
 const timeOutConst = (60 * 60 * 24) + 5
 
-/*
-		return "", PrePostFatalSetStatus, true, 500
-		return rv, PrePostFatalSetStatus, true, 500
-	return rv, PrePostContinue, exit, a_status
-*/
 // xyzzy-2fa - X2faSetup
 // type PrePostFlagType int - to replace 'bool' type.
 func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 
 	fmt.Printf("%sX2faSetup! AT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-	// fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorRed, MiscLib.ColorReset, rv, godebug.LF())
-	// fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n\n\n", MiscLib.ColorGreen, MiscLib.ColorReset, rv, godebug.LF())
+	fmt.Fprintf(os.Stderr, "\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
 	// func SignToken(tokData []byte, keyFile string) (out string, err error) {
 	//	hdlr.KeyFilePrivate        string                      // private key file for signing JWT tokens
 	// https://github.com/dgrijalva/jwt-go.git
-	/*
+	/ *
 	   {
 	       "auth_token": "46155d84-1de9-418f-b22b-314b8d228ec1",
 	       "config": "{}",
@@ -79,7 +262,7 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 	       "user_id": "f7ab4a0d-c53d-44a7-b869-49bb81b8919a",
 	       "xsrf_token": "05266ceb-ee79-4c91-9418-c4f3a6b267fd"
 	   }
-	*/
+	* /
 
 	var ed RedirectToData
 	var all map[string]interface{}
@@ -120,7 +303,6 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 	}
 
 	fmt.Printf("rv= ->%s<- at:%s\n", rv, godebug.LF())
-
 	return fmt.Sprintf(`{"status":"error","msg":"failed at %s"}`, godebug.LF()), PrePostRVUpdatedFail, true, 401
 }
 
@@ -128,30 +310,12 @@ func X2faSetup(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 // rv - return value string - JSON
 // rexit, if true, then will return with error from parent
 // rstatus - status to return with
-/*
-		return "", PrePostFatalSetStatus, true, 500
-		return rv, PrePostFatalSetStatus, true, 500
-	return rv, PrePostContinue, exit, a_status
-*/
 // func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rrv string, rexit bool, rstatus int) {
 func X2faValidateToken(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
-	/*
-		at top rv = -->>{
-			"auth_token":"06fedeb4-6984-493a-9fb4-85b95e8401fd",
-			"config":"{}",
-			"customer_id":"1",
-			"jwt_token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoX3Rva2VuIjoiMDZmZWRlYjQtNjk4NC00OTNhLTlmYjQtODViOTVlODQwMWZkIn0.HeOVeKmiAUI3U6WJ9LDDVsRrkSq2acItixU7ZlcgyU6L5k1D7-ohX8D167rxhm3IT55TlHz_riDno7gR8s47ppKjyensvjPKX_4e0xmGHVgzafKMY131PZRS9DC2AaOzXMnZJ2oGWpBHRYkOZsH9i4q6Jeztn2f5lt7S0pMCMfdRtngMPerKJLeCcZoqK2TXjeutPXgYZKb8lkWUmXY6TevdXvA9ekG7nFU3j6TO42-qsJBlYJFEM_zoGyGaqdMBdD3v0ejarh31fVBGnh9xIq9drs3fddT_JaS3q5xDjz1ZRCWpd3RQvv2EZCohUVbSIYvHDTrT4JhJIaOHOf4zVQ",
-			"privs":"[]",
-			"seq":"8452319e-4a9f-4c32-b86d-19a3e7a9ed2f",
-			"status":"success",
-			"user_id":"3290ce1d-14fa-414d-8759-4a323e40ad32",
-			"xsrf_token":"2c11fa61-f4e7-477e-8570-ac100564b989"
-		}<<-- File: /Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/TabServer2/X2faSetup.go LineNo:122
-	*/
 
 	type RedirectToData struct {
 		Status string `json:"status"`
@@ -274,10 +438,10 @@ func GenRandBytesOracle() (buf []byte, ttl, epoc int, err error) {
 
 	if FirstRequest {
 		ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
-		// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
-		status, body = DoGet(URL, "_ran_", ran) // Get Random from Oralce
+		// status, body := hdlr.DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL, "id", qrId, "data", theData, "_ran_", ran)
+		status, body = hdlr.DoGet(URL, "_ran_", ran) // Get Random from Oralce
 	} else {
-		status, body = DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch. // random from oracle
+		status, body = hdlr.DoGet(URL, "ep", fmt.Sprintf("%v", ThisEpoc)) // xyzzy Deal with TTL and timing to see if need to re-fetch. // random from oracle
 		// xyzzy use TimeRemain, ThisEpoc, LastResult
 	}
 
@@ -446,12 +610,9 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 
 	theData := `{"data":"data written to system in file"}`
 	// a432z.com - URL from config???
-
-	qrShortURL_upd := fmt.Sprintf("%s/upd/", hdlr.QRShortURL)
-	fmt.Fprintf(os.Stderr, "%s?url=%s&id=%s&data=%s&_ran_=%s\n", qrShortURL_upd, hdlr.DisplayURL2fa, qrId, theData, ran)
-	fmt.Fprintf(os.Stdout, "%s?url=%s&id=%s&data=%s&_ran_=%s\n", qrShortURL_upd, hdlr.DisplayURL2fa, qrId, theData, ran)
-
-	status, body := hdlr.DoGet(qrShortURL_upd, "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
+	fmt.Printf("http://t432z.com/upd/?url=%s&id=%s&data=%s&_ran_=%s\n", hdlr.DisplayURL2fa, qrId, theData, ran)
+	fmt.Fprintf(os.Stderr, "http://t432z.com/upd/?url=%s&id=%s&data=%s&_ran_=%s\n", hdlr.DisplayURL2fa, qrId, theData, ran)
+	status, body := hdlr.DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
 	if status != 200 {
 		fmt.Printf("status=%d\n", status)
 		fmt.Fprintf(os.Stderr, "status=%d\n", status)
@@ -600,61 +761,19 @@ func (hdlr *TabServer2Type) PullQRURLFromDB() (qr_enc_id, qr_url string, err err
 }
 
 // Modified to send Header!
-/*
----------------------------------------------
-// Xyzzy101 - Setup QR Redirect
----------------------------------------------
-
-	export QR_SHORT_AUTH_TOKEN="w4h0wvtb1zk4uf8Xv.Ns9Q7j8"
-	wget -o out/,list1 -O out/,list2 \
-		--header "X-Qr-Auth: ${QR_SHORT_AUTH_TOKEN}" \
-		"http://t432z.com/upd/?url=http://test.test.com&id=5c"
-
-	-- 1. DoGet - change to create a header
-	-- 2. Example Call to set this
-*/
-func (hdlr *TabServer2Type) DoGet(uri string, args ...string) (status int, rv string) {
-
-	sep := "?"
-	var qq bytes.Buffer
-	qq.WriteString(uri)
-	for ii := 0; ii < len(args); ii += 2 {
-		// q = q + sep + name + "=" + value;
-		qq.WriteString(sep)
-		qq.WriteString(url.QueryEscape(args[ii]))
-		qq.WriteString("=")
-		if ii < len(args) {
-			qq.WriteString(url.QueryEscape(args[ii+1]))
-		}
-		sep = "&"
-	}
-	url_q := qq.String()
-
-	// res, err := http.Get(url_q)
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url_q, nil)
-	req.Header.Add("User-Agent", "Go-FTL-x2fa")
-	// req.Header.Add("X-Qr-Auth", "w4h0wvtb1zk4uf8Xv.Ns9Q7j8") // Xyzzy - set from config?
-	req.Header.Add("X-Qr-Auth", hdlr.QRShortAuthToken)
-	res, err := client.Do(req)
-
-	if err != nil {
-		return 500, ""
-	} else {
-		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return 500, ""
-		}
-		status = res.StatusCode
-		if status == 200 {
-			rv = string(body)
-		}
-		return
-	}
-}
-
+//
+// ---------------------------------------------
+// // Xyzzy101 - Setup QR Redirect
+// ---------------------------------------------
+//
+// 	export QR_SHORT_AUTH_TOKEN="w4h0wvtb1zk4uf8Xv.Ns9Q7j8"
+// 	wget -o out/,list1 -O out/,list2 \
+// 		--header "X-Qr-Auth: ${QR_SHORT_AUTH_TOKEN}" \
+// 		"http://t432z.com/upd/?url=http://test.test.com&id=5c"
+//
+// 	-- 1. hdlr.DoGet - change to create a header
+// 	-- 2. Example Call to set this
+// * /
 func DoGet(uri string, args ...string) (status int, rv string) {
 
 	sep := "?"
@@ -677,8 +796,7 @@ func DoGet(uri string, args ...string) (status int, rv string) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url_q, nil)
 	req.Header.Add("User-Agent", "Go-FTL-x2fa")
-	// req.Header.Add("X-Qr-Auth", "w4h0wvtb1zk4uf8Xv.Ns9Q7j8") // Xyzzy - set from config?
-	// req.Header.Add("X-Qr-Auth", hdlr.QRShortAuthToken)
+	req.Header.Add("X-Qr-Auth", "w4h0wvtb1zk4uf8Xv.Ns9Q7j8") // Xyzzy - set from config?
 	res, err := client.Do(req)
 
 	if err != nil {
@@ -758,57 +876,10 @@ func RunTemplate(TemplateFn string, name_of string, g_data map[string]interface{
 
 }
 
-// ===================================================================================================================================================
-// Run a template and get the results back as a stirng.
-// This is the primary template runner for sending email.
-func RunTemplateString(Template string, g_data map[string]interface{}) string {
-
-	rtFuncMap := template.FuncMap{
-		"Center":      ms.CenterStr,   //
-		"PadR":        ms.PadOnRight,  //
-		"PadL":        ms.PadOnLeft,   //
-		"PicTime":     ms.PicTime,     //
-		"FTime":       ms.StrFTime,    //
-		"PicFloat":    ms.PicFloat,    //
-		"nvl":         ms.Nvl,         //
-		"Concat":      ms.Concat,      //
-		"title":       strings.Title,  // The name "title" is what the function will be called in the template text.
-		"ifDef":       ms.IfDef,       //
-		"ifIsDef":     ms.IfIsDef,     //
-		"ifIsNotNull": ms.IfIsNotNull, //
-		// "g":           global_g,       //
-		// "set":         global_set,     //
-	}
-
-	var b bytes.Buffer
-	foo := bufio.NewWriter(&b)
-
-	fmt.Fprintf(os.Stdout, "Template ->%s<- Data ->%s<-\n", Template, godebug.SVarI(g_data))
-
-	t, err := template.New("theTemplate").Funcs(rtFuncMap).Parse(Template)
-	// t, err := template.New("simple-tempalte").ParseFiles(TemplateFn)
-	if err != nil {
-		fmt.Printf("Error(12004): parsing/reading template, %s\n", err)
-		return ""
-	}
-
-	err = t.ExecuteTemplate(foo, "theTemplate", g_data)
-	if err != nil {
-		fmt.Fprintf(foo, "Error(12005): running template=->%s<-, %s\n", Template, err)
-		return ""
-	}
-
-	foo.Flush()
-	s := b.String() // Fetch the data back from the buffer
-
-	// LogIt()
-	fmt.Fprintf(os.Stdout, "Template Output is: ----->%s<-----\n", s)
-
-	return s
-
-}
-
-// status, body := hdlr.DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
+// status, body := DoGet("http://t432z.com/upd/", "url", hdlr.DisplayURL2fa, "id", qrId, "data", theData, "_ran_", ran)
 // key := fmt.Sprintf("%s%s", hdlr.RedisPrefix2fa, ID)
+*/
+
+const db102 = true
 
 /* vim: set noai ts=4 sw=4: */
