@@ -36,9 +36,8 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 	//  4. Reuturn # from x2fa:{UN} // ttl=4min
 	//  5. { "auth_tok_2part": ${auth_tok_2part}, "nt": ${n} }
 	fmt.Printf("%sAT:%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-	fmt.Fprintf(os.Stderr, "\n\n%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
-	fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorRed, MiscLib.ColorReset, rv, godebug.LF())
-	fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n\n\n", MiscLib.ColorGreen, MiscLib.ColorReset, rv, godebug.LF())
+	fmt.Fprintf(os.Stderr, "\n%s ++++++++++++++++++++++++++++++++ X2faStash ++++++++++++++++++++++++++++++++ %s\n", MiscLib.ColorRed, MiscLib.ColorReset)
+	fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n\n", MiscLib.ColorRed, MiscLib.ColorReset, rv, godebug.LF())
 
 	// func SignToken(tokData []byte, keyFile string) (out string, err error) {
 	//	hdlr.KeyFilePrivate        string                      // private key file for signing JWT tokens
@@ -133,7 +132,9 @@ func X2faStash(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 		nVal++
 
 		rv = fmt.Sprintf(`{"status":"success","auth_tok_2part":%q,"nVal":%d}`, auth_tok_2part, nVal)
-		return rv, PrePostContinue, false, 200
+		// return rv, PrePostContinue, false, 200
+		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at bottom rv = -->>%s<<-- %s\n\n", MiscLib.ColorRed, MiscLib.ColorReset, rv, godebug.LF())
+		return rv, PrePostSuccessWriteRV, false, 200
 
 	}
 

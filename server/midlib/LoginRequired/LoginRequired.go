@@ -44,18 +44,16 @@ import (
 	"strconv"
 	"strings"
 
-	JsonX "github.com/pschlump/JSONx"
-
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
-
-	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -305,7 +303,8 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 					}
 					if valid, first, xsrf_token, ttl := hdlr.ValidateAuthToken(rw, www, req, jwt_token); valid {
 
-						if hdlr.gCfg.DbOn("*", "LoginRequired", "db-bearer") {
+						// if hdlr.gCfg.DbOn("*", "LoginRequired", "db-bearer") {
+						if true {
 							fmt.Fprintf(os.Stderr, "%sAT: -- Authorized! Yea! Inject of jwt_token(%s)=[%s] ttl=%d first=%v %s%s\n", MiscLib.ColorGreen, hdlr.ParamName, jwt_token, first, ttl, godebug.LF(), MiscLib.ColorReset)
 						}
 
@@ -325,8 +324,7 @@ func (hdlr *LoginRequiredType) ServeHTTP(www http.ResponseWriter, req *http.Requ
 						   	SREM
 						*/
 
-						if true { // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PJS Feb 5
-
+						if false { // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PJS Feb 5 ( Sat Apr 27 19:59:30 MDT 2019 )
 							hdlr.MergeSessionData(rw, true)
 							if !first {
 								if !chkXsrf(xt) {

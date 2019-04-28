@@ -37,7 +37,7 @@ func KickQRGen(www http.ResponseWriter, req *http.Request, cfgTag string, rv str
 func KickEmail(www http.ResponseWriter, req *http.Request, cfgTag string, rv string, isError bool, cookieList map[string]string, ps *goftlmux.Params, trx *tr.Trx, hdlr *TabServer2Type) (rvOut string, pptFlag PrePostFlagType, exit bool, a_status int) {
 	ran := fmt.Sprintf("%d", mathRand.Intn(1000000000))
 	hdlr.DoGet(hdrl_EmailUrl, "_ran_", ran)
-	return rv, PrePostSuccessWriteRV, true, 200
+	return rv, PrePostSuccessWriteRV, false, 200
 }
 
 type SetupQRData struct {

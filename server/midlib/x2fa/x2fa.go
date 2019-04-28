@@ -709,6 +709,12 @@ func (hdlr *X2faType) Get2MinHashFunc() (hash string, ttlLeft int, err error) {
 		return "", 0, err
 	}
 
+	// xyzzy11221122
+	// xyzzy
+	// xyzzy -- Failed to use connection - should this value be stashed in Redis w/ a TTL and not re-fetched
+	// xyzzy
+	// xyzzy
+
 	godebug.DbPfb(db1, "%(Cyan) (err may be nil) [%s] AT: %(LF)\n", err)
 
 	// ------------------------------------------------------------------------------

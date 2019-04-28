@@ -268,6 +268,7 @@ func (hdlr *TabServer2Type) Get2MinHashFunc() (hash string, ttlLeft int, err err
 // ============================================================================================================================================
 // Should move to aesccm package
 func GenRandBytesOracle() (buf []byte, ttl, epoc int, err error) {
+	// xyzzy1122432322 -- needs to be config value!
 	URL := "http://www.2c-why.com/Ran/RandomValue"
 	var status int
 	var body string
@@ -363,7 +364,7 @@ order by 1, 2
 			val2 := val1[len(val1)-6:]
 			val, err := strconv.ParseInt(val2, 16, 64)
 			if err != nil {
-				fmt.Printf("Error on d.b. query %s\n", err)
+				fmt.Printf("Error on converstion from hex to int [%s] %s\n", val2, err)
 				continue
 			}
 			val = val % 1000000
