@@ -1,0 +1,33 @@
+{{define "filename"}}default_{{.seq}}-{{.timestamp}}.out{{end}}
+{{define "body"}}
+{
+	"Name_UC":"{{toUpper .corp_abrev}}",
+	"Name_LC":"{{toLower .corp_abrev}}",
+	"InitialSupply":"{{.corp_n_supply}}",
+	"Name":"{{.corp_shortname}}",
+	"Decimals":"{{.corp_n_decimals}}",
+	"FullName":"{{.corp_fullname}}",
+
+	"corp_abrev":"{{.corp_abrev}}",
+	"corp_again":"{{.corp_again}}",
+	"corp_allow_burn":"{{.corp_allow_burn}}",
+	"corp_allow_mint":"{{.corp_allow_mint}}",
+	"corp_email":"{{.corp_email}}",
+	"corp_eth_pay":"{{.corp_eth_pay}}",
+	"corp_fullname":"{{.corp_fullname}}",
+	"corp_n_supply":"{{.corp_n_supply}}",
+	"corp_n_decimals":"{{.corp_n_decimals}}",
+	"corp_password":"{{.corp_password}}",
+	"corp_reg_type":"{{.corp_reg_type}}",
+	"corp_shortname":"{{.corp_shortname}}",
+	"file_name":"{{.file_name}}",
+	"seq":{{.seq}},
+	"timestamp":"{{.timestamp}}"
+}
+{{end}}
+{{define "setenv_corp_abrev"}}
+Name_UC={{toUpper .corp_abrev}}
+{{end}}
+{{define "setenv_gen_filename"}}
+gen_filename={{.gen_filename}}
+{{end}}

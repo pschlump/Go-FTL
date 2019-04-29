@@ -1,0 +1,29 @@
+{{define "subject"}}Go-FTL Auth Demo - Support Request{{end}}
+{{define "body_html"}}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title> Go-FTL Auth Demo - Support Request </title>
+</head>
+<body>
+<pre>  
+
+	From: {{.p1}}
+	Subject: {{.p2}}
+	Body: {{.p3}}
+ 
+</pre>  
+</body>
+</html>
+{{end}}
+{{define "body_text"}}
+    
+	From: {{.p1}}
+	Subject: {{.p2}}
+	Body: {{.p3}}
+    
+{{end}}
+{{define "mod_date"}}
+	Tue Nov 24 08:36:52 MST 2015
+{{end}}

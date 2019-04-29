@@ -1,0 +1,14 @@
+{{define "header"}}
+<h1> This is gibbon.tmpl </h1>
+{{end}}
+{{define "body"}}
+<div class="search-docs">
+<ul>
+{{range $key, $value := .data}}	
+	<li> <a http="#" onClick="menuTo('{{$value.link|jsEsc}}')"> <span class="search-title">{{$value.title}}</span></a> <br> {{$value.desc}} </li>
+{{end}}
+</ul>
+</div>
+{{end}}
+{{define "footer"}}
+{{end}}
