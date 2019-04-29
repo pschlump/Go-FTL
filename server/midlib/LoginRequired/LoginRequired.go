@@ -40,11 +40,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
@@ -52,6 +50,7 @@ import (
 	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	"github.com/pschlump/jwtverif"
 	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
 )
@@ -83,7 +82,8 @@ func init() {
 		"RedisSessionPrefix":	{ "type":["string"], "default":"session:" },
 		"PostgresQuery":		{ "type":["string"], "default":"select s_validate_logged_in( $1 )" },
 		"ParamName":			{ "type":["string"], "default":"auth_token" },
-		"KeyFile":		    	{ "type":["string"], "default":"key.pub" },
+		"KeyFilePublic":		 { "type":["string"], "default":"key.pub" },
+		"KeyFileType":		     { "type":["string"], "default":"ES256" },
 		"CheckXsrfToken":   	{ "type":["string"], "default":"yes" },
 		"RemoteValidate":		{ "type":["string"], "default":"no" },
 		"RemoteValidateURL":	{ "type":["string"], "default":"http://auth.2c-why.com/api/validate_auth_token" },
@@ -131,7 +131,8 @@ type LoginRequiredType struct {
 	RedisSessionPrefix   string // Deprecated!
 	PostgresQuery        string
 	ParamName            string
-	KeyFile              string // public key for verification. (private is used for signing)
+	KeyFilePublic        string // public key for verification. (private is used for signing)
+	KeyFileType          string // ES256, RS256 etc.
 	CheckXsrfToken       string // validate that the X-Xsrf-Token is set correctly for this session
 	RemoteValidate       string // yes means that you should use RemoteValidateURL to validate the "auth_token"
 	RemoteValidateURL    string
@@ -590,7 +591,7 @@ func (hdlr *LoginRequiredType) ValidateAuthToken(rw *goftlmux.MidBuffer, www htt
 		if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
 			fmt.Fprintf(os.Stderr, "JWT Validaiton of Token -- AT: %s -->>%s<<--\n", godebug.LF(), auth_token)
 		}
-		iat, err := hdlr.VerifyToken([]byte(auth_token), hdlr.KeyFile)
+		iat, err := hdlr.VerifyToken([]byte(auth_token), hdlr.KeyFilePublic, hdlr.KeyFileType)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 			fmt.Printf("Error: VerifyToken return err=%s\n", err)
@@ -992,74 +993,76 @@ func loadData(p string) ([]byte, error) {
 
 // Verify a token and output the claims.  This is a great example
 // of how to verify and view a token.
-func (hdlr *LoginRequiredType) VerifyToken(tokData []byte, keyFile string) (iat string, err error) {
+func (hdlr *LoginRequiredType) VerifyToken(tokData []byte, keyFile, keyType string) (iat string, err error) {
 
-	pwd, _ := os.Getwd()
-	fmt.Fprintf(os.Stderr, "%sNew tokData ->%s<- keyFile ->%s<- pwd ->%s<- AT: %s%s\n", MiscLib.ColorYellow, tokData, keyFile, godebug.LF(), pwd, MiscLib.ColorReset)
+	return jwtverif.VerifyToken(tokData, keyFile, keyType)
 
-	// trim possible whitespace from token
-	tokData = regexp.MustCompile(`\s*$`).ReplaceAll(tokData, []byte{})
-	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-validate-token") {
-		fmt.Fprintf(os.Stderr, "Token len: %v bytes\n", len(tokData))
-	}
-
-	// Parse the token.  Load the key from command line option
-	token, err := jwt.Parse(string(tokData), func(t *jwt.Token) (interface{}, error) {
-		data, err := loadData(keyFile)
-		if err != nil {
-			return nil, err
-		}
-		if isEs() {
-			return jwt.ParseECPublicKeyFromPEM(data)
-		} else if isRs() {
-			return jwt.ParseRSAPublicKeyFromPEM(data)
-		}
-		return data, nil
-	})
-
-	// Print some debug data
-	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-validate-token") && token != nil {
-		fmt.Fprintf(os.Stderr, "Header:\n%v\n", token.Header)
-		fmt.Fprintf(os.Stderr, "Claims:\n%v\n", token.Claims)
-	}
-
-	// Print an error if we can't parse for some reason
-	if err != nil {
-		return "", fmt.Errorf("Couldn't parse token: %v", err)
-	}
-
-	// Is token invalid?
-	if !token.Valid {
-		return "", fmt.Errorf("Token is invalid")
-	}
-
-	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-token") {
-		fmt.Fprintf(os.Stderr, "Token Claims: %s\n", godebug.SVarI(token.Claims))
-	}
-
-	// {"auth_token":"f5d8f6ae-e2e5-42c9-83a9-dfd07825b0fc"}
-	type GetAuthToken struct {
-		AuthToken string `json:"auth_token"`
-	}
-	var gt GetAuthToken
-	cl := godebug.SVar(token.Claims)
-	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
-		fmt.Fprintf(os.Stderr, "Claims just before -->>%s<<--\n", cl)
-	}
-	err = json.Unmarshal([]byte(cl), &gt)
-	if err == nil {
-		if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
-			fmt.Fprintf(os.Stderr, "Success: %s -- token [%s] \n", err, gt.AuthToken)
-		}
-		fmt.Fprintf(os.Stdout, "Success: %s -- token [%s] \n", err, gt.AuthToken)
-		return gt.AuthToken, nil
-	} else {
-		if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
-			fmt.Fprintf(os.Stderr, "Error: %s -- Unable to unmarsal -->>%s<<--\n", err, cl)
-		}
-		fmt.Fprintf(os.Stdout, "Error: %s -- Unable to unmarsal -->>%s<<--\n", err, cl)
-		return "", err
-	}
+	//	pwd, _ := os.Getwd()
+	//	fmt.Fprintf(os.Stderr, "%sNew tokData ->%s<- keyFile ->%s<- pwd ->%s<- AT: %s%s\n", MiscLib.ColorYellow, tokData, keyFile, godebug.LF(), pwd, MiscLib.ColorReset)
+	//
+	//	// trim possible whitespace from token
+	//	tokData = regexp.MustCompile(`\s*$`).ReplaceAll(tokData, []byte{})
+	//	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-validate-token") {
+	//		fmt.Fprintf(os.Stderr, "Token len: %v bytes\n", len(tokData))
+	//	}
+	//
+	//	// Parse the token.  Load the key from command line option
+	//	token, err := jwt.Parse(string(tokData), func(t *jwt.Token) (interface{}, error) {
+	//		data, err := loadData(keyFile)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		if isEs() {
+	//			return jwt.ParseECPublicKeyFromPEM(data)
+	//		} else if isRs() {
+	//			return jwt.ParseRSAPublicKeyFromPEM(data)
+	//		}
+	//		return data, nil
+	//	})
+	//
+	//	// Print some debug data
+	//	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-validate-token") && token != nil {
+	//		fmt.Fprintf(os.Stderr, "Header:\n%v\n", token.Header)
+	//		fmt.Fprintf(os.Stderr, "Claims:\n%v\n", token.Claims)
+	//	}
+	//
+	//	// Print an error if we can't parse for some reason
+	//	if err != nil {
+	//		return "", fmt.Errorf("Couldn't parse token: %v", err)
+	//	}
+	//
+	//	// Is token invalid?
+	//	if !token.Valid {
+	//		return "", fmt.Errorf("Token is invalid")
+	//	}
+	//
+	//	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-token") {
+	//		fmt.Fprintf(os.Stderr, "Token Claims: %s\n", godebug.SVarI(token.Claims))
+	//	}
+	//
+	//	// {"auth_token":"f5d8f6ae-e2e5-42c9-83a9-dfd07825b0fc"}
+	//	type GetAuthToken struct {
+	//		AuthToken string `json:"auth_token"`
+	//	}
+	//	var gt GetAuthToken
+	//	cl := godebug.SVar(token.Claims)
+	//	if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
+	//		fmt.Fprintf(os.Stderr, "Claims just before -->>%s<<--\n", cl)
+	//	}
+	//	err = json.Unmarshal([]byte(cl), &gt)
+	//	if err == nil {
+	//		if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
+	//			fmt.Fprintf(os.Stderr, "Success: %s -- token [%s] \n", err, gt.AuthToken)
+	//		}
+	//		fmt.Fprintf(os.Stdout, "Success: %s -- token [%s] \n", err, gt.AuthToken)
+	//		return gt.AuthToken, nil
+	//	} else {
+	//		if hdlr.gCfg.DbOn("*", "LoginRequired", "db-jwt-token") {
+	//			fmt.Fprintf(os.Stderr, "Error: %s -- Unable to unmarsal -->>%s<<--\n", err, cl)
+	//		}
+	//		fmt.Fprintf(os.Stdout, "Error: %s -- Unable to unmarsal -->>%s<<--\n", err, cl)
+	//		return "", err
+	//	}
 
 }
 
@@ -1165,15 +1168,15 @@ func (hdlr *LoginRequiredType) VerifyToken(tokData []byte, keyFile string) (iat 
 //-	return nil
 //-}
 
-func isEs() bool {
-	// return strings.HasPrefix(*flagAlg, "ES")
-	return false
-}
-
-func isRs() bool {
-	// return strings.HasPrefix(*flagAlg, "RS")
-	return true
-}
+//func isEs() bool {
+//	// return strings.HasPrefix(*flagAlg, "ES")
+//	return true
+//}
+//
+//func isRs() bool {
+//	// return strings.HasPrefix(*flagAlg, "RS")
+//	return false
+//}
 
 //------------------------------------------------------------------------------------------------------------------------------
 func GetURL(uri string, XssiPrefix []string, args ...string) (status int, rv string) {

@@ -67,15 +67,17 @@ func init() {
 		"RedisSessionPrefix":            { "type":[ "string" ], "default":"session:" },
 		"EmailConfigFileName":           { "type":[ "string" ], "default": "./email-config.json" },
 		"EmailTemplateDir":              { "type":[ "string" ], "default": "./tmpl/" },
-		"KeyFilePrivate":                { "type":[ "string" ] },
-		"DisplayURL2fa":                { "type":[ "string" ], "required":false, "default": "/msetup.html" },
+		"KeyFilePrivate":             { "type":[ "string" ] },
+		"KeyFilePublic":              { "type":[ "string" ] },
+		"KeyFileType":                { "type":[ "string" ], "default":"ES256" },
+		"DisplayURL2fa":                 { "type":[ "string" ], "required":false, "default": "/msetup.html" },
 		"RedisPrefix2fa":                { "type":[ "string" ], "required":false, "default": "2fa:" },
 		"CustomerURL":                   { "type":[ "string" ], "default":"http://www.TabServer2-CustomerURL-not-set.com" },
 		"QrSuccessTemplateFn":           { "type":[ "string" ], "default":"./tmpl/qr_success.tmpl" },
 		"Server2faURL":                  { "type":[ "string" ], "required":false, "default":"http://2fa.simple-auth.com"  },
 		"StatusForAllErrors":            { "type":[ "string" ], "required":false, "default":"no-use-JSON-msg"  },
-		"QRShortURL":                   { "type":[ "string" ], "required":false, "default":"http://t432z.com/"  },
-		"QRShortAuthToken":             { "type":[ "string" ], "required":false, "default":"qr-short-auth-token"  },
+		"QRShortURL":                    { "type":[ "string" ], "required":false, "default":"http://t432z.com/"  },
+		"QRShortAuthToken":              { "type":[ "string" ], "required":false, "default":"qr-short-auth-token"  },
 		"LineNo":                        { "type":[ "int" ], "default":"1" }
 		}`)
 }
@@ -304,6 +306,8 @@ type TabServer2Type struct {
 	EmailConfigFileName   string                      // name of file to take Email config from
 	EmailTemplateDir      string                      //
 	KeyFilePrivate        string                      // private key file for signing JWT tokens
+	KeyFilePublic         string                      //
+	KeyFileType           string                      //
 	DisplayURL2fa         string                      // 2fa - see X2faSetup
 	RedisPrefix2fa        string                      // 2fa - see X2faSetup
 	Server2faURL          string                      // 2fa see X2faSetup

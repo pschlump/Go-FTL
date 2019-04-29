@@ -23,8 +23,6 @@ import (
 	"os"
 	"sync"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/mid"
@@ -33,7 +31,8 @@ import (
 	"github.com/pschlump/Go-FTL/server/tr"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/json" //	"encoding/json"
+	"github.com/pschlump/json"         //	"encoding/json"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 // Exists reports whether the named file or directory exists.
@@ -970,96 +969,6 @@ func loadData(p string) ([]byte, error) {
 	return ioutil.ReadAll(rdr)
 }
 
-// Create, sign, and output a token.  This is a great, simple example of
-// how to use this library to create and sign a token.
-func SignToken(tokData []byte, keyFile string) (out string, err error) {
-
-	// parse the JSON of the claims
-	var claims jwt.MapClaims
-	if err = json.Unmarshal(tokData, &claims); err != nil {
-		err = fmt.Errorf("Couldn't parse claims JSON: %v", err)
-		return
-	}
-
-	fmt.Fprintf(os.Stderr, "Siging: %s, AT: %s\n", tokData, godebug.LF())
-	fmt.Fprintf(os.Stderr, "Claims: %s, AT: %s\n", godebug.SVarI(claims), godebug.LF())
-
-	//-	// add command line claims
-	//-	if len(flagClaims) > 0 {
-	//-		for k, v := range flagClaims {
-	//-			claims[k] = v
-	//-		}
-	//-	}
-
-	// get the key
-	var key interface{}
-	key, err = loadData(keyFile)
-	if err != nil {
-		err = fmt.Errorf("Couldn't read key: %v", err)
-		return
-	}
-
-	// get the signing alg
-	// alg := jwt.GetSigningMethod(*flagAlg)
-	alg := jwt.GetSigningMethod("RS256") // xyzzy - Param
-	if alg == nil {
-		err = fmt.Errorf("Couldn't find signing method: %v", "RS256") // xyzzy Param
-		return
-	}
-
-	// create a new token
-	token := jwt.NewWithClaims(alg, claims)
-
-	//-	// add command line headers
-	//-	if len(flagHead) > 0 {
-	//-		for k, v := range flagHead {
-	//-			token.Header[k] = v
-	//-		}
-	//-	}
-
-	if isEs() {
-		if k, ok := key.([]byte); !ok {
-			err = fmt.Errorf("Couldn't convert key data to key")
-			return
-		} else {
-			key, err = jwt.ParseECPrivateKeyFromPEM(k)
-			if err != nil {
-				return
-			}
-		}
-	} else if isRs() {
-		if k, ok := key.([]byte); !ok {
-			err = fmt.Errorf("Couldn't convert key data to key")
-			return
-		} else {
-			key, err = jwt.ParseRSAPrivateKeyFromPEM(k)
-			if err != nil {
-				return
-			}
-		}
-	}
-
-	if out, err = token.SignedString(key); err == nil {
-		if db81 {
-			fmt.Println(out)
-		}
-	} else {
-		err = fmt.Errorf("Error signing token: %v", err)
-	}
-
-	return
-}
-
-func isEs() bool {
-	// return strings.HasPrefix(*flagAlg, "ES")
-	return false
-}
-
-func isRs() bool {
-	// return strings.HasPrefix(*flagAlg, "RS")
-	return true
-}
-
 const db81 = false
 const db1 = false
 const db2 = false
@@ -1072,11 +981,5 @@ const db_GenUpdateSet = false
 
 const db_DumpInsert = true
 const db_DumpDelete = true
-
-// const hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-1") = true
-// const hdlr.gCfg.DbOn("*", "TabServer2", "db-closure-2") = true
-// const hdlr.gCfg.DbOn("*", "TabServer2", "db-email") = true
-// const hdlr.gCfg.DbOn("*", "TabServer2", "db-session") = true
-//			if hdlr.gCfg.DbOn("*", "SessionRedis", "db1") {
 
 /* vim: set noai ts=4 sw=4: */

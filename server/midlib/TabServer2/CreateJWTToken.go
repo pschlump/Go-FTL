@@ -24,6 +24,7 @@ import (
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
+	"github.com/pschlump/jwtverif"
 )
 
 /*
@@ -70,7 +71,7 @@ func CreateJWTToken(res http.ResponseWriter, req *http.Request, cfgTag string, r
 
 		fmt.Fprintf(os.Stderr, "%s **** AT **** :%s at top rv = -->>%s<<-- %s\n", MiscLib.ColorBlue, MiscLib.ColorReset, rv, godebug.LF())
 
-		signedKey, err := SignToken([]byte(tokData), hdlr.KeyFilePrivate)
+		signedKey, err := jwtverif.SignToken([]byte(tokData), hdlr.KeyFilePrivate, hdlr.KeyFileType)
 		if err != nil {
 			all["status"] = "error"
 			all["msg"] = fmt.Sprintf("Error: Unable to sign the JWT token, %s", err)
