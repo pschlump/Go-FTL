@@ -12,7 +12,7 @@ corp_reg_test2:
 old_all:
 	( cd ./../midlib/aessrp ; make test_version )
 	rm -f goftl
-	go build
+	./cmp-local.sh
 	./rs.sh
 
 206: dot206.jsonx loc206.jsonx
@@ -30,12 +30,6 @@ build_linux:
 
 copyTo74:
 	scp go-ftl.linux pschlump@192.154.97.74:/tmp
-
-binaries:
-	rm ./goftl
-	go build	
-	mkdir -p ~/Projects/www.go-ftl.com_doc/_site/download
-	tar -czf ~/Projects/www.go-ftl.com_doc/_site/download/goftl.MacOS.10.10.5_ver0.5.9.tar.gz ./goftl
 
 # rerun the server without doing a "go build" and recompiling it.
 rr:
@@ -144,7 +138,7 @@ validate-token:
 
 
 test1: clean1
-	go build
+	./cmp-local.sh
 	( ( sleep 2 ; make test1a ) & )
 	./cli2 -c 7-cfg.json
 
@@ -156,16 +150,16 @@ clean1:
 	( cd /Users/corwin/Projects/ftl0/cli2; rm -f utf1.json )
  
 test2:
-	go build
+	./cmp-local.sh
 	./cli2 -c 2-cfg.json
 
 # test JSONP and Header ----------------
 test3:
-	go build
+	./cmp-local.sh
 	./cli2 -c 5-cfg.json
 
 test4: 
 	-rm cli2
-	go build
+	./cmp-local.sh
 	./cli2 -c file-test.cfg.json
 
