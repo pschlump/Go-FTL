@@ -1526,7 +1526,7 @@ func (hdlr *TabServer2Type) RespHandlerSQL(res http.ResponseWriter, req *http.Re
 				trx.SetCacheData(HQuery, 1, rv, data...)
 			} else {
 				// Rows, err := sizlib.Sel ( res, req, db, h.Query, data... )
-				fmt.Fprintf(os.Stderr, "\n%sAt .Query: %s, addNames=%s, %s%s\n\n", MiscLib.ColorYellow, HQuery, addNames, godebug.LF(), MiscLib.ColorReset)
+				fmt.Fprintf(os.Stderr, "\n%sAt .Query: %s, addNames=%s, data=%s, %s%s\n\n", MiscLib.ColorYellow, HQuery, addNames, godebug.SVar(data), godebug.LF(), MiscLib.ColorReset)
 				trx.SetQry(HQuery, 1, data...)
 				Rows, err := hdlr.gCfg.Pg_client.Db.Query(HQuery, data...)
 				if err != nil {

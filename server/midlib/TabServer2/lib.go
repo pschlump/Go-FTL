@@ -27,7 +27,6 @@ import (
 	"sync"
 	"time"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/hjson/hjson-go"
 	"github.com/pschlump/Go-FTL/server/common"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
@@ -39,6 +38,7 @@ import (
 	"github.com/pschlump/godebug"
 	"github.com/pschlump/json" //	"encoding/json"
 	"github.com/pschlump/ms"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/user_agent"
 	"github.com/pschlump/uuid"
 )
@@ -1163,154 +1163,162 @@ func InjectDataPs(ps *goftlmux.Params, h SQLOne, res http.ResponseWriter, req *h
 	https := ""
 	// fmt.Printf ( "In Inject Data\n" )
 	for i, _ := range h.valid {
-		switch i {
-		case "$IP$", "$ip$":
-			forward := req.Header.Get("X-Forwarded-For")
-			if forward != "" {
-				goftlmux.AddValueToParams("$ip$", forward, 'i', goftlmux.FromInject, ps)
-			} else {
-				h, _, err := net.SplitHostPort(req.RemoteAddr)
-				if err == nil {
-					goftlmux.AddValueToParams("$ip$", h, 'i', goftlmux.FromInject, ps)
+		fmt.Printf("%sIn Inject Data, i=%s AT:%s%s\n", MiscLib.ColorYellow, i, godebug.LF(), MiscLib.ColorReset)
+		if strings.HasPrefix(i, "$ENV$") {
+			envname := i[5:]
+			val := os.Getenv(envname)
+			fmt.Fprintf(os.Stderr, "%sFound Env ->%s<- envname ->%s<- value ->%s<-%s\n", MiscLib.ColorYellow, i, envname, val, MiscLib.ColorReset)
+			goftlmux.AddValueToParams(i, val, 'i', goftlmux.FromInject, ps)
+		} else {
+			switch i {
+			case "$IP$", "$ip$":
+				forward := req.Header.Get("X-Forwarded-For")
+				if forward != "" {
+					goftlmux.AddValueToParams("$ip$", forward, 'i', goftlmux.FromInject, ps)
 				} else {
-					goftlmux.AddValueToParams("$ip$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
-				}
-			}
-			//x := goftlmux.LastIndexOfChar(req.RemoteAddr, ':')
-			//if x >= 0 {
-			//	goftlmux.AddValueToParams("$ip$", req.RemoteAddr[0:x], 'i', goftlmux.FromInject, ps)
-			//} else {
-			//	goftlmux.AddValueToParams("$ip$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
-			//}
-
-		// SHA256 hash of IP address with "salt" - will be unique - but not an IP address.
-		case "$IP_HASH$", "$ip_hash$":
-			forward := req.Header.Get("X-Forwarded-For")
-			if forward != "" {
-				forward = HashStrings.Sha256("salt-3", forward)
-				goftlmux.AddValueToParams("$ip_hash$", forward, 'i', goftlmux.FromInject, ps)
-			} else {
-				h, _, err := net.SplitHostPort(req.RemoteAddr)
-				if err == nil {
-					h = HashStrings.Sha256("salt-3", h)
-					goftlmux.AddValueToParams("$ip_hash$", h, 'i', goftlmux.FromInject, ps)
-				} else {
-					h = HashStrings.Sha256("salt-3", "0.0.0.0")
-					goftlmux.AddValueToParams("$ip_hash$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
-				}
-			}
-
-		case "$url$":
-			if req.TLS != nil {
-				https = "https://"
-			} else {
-				https = "http://"
-			}
-			v := https + req.Host
-			goftlmux.AddValueToParams("$url$", v, 'i', goftlmux.FromInject, ps)
-
-		case "$ua$": // User Agent
-			{
-				// fmt.Printf ( "Found $ua$ - inject\n" )
-				v := req.UserAgent()
-				ua := user_agent.New(v)
-				goftlmux.AddValueToParams("$ua$", v, 'i', goftlmux.FromInject, ps)
-
-				// xyzzy
-				family, ua_version := ua.Browser()
-				ua_arr := strings.Split(ua_version+".0.0.0.0", ".")
-				goftlmux.AddValueToParams("$ua_family$", family, 'i', goftlmux.FromInject, ps)
-				goftlmux.AddValueToParams("$ua_major$", ua_arr[0], 'i', goftlmux.FromInject, ps)
-				goftlmux.AddValueToParams("$ua_minor$", ua_arr[1], 'i', goftlmux.FromInject, ps)
-				goftlmux.AddValueToParams("$ua_patch$", ua_arr[2], 'i', goftlmux.FromInject, ps)
-
-				if ua.Mobile() {
-					goftlmux.AddValueToParams("$is_mobile$", "y", 'i', goftlmux.FromInject, ps)
-				} else {
-					goftlmux.AddValueToParams("$is_mobile$", "n", 'i', goftlmux.FromInject, ps)
-				}
-
-				if ua.Bot() {
-					goftlmux.AddValueToParams("$is_bot$", "y", 'i', goftlmux.FromInject, ps)
-				} else {
-					goftlmux.AddValueToParams("$is_bot$", "y", 'i', goftlmux.FromInject, ps)
-				}
-
-				pl := ua.Platform()
-				os := ua.OS()
-				// fmt.Printf ( "OS:->%s<- Platform:->%s<-\n", os, pl )
-				os_arr := make([]string, 0, 10)
-				// m["$os$"] = make([]string, 1)
-				// m["$os$"][0] = pl
-				// goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
-				// fr["$os$"] = "inject-$ua$"
-				switch pl {
-				case "X11":
-					goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
-					os_arr = strings.Split(os+" 0 0 0 0", " ")
-					os_arr[0] = ps.ByNameDflt("os_family", "Linux")
-				case "Macintosh":
-					goftlmux.AddValueToParams("$os$", "Mac_OS_X", 'i', goftlmux.FromInject, ps)
-					os_arr = strings.Split(os+" 0 0 0 0", " ")
-					if strings.HasPrefix(family, "FireFox") {
-						os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Mac OS X  *", "")+".0.0.0.0", "_")
-					} else if strings.HasPrefix(family, "Opera") {
-						os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Opera-?", "")+".0.0.0.0", "_")
-					} else if strings.HasPrefix(family, "Chrome") {
-						os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Mac OS X *", "")+".0.0.0.0", "_")
-					} else if strings.HasPrefix(family, "Safari") {
-						os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Mac OS X *", "")+".0.0.0.0", "_")
+					h, _, err := net.SplitHostPort(req.RemoteAddr)
+					if err == nil {
+						goftlmux.AddValueToParams("$ip$", h, 'i', goftlmux.FromInject, ps)
+					} else {
+						goftlmux.AddValueToParams("$ip$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
 					}
-					os_arr[0] = ps.ByNameDflt("os_family", "Mac_OS_X")
-				case "Windows":
-					goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
-					os_arr = strings.Split(os+" 0 0 0 0", " ")
-					os_arr = os_arr[1:]
-					os_arr[0] = ps.ByNameDflt("os_family", "Windows")
-				case "iPhone":
-					fallthrough
-				case "iPod":
-					fallthrough
-				case "iPad":
-					os_arr[1] = "iOS"
-					goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
-				case "Linux":
-					os_arr = strings.Split(os+" 0 0 0 0", " ")
-					os_arr = os_arr[1:]
-					os_arr = strings.Split(os_arr[1]+".0.0.0.0", ".")
-					goftlmux.AddValueToParams("$os$", "Android", 'i', goftlmux.FromInject, ps)
-					os_arr[0] = ps.ByNameDflt("os_family", "Android")
-				default:
-					os_arr = strings.Split(os+" 0 0 0 0", " ")
-					goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
 				}
-				os_arr[1] = ps.ByNameDflt("osMajor", "0")
-				os_arr[2] = ps.ByNameDflt("osMinor", "0")
-				os_arr[3] = ps.ByNameDflt("osPatch", "0")
+				//x := goftlmux.LastIndexOfChar(req.RemoteAddr, ':')
+				//if x >= 0 {
+				//	goftlmux.AddValueToParams("$ip$", req.RemoteAddr[0:x], 'i', goftlmux.FromInject, ps)
+				//} else {
+				//	goftlmux.AddValueToParams("$ip$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
+				//}
 
-				goftlmux.AddValueToParams("$os_family$", os_arr[0], 'i', goftlmux.FromInject, ps)
-				goftlmux.AddValueToParams("$os_major$", os_arr[1], 'i', goftlmux.FromInject, ps)
-				goftlmux.AddValueToParams("$os_minor$", os_arr[2], 'i', goftlmux.FromInject, ps)
-				goftlmux.AddValueToParams("$os_patch$", os_arr[3], 'i', goftlmux.FromInject, ps)
+			// SHA256 hash of IP address with "salt" - will be unique - but not an IP address.
+			case "$IP_HASH$", "$ip_hash$":
+				forward := req.Header.Get("X-Forwarded-For")
+				if forward != "" {
+					forward = HashStrings.Sha256("salt-3", forward)
+					goftlmux.AddValueToParams("$ip_hash$", forward, 'i', goftlmux.FromInject, ps)
+				} else {
+					h, _, err := net.SplitHostPort(req.RemoteAddr)
+					if err == nil {
+						h = HashStrings.Sha256("salt-3", h)
+						goftlmux.AddValueToParams("$ip_hash$", h, 'i', goftlmux.FromInject, ps)
+					} else {
+						h = HashStrings.Sha256("salt-3", "0.0.0.0")
+						goftlmux.AddValueToParams("$ip_hash$", "0.0.0.0", 'i', goftlmux.FromInject, ps)
+					}
+				}
 
+			case "$url$":
+				if req.TLS != nil {
+					https = "https://"
+				} else {
+					https = "http://"
+				}
+				v := https + req.Host
+				goftlmux.AddValueToParams("$url$", v, 'i', goftlmux.FromInject, ps)
+
+			case "$ua$": // User Agent
+				{
+					// fmt.Printf ( "Found $ua$ - inject\n" )
+					v := req.UserAgent()
+					ua := user_agent.New(v)
+					goftlmux.AddValueToParams("$ua$", v, 'i', goftlmux.FromInject, ps)
+
+					// xyzzy
+					family, ua_version := ua.Browser()
+					ua_arr := strings.Split(ua_version+".0.0.0.0", ".")
+					goftlmux.AddValueToParams("$ua_family$", family, 'i', goftlmux.FromInject, ps)
+					goftlmux.AddValueToParams("$ua_major$", ua_arr[0], 'i', goftlmux.FromInject, ps)
+					goftlmux.AddValueToParams("$ua_minor$", ua_arr[1], 'i', goftlmux.FromInject, ps)
+					goftlmux.AddValueToParams("$ua_patch$", ua_arr[2], 'i', goftlmux.FromInject, ps)
+
+					if ua.Mobile() {
+						goftlmux.AddValueToParams("$is_mobile$", "y", 'i', goftlmux.FromInject, ps)
+					} else {
+						goftlmux.AddValueToParams("$is_mobile$", "n", 'i', goftlmux.FromInject, ps)
+					}
+
+					if ua.Bot() {
+						goftlmux.AddValueToParams("$is_bot$", "y", 'i', goftlmux.FromInject, ps)
+					} else {
+						goftlmux.AddValueToParams("$is_bot$", "y", 'i', goftlmux.FromInject, ps)
+					}
+
+					pl := ua.Platform()
+					os := ua.OS()
+					// fmt.Printf ( "OS:->%s<- Platform:->%s<-\n", os, pl )
+					os_arr := make([]string, 0, 10)
+					// m["$os$"] = make([]string, 1)
+					// m["$os$"][0] = pl
+					// goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
+					// fr["$os$"] = "inject-$ua$"
+					switch pl {
+					case "X11":
+						goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
+						os_arr = strings.Split(os+" 0 0 0 0", " ")
+						os_arr[0] = ps.ByNameDflt("os_family", "Linux")
+					case "Macintosh":
+						goftlmux.AddValueToParams("$os$", "Mac_OS_X", 'i', goftlmux.FromInject, ps)
+						os_arr = strings.Split(os+" 0 0 0 0", " ")
+						if strings.HasPrefix(family, "FireFox") {
+							os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Mac OS X  *", "")+".0.0.0.0", "_")
+						} else if strings.HasPrefix(family, "Opera") {
+							os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Opera-?", "")+".0.0.0.0", "_")
+						} else if strings.HasPrefix(family, "Chrome") {
+							os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Mac OS X *", "")+".0.0.0.0", "_")
+						} else if strings.HasPrefix(family, "Safari") {
+							os_arr = strings.Split("Mac_OS_X."+ReplaceString(os, ".*Mac OS X *", "")+".0.0.0.0", "_")
+						}
+						os_arr[0] = ps.ByNameDflt("os_family", "Mac_OS_X")
+					case "Windows":
+						goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
+						os_arr = strings.Split(os+" 0 0 0 0", " ")
+						os_arr = os_arr[1:]
+						os_arr[0] = ps.ByNameDflt("os_family", "Windows")
+					case "iPhone":
+						fallthrough
+					case "iPod":
+						fallthrough
+					case "iPad":
+						os_arr[1] = "iOS"
+						goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
+					case "Linux":
+						os_arr = strings.Split(os+" 0 0 0 0", " ")
+						os_arr = os_arr[1:]
+						os_arr = strings.Split(os_arr[1]+".0.0.0.0", ".")
+						goftlmux.AddValueToParams("$os$", "Android", 'i', goftlmux.FromInject, ps)
+						os_arr[0] = ps.ByNameDflt("os_family", "Android")
+					default:
+						os_arr = strings.Split(os+" 0 0 0 0", " ")
+						goftlmux.AddValueToParams("$os$", os, 'i', goftlmux.FromInject, ps)
+					}
+					os_arr[1] = ps.ByNameDflt("osMajor", "0")
+					os_arr[2] = ps.ByNameDflt("osMinor", "0")
+					os_arr[3] = ps.ByNameDflt("osPatch", "0")
+
+					goftlmux.AddValueToParams("$os_family$", os_arr[0], 'i', goftlmux.FromInject, ps)
+					goftlmux.AddValueToParams("$os_major$", os_arr[1], 'i', goftlmux.FromInject, ps)
+					goftlmux.AddValueToParams("$os_minor$", os_arr[2], 'i', goftlmux.FromInject, ps)
+					goftlmux.AddValueToParams("$os_patch$", os_arr[3], 'i', goftlmux.FromInject, ps)
+
+				}
+			case "$port$":
+				x := goftlmux.LastIndexOfChar(req.RemoteAddr, ':')
+				if x >= 0 {
+					goftlmux.AddValueToParams("$port$", req.RemoteAddr[x+1:], 'i', goftlmux.FromInject, ps)
+				} else {
+					goftlmux.AddValueToParams("$port$", "", 'i', goftlmux.FromInject, ps)
+				}
+			case "$host$":
+				goftlmux.AddValueToParams("$host$", req.Host, 'i', goftlmux.FromInject, ps)
+			case "$protocal$":
+				if req.TLS != nil {
+					goftlmux.AddValueToParams("$protocal$", "https", 'i', goftlmux.FromInject, ps)
+				} else {
+					goftlmux.AddValueToParams("$protocal$", "http", 'i', goftlmux.FromInject, ps)
+				}
+			case "$method$":
+				goftlmux.AddValueToParams("$method$", req.Method, 'i', goftlmux.FromInject, ps)
 			}
-		case "$port$":
-			x := goftlmux.LastIndexOfChar(req.RemoteAddr, ':')
-			if x >= 0 {
-				goftlmux.AddValueToParams("$port$", req.RemoteAddr[x+1:], 'i', goftlmux.FromInject, ps)
-			} else {
-				goftlmux.AddValueToParams("$port$", "", 'i', goftlmux.FromInject, ps)
-			}
-		case "$host$":
-			goftlmux.AddValueToParams("$host$", req.Host, 'i', goftlmux.FromInject, ps)
-		case "$protocal$":
-			if req.TLS != nil {
-				goftlmux.AddValueToParams("$protocal$", "https", 'i', goftlmux.FromInject, ps)
-			} else {
-				goftlmux.AddValueToParams("$protocal$", "http", 'i', goftlmux.FromInject, ps)
-			}
-		case "$method$":
-			goftlmux.AddValueToParams("$method$", req.Method, 'i', goftlmux.FromInject, ps)
 		}
 		/*
 			// 	 -- Let's think about htis - need to pull the "top" from the set of "top" for file-server? -- use top_hdlr to find file server and ask it?
