@@ -503,6 +503,9 @@ func (hdlr *LoginRequiredType) GetBearer(req *http.Request, ps *goftlmux.Params)
 	if len(aX) >= 2 && aX[0] == "bearer" {
 		rv = aX[1]
 	}
+	if len(aX) >= 2 && aX[0] == "Bearer" {
+		rv = aX[1]
+	}
 	// xyzzy - Try cookie - xyzzy
 	if rv == "" {
 		rv = lib.GetCookie("X-Jwt-Token", req)
@@ -594,9 +597,12 @@ func (hdlr *LoginRequiredType) ValidateAuthToken(rw *goftlmux.MidBuffer, www htt
 		iat, err := hdlr.VerifyToken([]byte(auth_token), hdlr.KeyFilePublic, hdlr.KeyFileType)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-			fmt.Printf("Error: VerifyToken return err=%s\n", err)
+			fmt.Printf("Error: VerifyToken return err=%s ->%s<-\n", err, auth_token)
 			return
 		}
+
+		ps := &rw.Ps
+		goftlmux.AddValueToParams("auth_token", iat, 'i', goftlmux.FromInject, ps)
 
 		// xyzzy - check exprie? -- Use redis for this?
 		// xyzzy - check redis - auth_token still valid?  ,"/api/session/validate_auth_token"
@@ -607,6 +613,8 @@ func (hdlr *LoginRequiredType) ValidateAuthToken(rw *goftlmux.MidBuffer, www htt
 			fmt.Fprintf(os.Stderr, "JWT auth_token - AT: %s -->>%s<<--\n", godebug.LF(), iat)
 			fmt.Fprintf(os.Stdout, "JWT auth_token - AT: %s -->>%s<<--\n", godebug.LF(), iat)
 		}
+
+		fmt.Fprintf(os.Stderr, "%sJWT auth_token - AT: %s -->>%s<<--%s\n", MiscLib.ColorRed, godebug.LF(), iat, MiscLib.ColorReset)
 
 		// get-from-redis, if not then...
 		if hdlr.RemoteValidate == "yes" {

@@ -16,6 +16,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	JsonX "github.com/pschlump/JSONx"
+	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
@@ -114,8 +115,8 @@ func (hdlr *OriginToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, 
 	key := hdlr.RedisPrefix + Origin
 
 	if db4 {
-		fmt.Printf("OriginToCustomerID: key= [%s], %s\n", key, godebug.LF())
-		fmt.Fprintf(os.Stderr, "OriginToCustomerID: key= [%s], %s\n", key, godebug.LF())
+		fmt.Printf("OriginToCustomerID: key= [%s] Type of Origin:%T  data=%s, %s\n", key, Origin, Origin, godebug.LF())
+		fmt.Fprintf(os.Stderr, "OriginToCustomerID: key= [%s] Type of Origin:%T data=%s, %s\n", key, Origin, Origin, godebug.LF())
 	}
 
 	conn, err := hdlr.gCfg.RedisPool.Get()
@@ -143,8 +144,8 @@ func (hdlr *OriginToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, 
 	}
 
 	if db4 {
-		fmt.Printf("redisGetCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
-		fmt.Fprintf(os.Stderr, "redisGetCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
+		fmt.Printf("OriginToCustomerID: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
+		fmt.Fprintf(os.Stderr, "%sOriginToCustomerID: %s key= [%s], Set customer_id to:%s, %s%s\n", MiscLib.ColorYellow, godebug.LF(), key, v, godebug.LF(), MiscLib.ColorReset)
 	}
 	customer_id = v
 	return

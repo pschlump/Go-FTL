@@ -12,6 +12,7 @@
 package main
 
 import (
+	_ "github.com/pschlump/Go-FTL/server/fileserve"
 	_ "github.com/pschlump/Go-FTL/server/midlib/AesSrp"
 	_ "github.com/pschlump/Go-FTL/server/midlib/BasicAuth"
 	_ "github.com/pschlump/Go-FTL/server/midlib/BasicAuthPgSQL"
@@ -20,6 +21,7 @@ import (
 	_ "github.com/pschlump/Go-FTL/server/midlib/Cookie"
 	_ "github.com/pschlump/Go-FTL/server/midlib/CorpRegV01"
 	_ "github.com/pschlump/Go-FTL/server/midlib/DirectoryBrowse"
+	_ "github.com/pschlump/Go-FTL/server/midlib/DocImageProc" // acb
 	_ "github.com/pschlump/Go-FTL/server/midlib/DumpRequest"
 	_ "github.com/pschlump/Go-FTL/server/midlib/DumpResponse"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Echo"
@@ -44,6 +46,8 @@ import (
 	_ "github.com/pschlump/Go-FTL/server/midlib/Logging"
 	_ "github.com/pschlump/Go-FTL/server/midlib/LoginRequired"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Minify"
+	_ "github.com/pschlump/Go-FTL/server/midlib/Monitor"
+	_ "github.com/pschlump/Go-FTL/server/midlib/OriginToCustomerId"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Prefix"
 	_ "github.com/pschlump/Go-FTL/server/midlib/Redirect"
 	_ "github.com/pschlump/Go-FTL/server/midlib/RedisList"
@@ -63,17 +67,7 @@ import (
 	_ "github.com/pschlump/Go-FTL/server/midlib/TabServer2"
 	_ "github.com/pschlump/Go-FTL/server/midlib/X2fa"
 	_ "github.com/pschlump/Go-FTL/server/midlib/ZipIt"
-	_ "github.com/pschlump/Go-FTL/server/midlib/f-upload"
-
-	// _ "github.com/pschlump/m6"
-
-	_ "github.com/pschlump/Go-FTL/server/midlib/DocImageProc" // acb
-	_ "github.com/pschlump/Go-FTL/server/midlib/acb1"         // acb
-
-	_ "github.com/pschlump/mon-alive/middleware"
-
-	// Modules that are not in the midlib deirectory
-	_ "github.com/pschlump/Go-FTL/server/fileserve"
-
-	_ "github.com/pschlump/Go-FTL/server/midlib/Monitor"
+	_ "github.com/pschlump/Go-FTL/server/midlib/acb1"     // acb
+	_ "github.com/pschlump/Go-FTL/server/midlib/f-upload" // _ "github.com/pschlump/m6"
+	_ "github.com/pschlump/mon-alive/middleware"          // Modules that are not in the midlib deirectory
 )

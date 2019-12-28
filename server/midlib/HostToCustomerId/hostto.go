@@ -11,13 +11,14 @@ import (
 	"net/http"
 	"os"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
 	JsonX "github.com/pschlump/JSONx"
+	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -113,8 +114,8 @@ func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw
 	key := hdlr.RedisPrefix + req.Host
 
 	if db4 {
-		fmt.Printf("redisGetCustomerId: key= [%s], %s\n", key, godebug.LF())
-		fmt.Fprintf(os.Stderr, "redisGetCustomerId: key= [%s], %s\n", key, godebug.LF())
+		fmt.Printf("HostToCustomerId: key= [%s], %s\n", key, godebug.LF())
+		fmt.Fprintf(os.Stderr, "HostToCustomerId: key= [%s], %s\n", key, godebug.LF())
 	}
 
 	conn, err := hdlr.gCfg.RedisPool.Get()
@@ -142,8 +143,8 @@ func (hdlr *HostToCustomerIdType) redisGetCustomerId(www http.ResponseWriter, rw
 	}
 
 	if db4 {
-		fmt.Printf("redisGetCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
-		fmt.Fprintf(os.Stderr, "redisGetCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
+		fmt.Printf("HostToCustomerId: %s key= [%s], Set customer_id to:%s, %s\n", godebug.LF(), key, v, godebug.LF())
+		fmt.Fprintf(os.Stderr, "%sHostToCustomerId: %s key= [%s], Set customer_id to:%s, %s%s\n", MiscLib.ColorCyan, godebug.LF(), key, v, godebug.LF(), MiscLib.ColorReset)
 	}
 	customer_id = v
 	return

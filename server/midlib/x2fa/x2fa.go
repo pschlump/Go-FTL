@@ -63,6 +63,7 @@ import (
 	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/HashStrings"
 	JsonX "github.com/pschlump/JSONx"
+	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
 	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/uuid"
@@ -132,11 +133,11 @@ func NewX2faTypeServer(n http.Handler, p []string, redisPrefix, realm string) *X
 }
 
 type RedisData struct {
-	Hash   string `json:"hash"`
-	Fp     string `json:"fp"`
-	T2faID string `json:"t_2fa_id"`
-	UserID string `json:"user_id"`
-	URL    string `json:"URL"`
+	Hash   string   `json:"hash"`
+	Fp     []string `json:"fp"`
+	T2faID string   `json:"t_2fa_id"`
+	UserID string   `json:"user_id"`
+	URL    string   `json:"URL"`
 }
 
 type dispatchType struct {
@@ -370,8 +371,8 @@ func getQRForSetup(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWrit
 		host = "http://" + req.Host
 	}
 	val := godebug.SVar(RedisData{
-		Hash:   RanHash,
-		Fp:     "fingerprint-not-set-yet",
+		Hash: RanHash,
+		// Fp:     "fingerprint-not-set-yet",
 		UserID: user_id,
 		T2faID: t_2fa_ID,
 		URL:    host,
@@ -505,13 +506,17 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	}
 	var rr RedisData
 	err = json.Unmarshal([]byte(v), &rr)
-	if rr.Fp == "fingerprint-not-set-yet" {
-		rr.Fp = fp
-	} else if rr.Fp == fp {
+	// if rr.Fp == "fingerprint-not-set-yet" {
+	if len(rr.Fp) == 0 {
+		rr.Fp = append(rr.Fp, fp)
+		// } else if rr.Fp == fp {
+	} else if sizlib.InArray(fp, rr.Fp) { // if 'fp'(param) is in the set of values from redis.
 		// rr.Fp = fp
 	} else {
-		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Can not update an existing FP - use re-learn."}`, godebug.LF())
-		return
+		fmt.Fprintf(os.Stderr, "%srr.Fp = [%s] fp = [%s] Can not update na existing FP - use re-learn; key=%s data=%s %s%s\n", MiscLib.ColorYellow, rr.Fp, fp, key, godebug.SVar(rr), godebug.LF(), MiscLib.ColorReset)
+		rr.Fp = append(rr.Fp, fp)
+		// fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Can not update an existing FP - use re-learn."}`, godebug.LF())
+		// return
 	}
 
 	val := godebug.SVar(rr)
@@ -527,7 +532,8 @@ func setFp(hdlr *X2faType, rw *goftlmux.MidBuffer, www http.ResponseWriter, req 
 	}
 
 	stmt := "update \"t_2fa\" set \"fp\" = $2, \"fpfull\" = $3 where \"id\" = $1"
-	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.T2faID, rr.Fp, fpfull)
+	// _, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.T2faID, rr.Fp, fpfull)
+	_, err = hdlr.gCfg.Pg_client.Db.Exec(stmt, rr.T2faID, fp, fpfull)
 	if err != nil {
 		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s PG error.","LineFile":%q}`+"\n", err, godebug.LF()))
 		fmt.Fprintf(www, `{"status":"error","LineFile":%q,"msg":"Failed to save fingerprint data for device to PG."}`, godebug.LF())

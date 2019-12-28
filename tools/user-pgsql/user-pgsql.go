@@ -87,6 +87,7 @@ const NIterations = 5000
 func main() {
 
 	flag.Parse()
+	// fns := flag.Args()
 
 	ConnectToPostgreSQL()
 

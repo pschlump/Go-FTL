@@ -182,8 +182,8 @@ func SetupQRCodeRedirect(www http.ResponseWriter, req *http.Request, cfgTag stri
 			host = "http://" + req.Host
 		}
 		val := godebug.SVar(RedisData{
-			Hash:   RanHash,
-			Fp:     "fingerprint-not-set-yet",
+			Hash: RanHash,
+			// Fp:     "fingerprint-not-set-yet",
 			UserID: ed.UserID,
 			T2faID: t_2fa_ID,
 			URL:    host,
@@ -518,7 +518,7 @@ order by 1, 2
 		}
 		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 
-		if ty == "okt" {
+		if ty == "otk" {
 			list = append(list, one_time_key)
 		} else {
 			val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))

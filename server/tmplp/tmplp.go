@@ -1,12 +1,7 @@
 //
 // Go-FTL
 //
-// Copyright (C) Philip Schlump, 2014-2016
-//
-// Do not remove the following lines - used in auto-update.
-// Version: 0.5.9
-// BuildNo: 1811
-// FileId: 1192
+// Copyright (C) Philip Schlump, 2014-2017
 //
 
 package tmplp
@@ -104,6 +99,10 @@ func ExecuteATemplate(tmpl string, data map[string]string) (rv string) {
 		"ifIsNotNull": ms.IfIsNotNull,
 		"dirname":     filepath.Dir, // xyzzyTemplateAdd - basename, dirname,
 		"basename":    filepath.Base,
+		"Title":       strings.Title,
+		"TmpFileName": ms.GenTmpFileName("./", "", func(fn string) {
+			data["TmpFileName"] = fn
+		}),
 	}
 	t := template.New("line-template").Funcs(funcMapTmpl)
 	t, err := t.Parse(tmpl)
@@ -141,6 +140,9 @@ func ExecuteATemplateByName(tmpl, tmplName string, data map[string]string) (rv s
 		"ifIsNotNull": ms.IfIsNotNull,
 		"dirname":     filepath.Dir, // xyzzyTemplateAdd - basename, dirname,
 		"basename":    filepath.Base,
+		"TmpFileName": ms.GenTmpFileName("./", "", func(fn string) {
+			data["TmpFileName"] = fn
+		}),
 	}
 	t := template.New("line-template").Funcs(funcMapTmpl)
 	t, err := t.Parse(tmpl)

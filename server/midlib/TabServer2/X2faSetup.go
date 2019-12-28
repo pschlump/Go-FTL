@@ -37,11 +37,11 @@ import (
 )
 
 type RedisData struct {
-	Hash   string `json:"hash"`
-	Fp     string `json:"fp"`
-	T2faID string `json:"t_2fa_id"`
-	UserID string `json:"user_id"`
-	URL    string `json:"URL"`
+	Hash   string   `json:"hash"`
+	Fp     []string `json:"fp"`
+	T2faID string   `json:"t_2fa_id"`
+	UserID string   `json:"user_id"`
+	URL    string   `json:"URL"`
 }
 
 // xyzzy - config item
@@ -355,7 +355,7 @@ order by 1, 2
 		}
 		godebug.DbPfb(db1, "%(Yellow) AT: %(LF)\n")
 
-		if ty == "okt" {
+		if ty == "otk" {
 			list = append(list, one_time_key)
 		} else {
 			val0 := HashStrings.Sha256(fmt.Sprintf("%s:%s:%s", user_hash, fp, current2MinHash))
@@ -482,8 +482,8 @@ func GetQRForSetup(hdlr *TabServer2Type, www http.ResponseWriter, req *http.Requ
 		host = "http://" + req.Host
 	}
 	val := godebug.SVar(RedisData{
-		Hash:   RanHash,
-		Fp:     "fingerprint-not-set-yet",
+		Hash: RanHash,
+		// Fp:     "fingerprint-not-set-yet",
 		UserID: user_id,
 		T2faID: t_2fa_ID,
 		URL:    host,
