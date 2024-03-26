@@ -4,7 +4,6 @@ go 1.22.0
 
 require (
 	github.com/codegangsta/negroni v1.0.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/websocket v1.5.1
 	github.com/jessevdk/go-flags v1.5.0
@@ -27,7 +26,7 @@ require (
 	github.com/pschlump/godebug v1.0.7
 	github.com/pschlump/hash-file v0.1.0
 	github.com/pschlump/json v1.12.1
-	github.com/pschlump/jwtverif v0.1.8
+	github.com/pschlump/jwtverif v1.0.9
 	github.com/pschlump/mapstructure v0.0.0-20220410160629-64b946ed6bda
 	github.com/pschlump/mon-alive v0.6.1
 	github.com/pschlump/pslog v0.0.2
@@ -57,11 +56,10 @@ require (
 	github.com/pschlump/pw v0.4.8 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/smartystreets/goconvey v1.8.1 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/test v1.0.10 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 )

@@ -18,8 +18,6 @@ import (
 	"github.com/pschlump/json"
 )
 
-// jwt "github.com/dgrijalva/jwt-go"
-
 type ConfigType struct {
 	KeyDir  string // ~/data
 	TokData string // JSON data to sign

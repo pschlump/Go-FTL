@@ -25,22 +25,21 @@ import (
 	"strings"
 	"sync"
 
-	JsonX "github.com/pschlump/JSONx"
-
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pschlump/Go-FTL/server/cfg"
 	"github.com/pschlump/Go-FTL/server/goftlmux"
 	"github.com/pschlump/Go-FTL/server/lib"
 	"github.com/pschlump/Go-FTL/server/mid"
+	JsonX "github.com/pschlump/JSONx"
 	"github.com/pschlump/MiscLib"
 	"github.com/pschlump/godebug"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/radix.v2/redis"
 	"github.com/pschlump/uuid"
 
-	jwt "github.com/dgrijalva/jwt-go"
-
 	"github.com/pschlump/MicroServiceLib"
 	MonAliveLib "github.com/pschlump/mon-alive/lib"
+
 	// Modified pool to have NewAuth for authorized connections
 	"github.com/pschlump/mon-alive/ListenLib"
 )
@@ -954,7 +953,7 @@ func isRs() bool {
 	return true
 }
 
-//------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 func GetURL(uri string, XssiPrefix []string, args ...string) (status int, rv string) {
 
 	sep := "?"
