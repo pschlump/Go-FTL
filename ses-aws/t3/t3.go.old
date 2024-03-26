@@ -1,0 +1,85 @@
+package main
+
+import (
+	"fmt"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
+)
+
+func main() {
+	//	// Create an EC2 service object in the "us-west-2" region
+	//	// Note that you can also configure your region globally by
+	//	// exporting the AWS_REGION environment variable
+	//	svc := ec2.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+	//
+	//	// Call the DescribeInstances Operation
+	//	resp, err := svc.DescribeInstances(nil)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	// resp has all of the response data, pull out instance IDs:
+	//	fmt.Println("> Number of reservation sets: ", len(resp.Reservations))
+	//	for idx, res := range resp.Reservations {
+	//		fmt.Println("  > Number of instances: ", len(res.Instances))
+	//		for _, inst := range resp.Reservations[idx].Instances {
+	//			fmt.Println("    - Instance ID: ", *inst.InstanceId)
+	//		}
+	//	}
+	//}
+
+	sess, err := session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		return
+	}
+
+	svc := ses.New(sess)
+
+	params := &ses.SendEmailInput{
+		Destination: &ses.Destination{ // Required
+			ToAddresses: []*string{
+				aws.String("pschlump@gmail.com"), // Required
+				// More values...
+			},
+		},
+		Message: &ses.Message{ // Required
+			Body: &ses.Body{ // Required
+				Html: &ses.Content{
+					Data: aws.String("Yep MessageData"), // Required
+					// Charset: aws.String("Charset"),
+				},
+				Text: &ses.Content{
+					Data: aws.String("Yep MessageData"), // Required
+					// Charset: aws.String("Charset"),
+				},
+			},
+			Subject: &ses.Content{ // Required
+				Data: aws.String("Test 01 MessageData"), // Required
+				// Charset: aws.String("Charset"),
+			},
+		},
+		Source: aws.String("pschlump@gmail.com"), // Required
+		ReplyToAddresses: []*string{
+			aws.String("pschlump@gmail.com"), // Required
+			// More values...
+		},
+		ReturnPath: aws.String("pschlump@gmail.com"),
+		// ReturnPathArn: aws.String("AmazonResourceName"),
+		// SourceArn:     aws.String("AmazonResourceName"),
+	}
+	resp, err := svc.SendEmail(params)
+
+	if err != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Pretty-print the response data.
+	fmt.Println(resp)
+
+}

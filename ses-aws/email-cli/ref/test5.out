@@ -1,0 +1,8 @@
+[
+	"password-changed-by-admin.html",
+	"password-changed.tmpl",
+	"password-reset.tmpl",
+	"reg-new-user.tmpl",
+	"support-message.tmpl",
+	"welcome-user.tmpl"
+]

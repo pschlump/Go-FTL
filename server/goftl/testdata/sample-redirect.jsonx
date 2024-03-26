@@ -1,0 +1,115 @@
+{
+	"http://localhost:9001/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:9001", "http://dev2.test1.com:9999/", "http://auth2.test2.com:9001", "http://192.168.0.157:9001" ],
+        "plugins":[
+			  { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Status"
+			} }
+			, { "Redirect": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/q/" ]
+				, "To": [
+					{ "To":"http://192.168.0.157:2004/q/{{.THE_REST}}" }
+				]
+			} }
+			, { "SaveInFile": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/SaveInFile"
+				, "Fmt": "template"
+			} }
+			, { "CorpRegV01": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/CorpRegV01"
+				, "Fmt": "template"
+				, "MakeTarget":  [ "genScript", "corp_reg_test1", "corp_reg_test2" ]
+				, "ApiKey": "Y7Vqi7LHkqOnJcfvHugxjHO7f0"
+				, "SetEnvNames": [ "gen_filename", "corp_abrev" ] 
+			} }
+			, { "CORS": { "LineNo":{{ __line_no__ }}
+				, "Paths":    			"/"
+				, "RedisPrefix":        "vorig:"
+				, "AllowedHeaders":		"*"
+				, "AllowCredentials":	true
+			} }
+			, { "LimitJson": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/api/session/", "/api/admin" ]
+				, "Allowed": [
+						{ "Path": [ "/api/session/login" ],           "ItemsRemoved": [ "customer_id", "auth_token", "config", "privs", "user_id", "seq" ] }
+					,	{ "Path": [ "/api/admin/change_password" ],   "ItemsRemoved": [ "customer_id", "config", "privs", "user_id", "username", "auth_token" ] }
+					,	{ "Path": [ "/api/session/change_password" ], "ItemsRemoved": [ "customer_id", "config", "privs", "user_id", "username", "auth_token" ] }
+					]
+			} }
+			, { "SessionRedis": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat1"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat2"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/table/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis/..."
+				, "StatusMessage":		"""Public (pet) Version 0.0.7 Fri Oct 27 08:17:21 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "ApiTableKey": 		"xyzzy"
+				, "ApiStatus":			"/api/session/"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/session/","/api/store/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis/..."
+				, "StatusMessage":		"""Public Version 0.0.6 Tue Sep 20 18:08:49 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "ApiTableKey": 		""
+				, "ApiStatus":			"/api/session/"
+			} }
+			, { "LoginRequired": { "LineNo":{{ __line_no__ }}
+				,"Paths": [ "/api/admin/", "/admin/", "/api/table/", "/api/list/" ]
+				,"StrongLoginReq":   	"no"
+				,"AuthMethod":	    	["Authentication:Bearer"]
+				,"Final":		    	"no"
+				,"KeyFile": 			"./test-key/sample_key.pub"
+				,"ValidationSource":	"jwt"
+				,"CheckXsrfToken":   	"yes"
+				,"RemoteValidate":		"yes"
+				,"RemoteValidateURL":	"http://localhost:9001/api/session/validate_auth_token" 
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/admin/status"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/admin/change_password"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":		"""Public Version 0.0.6 Tue Sep 20 18:08:49 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "ApiTableKey": 		""
+				, "ApiStatus":			"/api/admin/"
+				, "Final":				"yes"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/admin/","/api/table/","/api/list/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":		"""Logged In: Version 0.0.6 Tue Sep 20 18:08:49 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "ApiTableKey": 		""
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9001/www"
+			} }
+		]
+	}
+	, "http://localhost:9011/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:9011", "http://dev2.test1.com:9011" ],
+        "plugins":[
+			  { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Status"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9011/www"
+			} }
+		]
+	}
+}

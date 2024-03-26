@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="apple-touch-icon" href="favicon.png?_ran_=2">
+	<link rel="shortcut icon" sizes="120x120" href="favicon.png?v=2">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>PJS Test code for authentication (jQuery/Bootstrap version)</title>
+	<script src="js/jquery-2.1.4.js"></script>
+	<link rel="stylesheet" href="http://localhost:8088/style/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="http://localhost:8088/style/bootstrap-theme.min.css">
+<style>
+.panel-heading {
+	font-size: x-large;
+}
+</style>
+</head>
+<body>
+	<div class="page-header"><h1> t02.html </h1></div>
+
+	<div> Note <br>
+		:9001 - direct connect <br>
+		:9011 - cross origin test <br>
+	</div>
+
+	<div class="content container">
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Configuration </div>
+						<div class="panel-body">
+								<div class="form-group ">
+									<label class="form-control-label" for="setCookie" >Set Cookie</label>
+									<input class="form-control" id="setCookie" name="cookie1"   type="checkbox"> 
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" id="delCookie" type="button">Delete Cookie</button> 
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label" for="useHeader" >Use Authication Header/Berrer</label>
+									<input class="form-control" id="useHeader" name="header1"   type="checkbox"> 
+								</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Get Information </div>
+						<div class="panel-body">
+							<p>
+								<a href="http://localhost:9001/api/session/status_db"> http://localhost:9001/api/session/status_db" </a><br>
+								<a href="http://localhost:9001/api/session/echo_builtin"> http://localhost:9001/api/session/echo_builtin" </a><br>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Tests </div>
+						<div class="panel-body">
+							<p>
+								<h4> Missing Parameter / Extra Parameter Test -- http://localhost:9001/api/session/missing_param_test </h4>
+								<a href="http://localhost:9001/api/session/missing_param_test?aaa=12"> Missing Parameter Test: aaa=12 </a><br>
+								<a href="http://localhost:9001/api/session/missing_param_test?abc=12"> Parameter is good: abc=12 </a><br>
+								<a href="http://localhost:9001/api/session/missing_param_test?abc=12&extra=yesyes"> Parameter is good, extra parameter: abc=12 and extra=yesyes </a><br>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Register </div>
+						<div class="panel-body">
+							<form class="is-form" id="form01" method="POST" action="http://localhost:9001/api/session/register_new_user">
+								<div class="form-group ">
+									<label class="form-control-label">Uaername</label>
+									<input class="form-control" name="username" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Password</label>
+									<input class="form-control" name="password" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Again</label>
+									<input class="form-control" name="again"   type="text"> 
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Email</label>
+									<input class="form-control" name="email" type="text"> 
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Name</label>
+									<input class="form-control" name="real_name" type="text"> 
+								</div>
+								<div class="form-group ">
+									<input name="app" type="hidden" value="web-test-application">
+									<button class="btn btn-primary" type="submit">Register Now</button>		
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		Sample Registration Link.
+		<a id="regLink" href="http://localhost:9001/api/session/confirm_email?auth_token=3a139192-1615-4130-9da4-c1acd32b4e6a">
+		http://localhost:9001/api/session/confirm_email?auth_token=3a139192-1615-4130-9da4-c1acd32b4e6a </a>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Confirm Registation using Email or Script </div>
+						<div class="panel-body">
+							<p>
+								<!-- #select s_confirm_email ( '$auth_token', '1.1.1.1' ); -->
+								<!--	,"/api/session/confirm_email": { "g": "s_confirm_email", "p": [ "auth_token", "$ip$" ], "nokey":true -->
+								cd .../github.com/pschlump/Go-FTL/server/midlib/SessionRedis <br>
+								<b> Use: ./bin/show_registration_confir_key.sh to get key </b> <br>
+							</p>
+							<form class="is-form" id="form02" method="POST" action="http://localhost:9001/api/session/confirm_email">
+								<div class="form-group ">
+									<label class="form-control-label">auth_token</label>
+									<input class="form-control is-auth-token" name="auth_token" type="text">
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Confirm Registeration</button>		 
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!--
+			CREATE or REPLACE FUNCTION s_login(p_username varchar, p_password varchar, p_ip_addr varchar, p_host varchar)
+			,"/api/session/login": { "g": "s_login", "p": [ "username", "password", "$ip$", "$host$" ], "nokey":true
+		-->
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Login </div>
+						<div class="panel-body">
+							<form class="is-form" id="form03" method="POST" action="http://localhost:9001/api/session/login">
+								<div class="form-group ">
+									<label class="form-control-label">Username</label>
+									<input class="form-control" name="username" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Password</label>
+									<input class="form-control" name="password" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">2FA</label>
+									<input class="form-control" name="val2fa" type="text">	   
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Login</button> 
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Logout </div>
+						<div class="panel-body">
+							<form class="is-form" id="form04" method="POST" action="http://localhost:9001/api/session/logout">
+								<div class="form-group ">
+									<label class="form-control-label">Auth Token</label>
+									<input class="form-control is-auth-token" name="auth_token" type="text">	   
+								</div>
+								<div class="form-group ">
+									<input name="app" type="hidden" value="web-test-application">
+									<button class="btn btn-primary" type="submit">Logout</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ,"/api/session/change_password": { "g": "s_change_password", "p": [ "password", "again", "old_password", "auth_token", "$ip$", "$url$" ] -->
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Chagne Password for Logged In / From Web </div>
+						<div class="panel-body">
+							<form class="is-form" id="form05" method="POST" action="http://localhost:9001/api/session/change_password">
+								<div class="form-group ">
+									<label class="form-control-label">Auth Token</label>
+									<input class="form-control is-auth-token" name="auth_token" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Current Password</label>
+									<input class="form-control" name="old_password" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Password</label>
+									<input class="form-control" name="password" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Again</label>
+									<input class="form-control" name="again"   type="text"> 
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Change Password</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	<!-- validate auth token -->
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Validate Auth_Token - Using Cookie </div>
+						<div class="panel-body">
+							<form class="is-form" id="form06" method="POST" action="http://localhost:9001/api/session/validate_auth_token">
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Do It Now!</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Validate Auth_Token - Using Input Field </div>
+						<div class="panel-body">
+							<form class="is-form" id="form13" method="POST" action="http://localhost:9001/api/session/validate_auth_token">
+								<div class="form-group ">
+									<label class="form-control-label">Auth Token - No Enter </label>
+									<input class="form-control is-auth-token" name="auth_token" type="text">	   
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Do It Now!</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Validate Login Required, Cookie, Passed auth_token, or Authentication: Berrer </div>
+						<div class="panel-body">
+							<form class="is-form" id="form07" method="POST" action="http://localhost:9001/api/admin/login_required">
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Do It Now!</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Validate Login Required, Passed auth_token </div>
+						<div class="panel-body">
+							<form class="is-form" id="form08" method="POST" action="http://localhost:9001/api/admin/login_required">
+								<div class="form-group ">
+									<label class="form-control-label">Auth Token - No Enter </label>
+									<input class="form-control is-auth-token" name="auth_token" type="text">	   
+								</div>
+								<div class="form-group ">
+									<input name="app" type="hidden" value="web-test-application">
+									<button class="btn btn-primary" type="submit">Do It Now!</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+<!--	
+	,"/api/session/password_reset": { "g": "s_password_reset", "p": [ "username", "auth_token", "email","$ip$", "$url$", "$top$" ], "nokey":true
+		- just get back success.
+		- email sent - check link in email - verify token is correct.
+
+	,"/api/session/password_reset_pt2": { "g": "s_password_reset_pt2", "p": [ "password", "again", "token", "$ip$", "$url$" ], "nokey":true
+		- token from URL, after redirect from '/recover-password.html' 
+		- enter and submit - should be logged in.
+-->
+		
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Recover Password </div>
+						<div class="panel-body">
+							<h2> Enter either your username or your email </h2>
+							<form class="is-form" id="form09" method="POST" action="http://localhost:9001/api/session/password_reset">
+								<div class="form-group ">
+									<label class="form-control-label">Uaername</label>
+									<input class="form-control" name="username" type="text">	   
+								</div>
+								<input type="hidden" name="auth_token" value="">
+								<div class="form-group ">
+									<label class="form-control-label">Email</label>
+									<input class="form-control" name="email" type="text"> 
+								</div>
+								<div class="form-group ">
+									<input name="app" type="hidden" value="web-test-application">
+									<button class="btn btn-primary" type="submit">Recover Password</button>		
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Chagne Password for After "Recvoer Password" </div>
+						<div class="panel-body">
+							<form class="is-form" id="form10" method="POST" action="http://localhost:9001/api/session/password_reset_pt3">
+								<div class="form-group ">
+									<label class="form-control-label">Password</label>
+									<input class="form-control" name="password" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Again</label>
+									<input class="form-control" name="again"   type="text"> 
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Set New Password</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+<!--
+	,"/api/session/status_db2": { "g": "status_db", "p": [ "$ip$" ]
+-->
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Status: /api/session/status_db2 </div>
+						<div class="panel-body">
+							<form class="is-form" id="form11" method="POST" action="http://localhost:9001/api/session/status_db2">
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Test w/o Login</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Status: /api/admin/status_db2 </div>
+						<div class="panel-body">
+							<form class="is-form" id="form12" method="POST" action="http://localhost:9001/api/admin/status_db2">
+								<div class="form-group ">
+									<button class="btn btn-primary" type="submit">Test Require Login</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Status: /api/admin/status_db2 </div>
+						<div class="panel-body">
+							<form class="is-form" id="form14">
+								<div class="form-group ">
+									<label class="form-control-label">Set Non-Local URL (current value shown)</label>
+									<input class="form-control" name="nlURL" id="nlURL"  type="text"> 
+								</div>
+								<div class="form-group ">
+									<div> Pick one of <br>
+									<ol>
+									 	<li> http://localhost:9001</li>
+										<li> http://dev2.test1.com:9999/</li>
+										<li> http://auth2.test1.com:9001</li>
+										<li> http://192.168.0.157:9001  </li>
+										</div>
+									</ol>
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" type="button" id="shoCurrentInOutput">Show Current in Output</button>
+									<button class="btn btn-primary" type="button" id="setRemoteURL">Set It</button>
+									<button class="btn btn-primary" type="button" id="restoreDefaultRemoteURL">Restore Default</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Output </div>
+						<div class="panel-body">
+							<pre id="output"></pre>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+<script>
+
+var auth_token = "";
+var xsrf_token = "";
+var jwt_token = "";
+var setCookie = "n";
+var useHeader = "n";
+var setTheCookie = function() {}
+
+function createCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime()+(days*24*60*60*1000));
+		expires = "; expires="+date.toGMTString();
+	} 
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) {
+			return c.substring(nameEQ.length,c.length);
+		}
+	}
+	return null;
+}
+
+function delCookie(name) {
+	createCookie(name,"",-1);
+}
+
+function URLStrToHash(query) {
+	var rv = {};
+	var decode = function (s) { return decodeURIComponent(s.replace(/^\?/,"").replace(/\+/g, " ")); };
+
+	var p1 = query.replace(/([^&=]+)=?([^&]*)/g,function(j,n,v){
+		n = decode(n);
+		v = decode(v);
+		if ( typeof(rv[n]) === "undefined" ) {
+			rv[n] = ( typeof v === "undefined" ) ? "" : v;
+		} else if ( typeof(rv[n]) === "string" ) {
+			var x = rv[n];
+			rv[n] = [];
+			rv[n].push ( x );
+			rv[n].push ( v );
+		} else {
+			rv[n].push ( v );
+		}
+		return "";
+	});
+	return rv;
+}
+
+//var v = URLStrToHash("a=12&b=22&c&d");
+//console.log ( 'v=', v );
+//var v = URLStrToHash("a=12&b=22&x=aa&x=bb&x=cc&x=dd&x=ee&d=888888");
+//console.log ( 'v=', v );
+
+function Id(x){
+	return document.getElementById(x);
+}
+
+var g_origin = window.location.origin;
+if ( ! g_origin ) {			// Probablyl running on Opera
+	g_origin = window.location.protocol + "//" + window.location.host;
+}
+
+var g_param = URLStrToHash ( window.location.search );
+
+console.log ( window.location.search );
+console.log ( "g_param=", g_param );
+
+var rc = getCookie('recovery_token');
+if ( rc != "" ) {
+	console.log ( "Cooky recovery token set",rc);
+}
+if ( g_param.recovery_token ) {
+	console.log ( "Setting recovery token",g_param.recovery_token);
+	createCookie('recovery_token',g_param.recovery_token);
+}
+
+$("#setCookie").change(function() {
+	if(this.checked) {
+		// console.log ( "setCookie checked" );
+		setCookie = "y";
+		setTheCookie = function(auth_token) { createCookie("auth_token",auth_token); };
+		createCookie("auth_token",auth_token); 
+	} else {
+		// console.log ( "setCookie un-checked" );
+		setCookie = "n";
+		setTheCookie = function() { delCookie("auth_token"); };
+		delCookie("auth_token"); 
+	}
+});
+
+$("#delCookie").click(function() {
+	delCookie("auth_token"); 
+	$("#output").text( "it's gone" );
+});
+
+function SetupJWTBerrer() {
+	$.ajaxSetup({
+		beforeSend: function(xhr) {
+			if ( jwt_token && jwt_token !== "" ) {
+				xhr.setRequestHeader('Authorization', 'bearer '+jwt_token);
+			} else if ( auth_token && auth_token !== "" ) {
+				xhr.setRequestHeader('Authorization', 'bearer '+auth_token);
+			}
+			if ( xsrf_token != "" ) {
+				xhr.setRequestHeader('X-Xsrf-Token', xsrf_token);
+			}
+		}
+		,dataFilter: function(data, type) {
+			var prefix = ['//', ')]}\'', 'while(1);', 'while(true);', 'for(;;);'], i, l, pos;
+
+			// console.log ( "dataFilter: data type", type );
+
+			if (type && type != 'json' && type != 'jsonp') {
+				return data;
+			}
+
+			// console.log ( "dataFilter: raw data before remove of prefix.", data );
+
+			var dl = data.length;	 // data length 
+			for (i = 0, l = prefix.length; i < l; i++) {
+				var pl = prefix[i].length; // pattern lenght
+				// console.log ( "dataFilter: raw substr -={" + data.substring(0,pl) + "}=-" );
+				if ( dl >= pl && data.substring(0,pl) === prefix[i] ) {
+					return data.substring(pl);
+				}
+			}
+
+			return data;
+		}
+	});
+}
+
+$("#useHeader").change(function() {
+	if(this.checked) {
+		// console.log ( "useHeader checked" );
+		useHeader = "y";
+		//$.ajaxSetup({
+		//	beforeSend: function(xhr) {
+		//		xhr.setRequestHeader('Authorization', 'bearer '+auth_token);
+		//		if ( xsrf_token != "" ) {
+		//			xhr.setRequestHeader('X-Xsrf-Token', xsrf_token);
+		//		}
+		//	}
+		//});
+	} else {
+		// console.log ( "useHeader un-checked" );
+		useHeader = "n";
+		//$.ajaxSetup({
+		//	beforeSend: function(xhr) {
+		//		if ( xsrf_token != "" ) {
+		//			xhr.setRequestHeader('X-Xsrf-Token', xsrf_token);
+		//		}
+		//	}
+		//});
+	}
+});
+
+// http://stackoverflow.com/questions/1960240/jquery-ajax-submit-form
+
+var remoteURL = "";
+// <form class="is-form" id="form01" method="POST" action="http://localhost:9001/api/session/register_new_user">
+// <button class="btn btn-primary" type="button" id="shoCurrentInOutput">Show Current in Output</button>
+// <button class="btn btn-primary" type="button" id="setRemoteURL">Set It</button>
+// <button class="btn btn-primary" type="button" id="restoreDefaultRemoteURL">Restore Default</button>
+$("#shoCurrentInOutput").click(function() {
+	if ( remoteURL === "" ) {
+		$("#output").text( "is set to default now, 'http://localhost:9001'" );
+	} else {
+		$("#output").text( "is *NON* default, "+remoteURL );
+	}
+});
+$("#setRemoteURL").click(function() {
+	remoteURL = $("#nlURL").val();
+	console.log ( "Set to: ", remoteURL );
+	$("#output").text( "is *NON* default, "+remoteURL );
+});
+$("#restoreDefaultRemoteURL").click(function() {
+	remoteURL = "";
+	$("#output").text( "is set to default now, 'http://localhost:9001'" );
+});
+
+function submitIt ( event, id ) {
+	console.log( "Handler for #"+id+".submit() called." );
+	event.preventDefault();
+
+	// alert("pause1");
+	SetupJWTBerrer() 
+
+	var frm = $('#'+id);
+	var action = frm.attr('action');
+	if ( remoteURL === "" ) {
+	} else {
+// <form class="is-form" id="form01" method="POST" action="http://localhost:9001/api/session/register_new_user">
+		action = action.substring("http://localhost:9001".length);
+		console.log ( "after:", action );
+		action = remoteURL + action
+	}
+	$.ajax({
+		type: frm.attr('method'),
+		// url: frm.attr('action'),
+		url: action,
+		data: frm.serialize(),
+		success: function (data) {
+			console.log ( 'data=', data );	 // already parsed.
+			if ( data.status == "success" && data.xsrf_token ) {
+				xsrf_token = data.xsrf_token;
+			}
+			if ( data.status == "success" && data.auth_token ) {
+				auth_token = data.auth_token;
+				$('.is-auth-token').val(auth_token);
+				setTheCookie(auth_token);
+			}
+			if ( data.status == "success" && data.jwt_token ) {
+				jwt_token = data.jwt_token;
+			}
+			if ( data.status && data.status != "success" ) {
+				alert ( data.msg );
+			}
+			$("#output").text( JSON.stringify(data, null, 4) );
+		},
+		error: function(resp) {
+			console.log("error=",resp);
+			alert("got error status="+resp.status+" "+resp.statusText);
+		}
+	});
+}
+
+$( "#form01" ).submit(function( event ) { submitIt ( event, 'form01' ); });	// register
+$( "#form02" ).submit(function( event ) { submitIt ( event, 'form02' ); }); // confirm
+$( "#form03" ).submit(function( event ) { submitIt ( event, 'form03' ); });	// login
+$( "#form04" ).submit(function( event ) { submitIt ( event, 'form04' ); }); // logout
+$( "#form05" ).submit(function( event ) { submitIt ( event, 'form05' ); }); // change password
+$( "#form06" ).submit(function( event ) { submitIt ( event, 'form06' ); }); // Validate Auth_Token
+$( "#form07" ).submit(function( event ) { submitIt ( event, 'form07' ); }); // Login Required - to access item
+$( "#form08" ).submit(function( event ) { submitIt ( event, 'form08' ); }); // Login Required - passed auth_token
+$( "#form09" ).submit(function( event ) { submitIt ( event, 'form09' ); }); // Password Recovery - pt 1 - Ass for email with token.
+$( "#form10" ).submit(function( event ) { submitIt ( event, 'form10' ); }); // Password Recovery - pt 2 - take "token" and use 
+$( "#form11" ).submit(function( event ) { submitIt ( event, 'form11' ); }); // status_db - no login
+$( "#form12" ).submit(function( event ) { submitIt ( event, 'form12' ); }); // status_db - login required
+$( "#form13" ).submit(function( event ) { submitIt ( event, 'form13' ); }); // validate auth token - using input field value
+
+</script>
+
+</body>
+</html>

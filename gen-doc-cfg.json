@@ -1,0 +1,51 @@
+{
+	"Type":"doc"
+,	"Title": "Go-FTL Server"
+,	"BrandLink": "http://www.go-ftl.com"
+,	"BrandHtml": "<img src='images/go-ftl-icon144.png?v=0002' height='72' width='72'>"
+,	"__comment__": "Only needed becasue not ./"
+,	"UsePath": [ "./server", "./doc", "../TabServer2" ]
+,	"Meta_Description": "Go-FTL Server and Reverse Proxy"
+,	"Meta_Author": "Philip Schlump"
+,	"SiteTitle": "Go-FTL Server"
+,	"TopMenu":[
+		{ "Name":"Overview"				, "Pos":"left"			}
+	,	{ "Name":"TabServer"			, "Pos":"left"			}
+	,	{ "Name":"Middleware"			, "Pos":"left"			}
+	,	{ "Name":"Examples"				, "Pos":"left-drop"		}
+	,	{ "Name":"Login Angular 1.x"	, "Pos":"left-drop",	"LinkTo":"/doc-About"	}
+	,	{ "Name":"Login Angular 2.0"	, "Pos":"left-drop",	"LinkTo":"/doc-About"	}
+	,	{ "Name":"Tracer"				, "Pos":"left-drop",	"LinkTo":"/doc-About"	}
+	,	{ "Name":"Help"					, "Pos":"right"			}
+	,	{ "Name":"About"				, "Pos":"right-drop"	}
+	,	{ "Name":"About"				, "Pos":"right-drop", "LinkTo":"/doc-About"	}
+	,	{ "Name":"FAQ"					, "Pos":"right-drop", "LinkTo":"/doc-About"	}
+	,	{ "Name":"---------"			, "Pos":"right-drop" 	}
+	,	{ "Name":"Contact Us"			, "Pos":"right-drop", "LinkTo":"/ContactForm"	}
+	,	{ "Name":"---------"			, "Pos":"right-drop" 	}
+	,	{ "Name":"Report Go-FTL Issue"	, "Pos":"right-drop", "LinkTo":"/ReportIssue/Go-FTL"	}
+	,	{ "Name":"Report Webpage Issue"	, "Pos":"right-drop", "LinkTo":"/ReportIssue/WebSite"	}
+	]
+,	"IgnoreFiles": [ 
+		 "^.*/server/goftl/angular-login-example/.*$"
+		,"^.*/server/goftl/jq-mob/.*$"
+		,"^.*/server/goftl/notes/.*$"
+		,"^.*/server/goftl/quickstart/.*$"
+		,"^.*/server/goftl/static/.*$"
+		,"^.*/server/goftl/www.test1.com/.*$"
+		,"^.*/server/goftlmux/.1/.*$"
+		,"^.*/server/midlib/AesSrp/note/.*$"
+		,"^.*/.*/www/foo/t1.md"
+		,"^.*/.*/www/t1.md"
+		,"^.*/server/note/mkdocs-index.md"
+		,".*/README.md$"
+		,".*/LICENSE.md$"
+		,".*/NEED-HELP.md$"
+		,"^.*/blog/.*$"
+		,"^.*/server/Go-FTL-Docs/.*$"
+		,"^.*/server/goftlmux/about.md$"
+		,"^.*/server/goftlmux/How-I-Actually-Develop-With-A-Router.md$"
+		,"^.*/server/midlib/middleware.ftr.md$"
+		,"^.*/server/midlib/middleware.hdr.md$"
+	]
+}

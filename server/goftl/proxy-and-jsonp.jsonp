@@ -1,0 +1,14 @@
+// Comment: Test of both HTTP and HTTPS as a proxy to a different server.
+// Note: need to do a re-write on path to get to server.
+{
+    "name": { "LineNo":4,
+        "listen_to":[ "http://localhost:3111", "https://localhost:3112" ],
+		"certs": [ "/etc/pki/CA/certs/myserver.cert.pem", "/etc/pki/CA/private/myserver.key.pem" ],
+        "plugins":[
+            { "dumpIt": { "LineNo":8, "msg":"At Top, after mangl1" } },
+            { "jsonp":  { "LineNo":9, "paths":["/api/v1/jsonp"]  } },
+            { "dumpIt": { "LineNo":10, "msg":"After Proxy" } },
+            { "proxy1": { "LineNo":11, "to":"http://127.0.0.1:8204/api/", "paths":["/api/"]  } }
+        ]
+    }
+}

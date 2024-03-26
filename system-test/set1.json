@@ -1,0 +1,73 @@
+{ "name": "t",
+"Servers": [ "http://192.168.0.150:12000" ],
+"Tests": [
+		{
+			"Url": "%{Server%}/api/status",
+			"TheComment": "Make API call",
+			"CheckStatus": true,
+			"ExpectedStatus": 200,
+			"Data": null,
+			"CheckRegExp": null,
+			"ExitIfTestFails": false,
+			"CheckBodyFn": "",
+			"TestNo": 0,
+			"Run_it": true,
+			"DumpFile": false,
+			"OutputFile": ""
+		}
+		,{
+			"Url": "%{Server%}/api/xyzzy",
+			"TheComment": "Make API call - get back 404",
+			"CheckStatus": true,
+			"ExpectedStatus": 404,
+			"Data": null,
+			"CheckRegExp": null,
+			"ExitIfTestFails": false,
+			"CheckBodyFn": "",
+			"TestNo": 0,
+			"Run_it": true,
+			"DumpFile": false,
+			"OutputFile": ""
+		}
+		,{
+			"Url": "%{Server%}/index.html",
+			"TheComment": "fetch /index.html by name",
+			"CheckStatus": true,
+			"ExpectedStatus": 200,
+			"Data": null,
+			"CheckRegExp": null,
+			"ExitIfTestFails": false,
+			"CheckBodyFn": "./ref/%s-%d.out",
+			"TestNo": 0,
+			"Run_it": true,
+			"DumpFile": false,
+			"OutputFile": "./out/%s-%d.out"
+		}
+		,{
+			"Url": "%{Server%}/",
+			"TheComment": "fetch / get back /index.html",
+			"CheckStatus": true,
+			"ExpectedStatus": 200,
+			"Data": null,
+			"CheckRegExp": null,
+			"ExitIfTestFails": false,
+			"CheckBodyFn": "./ref/%s-%d.out",
+			"TestNo": 0,
+			"Run_it": true,
+			"DumpFile": false,
+			"OutputFile": "./out/%s-%d.out"
+		}
+		,{
+			"Url": "%{Server%}/api/run-cmd?cli={%22Cmd%22:[%22ls%22,%22-ltro%22]}&ApiKey=bob-bob-bob&_x_=%{random%}",
+			"TheComment": "test remote executeion of 'ls' command",
+			"CheckStatus": true,
+			"ExpectedStatus": 200,
+			"Data": null,
+			"CheckRegExp": null,
+			"ExitIfTestFails": false,
+			"TestNo": 0,
+			"Run_it": true,
+			"DumpFile": true
+		}
+	]
+}

@@ -1,0 +1,74 @@
+1. cfg.json -- default for cli is ../cfg.json
+2. copy command form for CLI like srp-cls
+3. build as a lib with tests
+4. 
+
+
+
+
+
+
+Tests (full cercuit - must test)
+	1. Registration of new user
+	2. Lost Password Recovery
+	3. New DeviceID
+	4. Lost Device - Recovery
+	5. Change of Password
+	6. Marketing Message
+
+
+
+//
+// CLI
+// -c/--cfg cfg.json
+// -o/--opts opts.json -- hash with opts in it
+//
+// em show-apps
+// em add-app
+// em del-app
+// em show-tmpl --app [name]
+// em add-tmpl --app [name] --file [fn]
+// em del-tmpl --app [name]
+//
+// em valid --opts opts.json || --list list.json
+// em send --opts opts.json
+// em send-list --list list.json
+//
+
+
+
+
+
+
+
+
+
+
+
+
+EMAIL Stuff
+	1. Create library to send email -> ./email-lib
+
+	2. Create CLI that will demo all of this	-> ./email-cli
+		1. List tempates
+		2. Sub values into templates and send
+		3. Demo mode flag that just builds email - but no send
+		4. Config to set demo mode and other items
+		5. Push into libary for all of this
+
+	3. Create MS - that will use library to send email	-> ./email-ms
+		1. Monitoring	ms:email-via-aws (status:ok - sending, status:ok, demo:y/n, file:name)
+		2. Change aes/srp to use new micro service
+		3. setup noreply@www.2c-why.com
+		4. Validate that email with AWS/SES
+
+
+
+Notes:	
+
+	http://docs.aws.amazon.com/ses/latest/DeveloperGuide/query-interface-examples.html
+	http://docs.aws.amazon.com/sdk-for-go/api/service/ses/#example_SES_SendEmail -- Docs
+	http://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
+	http://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started_create-admin-group.html -- How to create KEY - 
+		1. Need to create email/ses only gorup/key(s)
+

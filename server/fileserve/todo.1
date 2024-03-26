@@ -1,0 +1,10 @@
+
+1. verify that these get created from configuration - 
+	fs_lib.go:85 init()
+		CommandLocationMap = make(map[string]string)
+		ExtProcessTable = append(ExtProcessTable, &ExtProcessType{
+
+4. // xyzzyNotFound - change http.NotFound() to fileserve.NotFound() so can inrement marker and check it as this point
+
+		t_root, _ := filepath.Abs(fcfg.ThemeRoot) // From Config
+		// x_root, _ := filepath.Abs(fcfg.Root[0])   // From Config			// xyzzyRoot0 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< fix this <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -26,10 +26,10 @@ import (
 	"sync"
 	"time"
 
-	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 	"github.com/pschlump/Go-FTL/server/RedisSessionData"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/json" //	Modifed from: "encoding/json"
+	"github.com/pschlump/json"         //	Modifed from: "encoding/json"
+	logrus "github.com/pschlump/pslog" // "github.com/sirupsen/logrus"
 )
 
 //    "github.com/pschlump/Go-FTL/server/RedisSessionData"
@@ -260,13 +260,15 @@ func (b *MidBuffer) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 // Flusher Interface
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-// Don't actualy flush - just ignore.
+// Flush will Don't actualy flush - just ignore.
 func (b *MidBuffer) Flush() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------------------------------------------------------------------
+// FinalFlush will actually do the flush and is used at the top level.  It also addss any prefix/postfix text to the response.
+// Prefix for JSON might be "while(1);"
 func (b *MidBuffer) FinalFlush() {
 	if b.IsHijacked {
 		return

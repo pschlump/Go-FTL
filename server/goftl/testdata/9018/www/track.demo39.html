@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="apple-touch-icon" href="favicon.png?v=2">
+	<link rel="shortcut icon" sizes="120x120" href="favicon.png?v=2">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>Document tracking - web version - demo.</title>
+	<script src="js/jquery-3.3.1.min.js"></script>
+	<link rel="stylesheet" href="style/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="style/bootstrap-theme.min.css">
+	<script src="style/bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="/bower_components/moment/min/moment.min.js"></script>
+<script type="text/javascript" src="/bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+<link rel="stylesheet" href="/bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
+
+<script>
+var config = "prod";
+// var config = "test";
+</script>
+
+<style>
+.panel-heading {
+	font-size: x-large;
+}
+.pl10 {
+	padding-left: 10px;
+}
+.imgList {
+	border: 4px solid gray;
+}
+.imageSelected {
+	border: 4px solid green;
+}
+.imageNotSelected {
+	border: 4px solid black;
+}
+</style>
+</head>
+<body>
+<!-- xyzzy100 -->
+<!--
+TODO
+
+1. Create animal page - with new RFID, etc. (Date/Time etc)			30min
+
+2. Search page - then add event. - move button.						30min
+
+1hr testing
+
+4:00 am to 6:00am
+
+Prep Lecture - 1hr
+
+-->
+	<div class="page-header"><h1 class=pl10> Animal Tracking </h1></div>
+
+	<div class="content container">
+
+		<div id="docTop" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Ranch Animal Tracking </div>
+						<div class="panel-body">
+								<div class="form-group ">
+									<button class="btn btn-primary" id="bListAnimal1" type="button">List</button> 
+									<button class="btn btn-primary" id="bAnimal1" type="button">New Animal</button> 
+								</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="listAnimal" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> List Animals </div>
+						<div class="panel-body">
+							<form class="is-form" id="form00" method="POST" action="api/table/listanimal">
+								<div class="form-group ">
+									<label class="form-control-label">RDID</label>
+									<input class="form-control" id="tRFID" name="tRFID" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Ranch Short ID</label>
+									<input class="form-control" id="tNick" name="tNick" type="text">	   
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" id="bSearchAnimal" type="button">Search</button> 
+									<button class="btn btn-primary" id="bTop1" type="button">Menu</button> 
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="listAnimalData" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Animals History </div>
+						<div class="panel-body">
+							<div id="cowList"></div>
+							<div class="form-group ">
+								<button class="btn btn-primary" id="bAnimalEvent1" type="button">New Event</button> 
+								<button class="btn btn-primary" id="bTop3" type="button">Menu</button> 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+<!-- xyzzy101 -->
+
+		<div id="newEventPage" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Tracke events on an Animal </div>
+						<div class="panel-body">
+							<form class="is-form" id="form01" method="POST" action="api/table/xyzzy">
+								<div class="form-group ">
+									<label class="form-control-label">RFID</label>
+									<input class="form-control" id="uRFID" name="uRFID" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Ranch Short ID</label>
+									<input class="form-control" id="uNick" name="uNick" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Event Category (xyzzy-dropdown) </label>
+									<input class="form-control" id="uEventCategory" name="uEventCategory" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Event (xyzzy-dropdown) </label>
+									<input class="form-control" id="uEventName" name="uEventName" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Note</label>
+									<input class="form-control" id="uNote" name="uNote" type="text">	   
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" id="bAddEvent2" type="button">Add Event</button> 
+									<button class="btn btn-primary" id="bTop4" type="button">Menu</button> 
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+<script>
+
+// Library ------------------------------------------------------------------------------
+
+function createCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime()+(days*24*60*60*1000));
+		expires = "; expires="+date.toGMTString();
+	} 
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) {
+			return c.substring(nameEQ.length,c.length);
+		}
+	}
+	return null;
+}
+
+function delCookie(name) {
+	createCookie(name,"",-1);
+}
+
+function URLStrToHash(query) {
+	var rv = {};
+	var decode = function (s) { return decodeURIComponent(s.replace(/^\?/,"").replace(/\+/g, " ")); };
+
+	var p1 = query.replace(/([^&=]+)=?([^&]*)/g,function(j,n,v){
+		n = decode(n);
+		v = decode(v);
+		if ( typeof(rv[n]) === "undefined" ) {
+			rv[n] = ( typeof v === "undefined" ) ? "" : v;
+		} else if ( typeof(rv[n]) === "string" ) {
+			var x = rv[n];
+			rv[n] = [];
+			rv[n].push ( x );
+			rv[n].push ( v );
+		} else {
+			rv[n].push ( v );
+		}
+		return "";
+	});
+	return rv;
+}
+
+function Id(x){
+	return document.getElementById(x);
+}
+
+var g_origin = window.location.origin;
+if ( ! g_origin ) {			// Probablyl running on Opera
+	g_origin = window.location.protocol + "//" + window.location.host;
+}
+
+var g_param = URLStrToHash ( window.location.search );
+
+var curPage = "docTop";
+
+function doPage( pn ) {
+	curPage = pn;
+    $(".my_page").hide();
+    $("#"+curPage).show();
+	// $("#outErr").html("");		
+}
+
+
+
+
+var events;
+var n_events;
+function getEvents() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/v1_event_lookup",
+	  data: param
+	}).done(function(data) {
+		events = data.data;
+		n_events = data.meta.count[0].nRows;
+		console.log ( "events", events, "n", n_events );
+
+		//var s = "";
+		//for ( var ii = 0; ii < n_category; ii++ ) {
+		//	var na = category[ii].category_name;
+		//	s += "<li><a href=\"#\" onClick=\"setCategory('"+na+"')\">"+na+"</a></li>";
+		//	category_map[ na ] = category[ii].id;
+		//}
+		//$("#paintCatList").html(s);
+		//$("#paintCatList2").html(s);
+	});
+}
+
+
+
+
+var category;
+var category_map = {};
+var n_category;
+var tags;
+
+function getCategories() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/dt_category",
+	  data: param
+	}).done(function(data) {
+		category = data.data;
+		n_category = data.meta.count[0].nRows;
+		// console.log ( "cagegory", category );
+		// console.log ( "meta", data.meta );
+		// console.log ( "meta.count", data.meta.count );
+		// console.log ( "meta.count.nRows", data.meta.count[0].nRows );
+
+		// <li><a href="#" onClick="setCategory('html')">HTML</a></li>
+		var s = "";
+		for ( var ii = 0; ii < n_category; ii++ ) {
+			var na = category[ii].category_name;
+			s += "<li><a href=\"#\" onClick=\"setCategory('"+na+"')\">"+na+"</a></li>";
+			category_map[ na ] = category[ii].id;
+		}
+		$("#paintCatList").html(s);
+		$("#paintCatList2").html(s);
+	});
+}
+
+function displayDocByID(document_id) {
+	console.log ( "dispalyDocByID=", document_id );
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum, "id":document_id };
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/dt_document",
+	  data: param
+	}).done(function(data) {
+		console.log ( "data=", data )
+		// xyzzy - status == "success" (data.status)
+		var pdfURL = "/img-final/"+data.data[0].eth_hash+".pdf";
+		// var pdfURL = "/img-final/d2e98eea7a415551a48b890d4a3d97330721fe487a67388665fe1aae8d1b5228.pdf";
+		$("#thePDF").html("<iframe src="+pdfURL+" style=\"width:800px; height:500px;\" frameborder=\"1\"></iframe>");
+		doPage( "showPDF" );
+	});
+}
+
+function LookupCactegoryId(name) {
+	var id = category_map[name];
+	return id;
+}
+
+var tagsSet = {};
+var tagsValue;
+
+function getTags() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/dt_tags",
+	  data: param
+	}).done(function(data){
+		if ( data.status === "success" ) {
+			tags = data.data;
+			console.log ( "tags", tags );
+			// <div id="tagsPanel" class="collapse">
+			var s = "";
+			for ( var ii = 0, mx = tags.length; ii < mx; ii++ ) {
+				var na = tags[ii].tag_name;
+				s += "<div><label><input class=\"tagsCheckbox\" type=\"checkbox\" value=\""+na+"\"> "+na+"</label></div>";
+			}
+			$("#tagsPanel").html(s);
+			$("#tagsPanel2").html(s);
+			$('.tagsCheckbox').change(function() {
+				var vv = $(this).val();
+				if(this.checked) {
+					tagsSet[vv] = true;
+					console.log ( "val=", $(this).val() );
+				} else {
+					tagsSet[vv] = false;
+					console.log ( "remove=", $(this).val() );
+				}
+				var t = "", com = "";
+				for ( key in tagsSet ) {
+					if ( tagsSet[key] ) {
+						t = t + com + key;
+						com = "|";
+					}
+				}
+				tagsValue = t;
+				$("#sTags").val(t);
+				$("#tTags").val(t);
+			});
+		}
+	});
+}
+
+getEvents();
+
+//getCategories();
+//getTags();
+
+function displayDoc(pos,id) {
+	console.log ( "displayDoc", pos, id );
+	displayDocByID(id);
+}
+
+function renderTableTo ( loc, data ) {
+	var sA = [];
+	sA.push ( "<table class=\"table table-striped\">" );
+	sA.push ( "\t<thead>" );
+	sA.push ( "\t\t<tr>" );
+		sA.push ( "<th scope=\"col\">Description</th>" );
+		sA.push ( "<th scope=\"col\">Date</th>" );
+		sA.push ( "<th scope=\"col\">Action</th>" );
+	sA.push ( "\t\t</tr>" );
+	sA.push ( "\t</thead>" );
+	sA.push ( "\t<tbody>" );
+	for ( var ii = 0, mx = data.data.length; ii < mx; ii++ ) {
+		sA.push ( "\t\t<tr>" );
+			sA.push ( "<td>"+data.data[ii].desc+"</td>" );
+			sA.push ( "<td>"+data.data[ii].created+"</td>" );
+			sA.push ( "<td><button class=\"btn btn-primary\" type=\"button\" onClick=\"displayDoc("+ii+",'"+data.data[ii].id+"')\">Display</button></td>" );
+		sA.push ( "\t\t</tr>" );
+	}
+	sA.push ( "\t</tbody>" );
+	sA.push ( "<table>" );
+	var s = sA.join("\n");
+	$(loc).html(s);
+}
+
+
+// <div id="cowList"></div>
+function renderCowHistory ( loc, data ) {
+	var sA = [];
+	sA.push ( "<table class=\"table table-striped\">" );
+	sA.push ( "\t<thead>" );
+	sA.push ( "\t\t<tr>" );
+		sA.push ( "<th scope=\"col\">RFID</th>" );
+		sA.push ( "<th scope=\"col\">Event</th>" );
+	sA.push ( "\t\t</tr>" );
+	sA.push ( "\t</thead>" );
+	sA.push ( "\t<tbody>" );
+	for ( var ii = 0, mx = data.length; ii < mx; ii++ ) {
+		sA.push ( "\t\t<tr>" );
+			sA.push ( "<td>"+data[ii].rfid+"</td>" );
+			sA.push ( "<td>"+data[ii].event_data+"</td>" );
+		sA.push ( "\t\t</tr>" );
+	}
+	sA.push ( "\t</tbody>" );
+	sA.push ( "<table>" );
+	var s = sA.join("\n");
+	$(loc).html(s);
+}
+
+// xyzzy100
+// Steps
+// *1. Create data in tables
+// *2. Create URL to pull back cow data - Put in index.html file.
+// *3. Mod for select to do joined data.
+// 		http://192.168.0.157:9018/api/table/ListAnimal?api_table_key=kip.philip&_ran_=12
+// *4. Display/render data
+// *4a. Add in RFID and break on RFID, seq to order by.
+// *5. Use form to select exact data - where clause
+// *5a. Create form, split into 2 pages a search and a display page.
+// *6. Test this.
+//
+// 4b. Render out JSON data with sub-table Event, Gender etc. -- fucntion eventRender
+// 7. Insert new data.
+//
+
+// function getImageList() {
+function getAnimalList() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	var sRFID = $("#tRFID").val();
+	var sNick = $("#tNick").val();
+
+	console.log ( "sRFID=", sRFID );
+	console.log ( "sNick=", sNick );
+	if ( sRFID || sNick ) {
+		var wh = {"op":"and", "List":[]};
+		if ( sRFID ) {
+			wh.List.push ( {"op":"=", "name":"rfid", "Val1s":sRFID } );
+		}
+		wh_s = JSON.stringify ( wh );
+		param["where"] = wh_s;
+		// console.log ( "wh_s=", wh_s );
+	}
+
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/listanimal",
+	  data: param
+	}).done(function(data){
+			// console.log ( "Pull back data 1 (check if string or correct) = ", data )
+			renderCowHistory("#cowList",data);
+			// xyzzy100 - add in other params for search of animal.
+			doPage( "listAnimalData" );
+		})
+		.fail(function( err ) {
+			console.log( "error", err );
+		})
+		.always(function() {
+			console.log( "complete/alwasy called" );
+		});
+}
+
+
+
+
+// ------------------------------------------------------------------------------------
+function fetchAllDocuments() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	// xyzzy - need to set order by.
+	$.ajax( {
+	  method: "GET",
+	  url: "/api/table/dt_document",
+	  data: param
+	})
+		.done(function( data ) {
+			// xyzzy - if status == "success"
+			renderTableTo ( "#outdata", data );
+		})
+		.fail(function( err ) {
+			console.log( "error", err );
+		})
+		.always(function() {
+			console.log( "complete/alwasy called" );
+		});
+}
+
+
+// ------------------------------------------------------------------------------------
+function addAnimalEvent() {
+	// Use...
+	var sRFID = $("#uRFID").val();
+	var sNick = $("#uNick").val();
+	// To Get...
+	var animal_id = "100";			// xyzzy xyzzy xyzzy
+
+	var sEventCategory = $("#uEventCategory").val();
+	var sEventName = $("#uEventName").val();
+	var sNote = $("#uNote").val();
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum, "animal_id": animal_id };
+
+	param["event_data"] = JSON.strigify( { "Event": sEventCategory, "EventDetail": sEventName, "Note": sNote } );
+
+		// id, animal_id, event_data
+		$.ajax( {
+		  method: "POST",
+		  url: "/api/table/v1_animal1_event",
+		  data: param
+		})
+			.done(function( data ) {
+				console.log( "Insert v1_animal1_event, looks to be successful.", data );
+				// doPage( "showPDF" ); // status ?? - mod page - xyzzy
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+			});
+}
+
+$(document).ready(function() {
+	doPage( curPage );
+
+	if ( config == "prod" ) {
+		$("#bShowDoc").hide();
+	}
+});
+
+// Display Correct Page -----------------------------------
+$(document).ready(function() {
+	doPage( curPage );
+
+	if ( config == "prod" ) {
+		$("#bShowDoc").hide();
+	}
+
+	// <button class="btn btn-primary" id="bListAnimal1" type="button">List</button> 
+	$("#bListAnimal1").click(function() {
+		doPage( "listAnimal" );
+	});
+	// <button class="btn btn-primary" id="bAnimalEvent1" type="button">New Event</button> 
+	$("#bAnimalEvent1").click(function() {
+		// <!-- xyzzy101 -->
+		// <input class="form-control" id="tNick" name="tNick" type="text">	   
+		// <input class="form-control" id="tRFID" name="tRFID" type="text">	   
+		var sRFID = $("#tRFID").val();
+		var sNick = $("#tNick").val();
+		console.log ( "Before Setting ", sRFID );
+		if ( sRFID ) {
+			console.log ( "Setting ", sRFID );
+			$("#uRFID").val(sRFID);
+		}
+		if ( sNick ) {
+			$("#uNick").val(sNick);
+		}
+		doPage( "newEventPage" );
+	});
+
+	// -- mod more below ---
+
+	var docTopFunc = function() {
+		doPage( "docTop" );
+	}
+	$("#bTop1").click(docTopFunc);
+	$("#bTop2").click(docTopFunc);
+	$("#bTop3").click(docTopFunc);
+	$("#bTop4").click(docTopFunc);
+
+	var form00Action = function() {
+		console.log ( "form00Aciton" );
+		getAnimalList();
+	}
+	var form01Action = function() {
+		console.log ( "form01Aciton" );
+		addAnimalEvent();
+	}
+
+	$( "#form00" ).submit(function( event ) { 
+		event.preventDefault();
+		form00Action();
+	});
+	$("#bSearchAnimal").click(function() {
+		event.preventDefault();
+		form00Action();
+	});
+
+	$( "#form01" ).submit(function( event ) { 
+		event.preventDefault();
+		form01Action();
+	});
+	$("#bAddEvent2").click(function() {
+		event.preventDefault();
+		form01Action();
+	});
+
+
+	var ProcessImageRow = function ( Param ) {
+		$.ajax( {
+		  method: "POST",
+		  url: "/api/procImgRow",
+		  data: Param
+		})
+			.done(function( data ) {
+				// console.log( "ProcessImageRow.done()", data );
+				// data = JSON.parse ( data );
+				console.log( "ProcessImageRow.done() 2", data );
+				pdfURL = data.pdfURL;
+				if ( config == "prod" ) {
+					$("#thePDF").html("<iframe src="+pdfURL+" style=\"width:800px; height:500px;\" frameborder=\"1\"></iframe>");
+					doPage( "showPDF" );
+				}
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+			});
+	}
+
+	var form01ActionOld = function( imgList ) {
+		// xyzzy - setup buttons - on Search/Action
+		/* 	type: frm.attr('method'),
+			url: frm.attr('action'),
+			data: frm.serialize(),
+		*/
+		var ranNum = Math.random();
+		var frm = $('#form01x');
+		var frmData = frm.serializeArray();	// Array of name/value map pairs
+		// console.log ( "searialize data", frm.serialize() );
+		console.log ( "searialize data", frmData);
+		var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+		for ( var ii = 0; ii < frmData.length; ii++ ) {
+			param[frmData[ii].name] = frmData[ii].value;
+		}
+		console.log ( "searialize data map", param);
+
+		// xyzzy - put up spinner - on z-index 100000
+
+		var tTags = $("#tTags").val();				// uses same data as create new form.
+		var tCategory = $("#sCategory").val();		// uses same data as create new form.
+		var tTitle = $("#tTitle").val();
+		var tDesc = $("#tDesc").val();
+		console.log ( "tTags=", tTags );
+		console.log ( "tCategory=", tCategory );
+		console.log ( "tTitle=", tTitle );
+		console.log ( "tDesc=", tDesc );
+
+		var category_id = LookupCactegoryId(tCategory);
+
+		param["tags"] = tTags;
+		param["title"] = tTitle;
+		param["desc"] = tDesc;
+		param["category_id"] = category_id;
+		param["category"] = tCategory;
+		param["category_orig"] = tCategory;
+		param["image_list"] = JSON.stringify ( imgListSelected );
+
+		$.ajax( {
+		  method: "POST",
+		  url: "/api/table/dt_document",
+		  data: param
+		})
+			.done(function( data ) {
+				console.log( ".done()", data );
+				if ( data.status === "success" ) {
+					// xyzzy - have data.id - is ID of parametric data - make 2nd call?
+					param["id"] = data.id;
+					ProcessImageRow ( param );
+				} else {
+					// Xyzzy - Reprot Error
+					console.log ( "Report Error", data )
+				}
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+			});
+
+	}
+
+	// <button class="btn btn-primary" id="bAddDocumentPt2" type="button">Create Document</button> 
+	$("#bAddDocumentPt2").click(function() {
+		console.log ( "Save data with images to server" );
+		form01Action ( imgListSelected );
+	});
+
+	$("#bShowDoc").click(function() {
+		// <div id=thePDF></div>
+		// https://stackoverflow.com/questions/4853898/display-pdf-within-web-browser
+		// $("#thePDF").html("<iframe src="http://docs.google.com/gview?url=http://path.com/to/your/pdf.pdf&embedded=true" style="width:600px; height:500px;" frameborder="0"></iframe>
+		$("#thePDF").html("<iframe src="+pdfURL+" style=\"width:800px; height:500px;\" frameborder=\"1\"></iframe>");
+		doPage( "showPDF" );
+	});
+
+	// See above...
+	// sA.push ( "<td><label><img id=\"nImg'+ii+'\"width=\"200\" src='/image/"+data[ii].name+"'>&nbsp;<input type=\"checkbox\" class=\"selectedImg\" value=\"'+ii+':'+data[ii].name+'\"></label></td>" );
+	//$('.selectedImg').change(function(x) {
+	//	console.log("x=",x);
+	//});
+
+	var form02Action = function() {
+		/* 	type: frm.attr('method'),
+			url: frm.attr('action'),
+			data: frm.serialize(),
+		*/
+		var ranNum = Math.random();
+		var frm = $('#form02');
+		var frmData = frm.serializeArray();	// Array of name/value map pairs
+		// console.log ( "searialize data", frm.serialize() );
+		console.log ( "searialize data", frmData);
+		var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+		for ( var ii = 0; ii < frmData.length; ii++ ) {
+			param[frmData[ii].name] = frmData[ii].value;
+		}
+		console.log ( "searialize data map", param);
+		// xyzzy - put up spinner - on z-index 100000
+
+		// $("input[name=first_name]").val();
+		var sCategory = $("#sCategory").val();
+		var sTags = $("#sTags").val();
+		var sWords = $("#sWords").val();
+		var sBegDate = $("#sBegDate").val();
+		var sEndDate = $("#sEndDate").val();
+
+		// Add where clause to query - if no where then it will just pull back all documents in default sorted order.  This is a
+		// paged set so it is reasonable to pull.  Default sorted order is fast - hits a database index.
+		if ( sCategory != "" || sTags != "" || sWords != ""  || sBegDate != "" || sEndDate != "" ) {
+			var wh = {"op":"and", "List":[]};
+
+			if ( sCategory != "" ) {
+				wh.List.push ( {"op":"in", "name":"category", "List":[{"Val1s":sCategory}] } );	// op:= or op:== is invalid query.
+			}
+
+			if ( sTags != "" ) {
+				// wh.List.push ( {"op":"in", "name":"tag_list", "List":[{"Val1s":sTags}] } );	
+				var t1 = [];
+				for ( key in tagsSet ) {
+					if ( tagsSet[key] ) {
+						t1.push ( { "Val1s": key } );
+					}
+				}
+				wh.List.push ( {"op":"in", "name":"tag_list", "List":t1 } );	
+			}
+
+			if ( sWords != "" ) {
+				wh.List.push ( {"op":"==", "name":"key_word", "Val1s": sWords} ); // op must be = or ==	
+			}
+
+			// https://eonasdan.github.io/bootstrap-datetimepicker/
+			// https://stackoverflow.com/questions/44971954/how-to-get-am-pm-from-the-date-time-string-using-moment-js
+			// https://stackoverflow.com/questions/46931440/convert-datetime-to-iso-format
+
+			if ( sBegDate != "" && sEndDate != "" ) {
+				var pBeg = moment(sBegDate, 'DD/MM/YYYY H:mm A')
+				var begISO = pBeg.toISOString();
+				var pEnd = moment(sEndDate, 'DD/MM/YYYY H:mm A')
+				var endISO = pBeg.toISOString();
+				console.log('Beg,End', begISO,endISO);
+				wh.List.push ( {"op":"between", "name":"created", "Val1d": begISO, "Val2d": endISO} ); 
+			} else if ( sBegDate != "" ) {
+				var pBeg = moment(sBegDate, 'DD/MM/YYYY H:mm A')
+				console.log('Beg', pBeg);
+				var begISO = pBeg.toISOString();
+				console.log('Beg', begISO);
+				wh.List.push ( {"op":">=", "name":"created", "Val1d": begISO} );
+			} else if ( sEndDate != "" ) {
+				var pEnd = moment(sEndDate, 'DD/MM/YYYY H:mm A')
+				var endISO = pBeg.toISOString();
+				console.log('End', endISO);
+				wh.List.push ( {"op":"<=", "name":"created", "Val1d": endISO} ); 
+			}	
+
+			wh_s = JSON.stringify ( wh );
+			param["where"] = wh_s;
+		}
+
+		$.ajax( {
+		  method: "GET",
+		  url: "/api/table/dt_document",
+		  data: param
+		})
+			.done(function( data ) {
+				console.log( ".done()", data );
+				// xyzzy - if status == "success" {
+
+					renderTableTo ( "#outdata", data );
+					doPage( "docList" );
+
+				// xyzzy - else 
+					// xyzzy - take message and put in error page.
+					// xyzzy - switch to error page.
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+				// xyzzy - take message and put in error page.
+				// xyzzy - switch to error page.
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+				// xyzzy - take down spinner.
+			});
+
+	}
+	$( "#form02" ).submit(function( event ) { 
+		event.preventDefault();
+		form02Action();
+	});
+	$("#searchGo").click(form02Action);
+
+});
+
+
+</script>
+
+</body>
+</html>

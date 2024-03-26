@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="apple-touch-icon" href="/favicon.png?_ver_=3">
+	<link rel="shortcut icon" sizes="120x120" href="/favicon.png?_ver_=3">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<!-- Version 1.0.2 Fri May 19 07:23:45 MDT 2017 -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>PJS Redux/React version 1.0.1</title>
+<!-- React Bootstrap -->
+	<!-- version 3.3.7 Bootstrap -->
+	<!-- OLD
+	<script src="http://192.168.0.157:8088/js-lib/jquery-2.1.4.js"></script>
+	<script src="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
+	-->
+	<script src="http://192.168.0.157:8088/js-lib/jquery-2.1.4.js"></script>
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/css/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/css/bootstrap-theme.min.css">
+	<!-- /Users/corwin/go/src/www.2c-why.com/ReduxReactClass/04-Simple-Blog/style/bootstrap-3.3.7/dist/css -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/font-awesome-4.7.0/css/font-awesome.min.css">
+	<!-- /Users/corwin/go/src/www.2c-why.com/ReduxReactClass/04-Simple-Blog/style/font-awesome-4.7.0/css -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/my-aside.css?_ver_=00001">
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/video-react.css" />
+	<script src="http://192.168.0.157:8088/js-lib/app-config.js?_ver_=00001"></script>
+<style>
+
+.it-table {
+	margin-left: 10px;
+}
+.it-down {
+	color: black;
+	background-color: red;
+	font-weight: 700;
+}
+.it-up {
+	-x-background-color: #efe1d0;
+}
+
+</style>
+</head>
+<body>
+	<div id="root">
+		<h1> Live Monitor </h1>
+	
+		<div id="main_section">Noting Painted Yet</div>
+
+		<div id="fn">0</div>
+
+	</div>
+</body>
+<script>
+
+/**
+ * Return a timestamp with the format "m/d/yy h:MM:ss TT"
+ * @type {Date}
+ */
+
+function twoDig(k) {
+	if ( k <= 9 ) {
+		return "0" + k;
+	}
+	return k;
+}
+
+function timeStamp() {
+// Create a date object with the current time
+  var now = new Date();
+
+// Create an array with the current month, day and time
+// var date = [ now.getMonth() + 1, now.getDate(), now.getFullYear() ];
+  var date = [
+	  now.getFullYear()
+	, twoDig(now.getMonth() + 1)
+	, twoDig(now.getDate())
+	];
+
+// Create an array with the current hour, minute and second
+  var time = [
+		  twoDig(now.getHours())
+		, twoDig(now.getMinutes())
+		, twoDig(now.getSeconds())
+	];
+
+// Determine AM or PM suffix based on the hour
+  var suffix = ( time[0] < 12 ) ? "AM" : "PM";
+
+// Convert hour from military time
+  time[0] = ( time[0] < 12 ) ? time[0] : time[0] - 12;
+
+// If hour is 0, set it to 12
+  time[0] = time[0] || 12;
+
+// If seconds and minutes are less than 10, add a zero
+  for ( var i = 1; i < 3; i++ ) {
+    if ( time[i] < 10 ) {
+      time[i] = "0" + time[i];
+    }
+  }
+
+// Return the formatted string
+  return date.join("-") + " " + time.join(":") + " " + suffix;
+}
+
+$(function() {
+
+	/*
+	TODO:
+	Done:
+		*1. Add a fetch/number with date/time stamp on the page
+		*2. Drop the "Version1"
+		*3. Use a QT - template 
+		*4. Check if memory leeking
+		*5. Can you get the "status" of the fetch - if 304 then no need to render.
+	*/
+
+	// var host = "192.168.0.157:9001";
+
+	var prev_s = "";
+	var fn = 1;
+
+	function renderLiveMonitor(data,to) {
+		var bod = "";
+		for ( var i = 0, mx = data.length; i < mx; i++ ) {
+			var it = data[i];
+			if ( it.Status === "up" ) {
+				bod += "<tr><td class=\"it-up\">"+it.Status+"</td><td class=\"it-up\">"+it.Name+"</td></tr>";
+			} else {
+				bod += "<tr><td class=\"it-down\">"+it.Status+"</td><td class=\"it-down\">"+it.Name+"</td></tr>";
+			}
+		}
+		var s = [
+			"		<div>"
+			,"			<table class=\"table it-table\">"
+			,"				<thead>"
+			,"					<tr><th>State</th><th>Name</th></tr>"
+			,"				</thead>"
+			,"				<tbody>"
+			,bod
+			,"				</tbody>"
+			,"			</table>"
+			,"		</div>"
+			].join('');
+		if ( s !== prev_s ) {
+			$(to).html(s);
+			prev_s = s;
+		}
+	}
+
+	function renderError(data,to) {
+		return "<div>" + JSON.stringify(data) + "</div>";
+	}
+
+	function fetchAndUpdate() {
+		// console.log ( "In fetchAndUpdate()" )
+		// url = "http://"+host+"/lm/data.json";
+		fn++;
+		$("#fn").html("<div class=\"it-fn\">Fetch:"+fn+" At: "+timeStamp()+"</div>");
+		var url = "/lm/data.json";
+		var jqxhr = $.ajax( { url:url } )
+			.done(function(data) {
+				// console.log( "success", jqxhr.status );
+				renderLiveMonitor(data, "#main_section");
+			})
+			.fail(function(err,stat) {
+				console.log( "error", err, stat );
+				renderError(stat, "#main_section");
+			})
+			.always(function() {
+				// console.log( "complete:"+url );
+			});
+	}
+
+	fetchAndUpdate();
+	// fetch data 1ce a second
+	// Call the "render" function for this
+	window.interval_fetchAndUpdate = setInterval(fetchAndUpdate, 30*1000);		// poling frequency once every 30 sec.
+
+});
+</script>
+</html>

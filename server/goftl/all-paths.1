@@ -1,0 +1,27 @@
+
+export XX=/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/goftl_cli.go
+
+for i in \
+	/Users/corwin/go/src/www.2c-why.com/Corp-Reg/svr/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/go-class/svr/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/h2ppp/svr/.bak/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/h2ppp/svr/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/h2ppp/svr/old/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/qr-today.com/svr/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/qr-today.com/svr/goftl_cli.go-old \
+	/Users/corwin/go/src/www.2c-why.com/qr-today.com/svr/old/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/runRemoteCommand/rmt-cmd/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/runRemoteCommand/rmt-cmd/old/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/Tracer2/svr/.bak/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/Tracer2/svr/goftl_cli.go \
+	/Users/corwin/go/src/www.2c-why.com/Tracer2/svr/old/goftl_cli.go \
+	/Users/corwin/Go-FTL/server/goftl/goftl_cli.go \
+	/Users/corwin/Projects/github.com/Go-FTL/server/goftl/goftl_cli.go \
+	/Users/corwin/Projects/go-class/svr/goftl_cli.go \
+	/Users/corwin/Projects/go-class/svr/old/goftl_cli.go \
+	/Users/corwin/Projects/go-cli/out/Go-FTL-goftl_cli.go  \
+	; do
+	ii=$( echo $i | sed -e 's/\//_/g' )
+	diff $XX $i >>,,x$ii
+done
+

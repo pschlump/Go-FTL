@@ -1,0 +1,56 @@
+[
+	{
+		"Name": "Federated Auth Server",
+		"Status": "up",
+		"Data": "Ping:http://192.168.0.157:9001/Status",
+		"LongName": "Ping check http://192.168.0.157:9001/Status checks ok."
+	},
+	{
+		"Name": "Go-FTL:www.qr-today.com",
+		"Status": "up",
+		"Data": "",
+		"LongName": "Ping check http://192.168.0.157:16040/api/status checks ok"
+	},
+	{
+		"Name": "Go-FTL:www.redux-react-class.com",
+		"Status": "up",
+		"Data": "Ping:http://192.168.0.157:8088/api/status",
+		"LongName": "Ping check http://192.168.0.157:8088/api/status checks ok."
+	},
+	{
+		"Name": "Test01",
+		"Status": "up",
+		"Data": "",
+		"LongName": "Ping check http://127.0.0.1:8111/api/status checks ok"
+	},
+	{
+		"Name": "local:192.168.0.182",
+		"Status": "up",
+		"Data": "Ping:http://192.168.0.182:80/whatever",
+		"LongName": "Ping check http://192.168.0.182:80/whatever checks ok."
+	},
+	{
+		"Name": "local:geth182a",
+		"Status": "up",
+		"Data": "{\"ok\":\"StatusCode: 200\",\"status\":\"ok\"}",
+		"LongName": "geth 182 a"
+	},
+	{
+		"Name": "ping:alive",
+		"Status": "up",
+		"Data": "{\"status\":\"ok\"}",
+		"LongName": "Check Remote Services"
+	},
+	{
+		"Name": "remote:206-server",
+		"Status": "up",
+		"Data": "{\"ok\":\"StatusCode: 200\",\"status\":\"ok\"}",
+		"LongName": "www.2c-why.com, etc..."
+	},
+	{
+		"Name": "remote:t432z.com",
+		"Status": "up",
+		"Data": "{\"ok\":\"StatusCode: 200\",\"status\":\"ok\"}",
+		"LongName": "www.t432z.com, etc..."
+	}
+]

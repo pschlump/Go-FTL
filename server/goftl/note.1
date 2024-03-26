@@ -1,0 +1,89 @@
+On Register 
+	if 2Factor
+		- Box with explain, links for IOS / Android app for validation
+			- Device ID - for creating the IOS/Andoid registration (Maybee Later a QR code?)
+		- List of 20 backup keys
+
+On Login
+	On init of page ask server if 2 factor requried
+	if 2Factor 	
+		- Show in box 2 factor input with	
+			1. Links - to IOS / Android app for validation
+			2. Explain about 1-time keys
+
+			{ "mangle": { "LineNo":6, "Paths":"/" } },
+
+/// <reference path="../node_modules/angular2/typings/browser.d.ts" />
+
+
+Installed:
+
+root@peach:/etc/go_ftl# cat go_ftl.cfg
+
+LOG_DIR=/home/pschlump/Projects/go-ftl/log
+HOME_DIR=/home/pschlump/Projects/go-ftl
+
+CFG_FILE="dot206.json"
+LOG_FILE=",newLog.log"
+
+export API_TABLE_KEY="8HbvBJR1qWkpMgGxzqj2sRvuXg"
+
+root@peach:/etc/go_ftl# cat go_ftl.sh
+#!/bin/bash
+
+. $1
+
+mkdir -p $LOG_DIR
+
+echo "At 1st boot" >>$LOG_DIR/$LOG_FILE
+date >>$LOG_DIR/$LOG_FILE
+
+cd $HOME_DIR
+
+while true ; do
+	pwd >>$LOG_DIR/$LOG_FILE
+	ls -l ./go-ftl >>$LOG_DIR/$LOG_FILE
+	ls -l $CFG_FILE >>$LOG_DIR/$LOG_FILE
+	echo "API_TABLE_KEY=$API_TABLE_KEY" >>$LOG_DIR/$LOG_FILE
+	$HOME_DIR/go-ftl -c $CFG_FILE >$LOG_DIR/$LOG_FILE 2>&1
+	echo "exit=$?" >>$LOG_DIR/$LOG_FILE
+	date >>$LOG_DIR/$LOG_FILE
+	echo "Crash Recovery - sleep 60" >>$LOG_DIR/$LOG_FILE
+	sleep 60
+done
+
+exit 0
+
+root@peach:/etc/go_ftl# cat restart_go_ftl.sh
+#!/bin/bash
+
+. $1
+
+mkdir -p $LOG_DIR
+
+echo "At 1st boot" >>$LOG_DIR/$LOG_FILE
+date >>$LOG_DIR/$LOG_FILE
+
+cd $HOME_DIR
+
+#while true ; do
+#	pwd >>$LOG_DIR/$LOG_FILE
+#	ls -l ./go-ftl >>$LOG_DIR/$LOG_FILE
+#	ls -l $CFG_FILE >>$LOG_DIR/$LOG_FILE
+#	$HOME_DIR/go-ftl -c $CFG_FILE >$LOG_DIR/$LOG_FILE 2>&1
+#	echo "exit=$?" >>$LOG_DIR/$LOG_FILE
+#	date >>$LOG_DIR/$LOG_FILE
+#	echo "Crash Recovery - sleep 60" >>$LOG_DIR/$LOG_FILE
+#	sleep 60
+#done
+
+xx=$( ps -ef | grep go-ftl| grep -v grep | grep "$NN" | awk '{print $2}' )
+if [ "X$xx" == "X" ] ; then
+	:
+else
+	kill $xx
+fi
+
+exit 0
+
+root@peach:/etc/go_ftl#

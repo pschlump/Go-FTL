@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="apple-touch-icon" href="favicon.png?v=2">
+	<link rel="shortcut icon" sizes="120x120" href="favicon.png?v=2">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>PJS Layout - (jQuery/Bootstrap version)</title>
+	<script src="js/jquery-2.1.4.js"></script>
+	<script src="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/css/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/bootstrap-3.3.7/dist/css/bootstrap-theme.min.css">
+	<!-- /Users/corwin/go/src/www.2c-why.com/ReduxReactClass/04-Simple-Blog/style/bootstrap-3.3.7/dist/css -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/font-awesome-4.7.0/css/font-awesome.min.css">
+	<!-- /Users/corwin/go/src/www.2c-why.com/ReduxReactClass/04-Simple-Blog/style/font-awesome-4.7.0/css -->
+	<link rel="stylesheet" href="http://192.168.0.157:8088/style/my-aside.css?_ver_=00001">
+</head>
+<body>
+
+<div class="wrap">
+	<nav id="nav-bar" class="nav-bar navbar-inverse" role="navigation">
+		<div id ="top-menu" class="container-fluid active">
+			<a class="navbar-brand" href="#">Brand</a>
+			<ul class="nav navbar-nav">
+				<form id="qform" class="navbar-form pull-left" role="search">
+					<input type="text" class="form-control" placeholder="Search" />
+				</form>
+				<!-- <li> adds "open" to open the dropdown. -->
+				<li class="dropdown movable">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="caret"></span><span class="fa fa-4x fa-child"></span></a>
+					<!-- <ul> becomes display:block when shown. Has height annimation also. -->
+					<!-- <ul> becomes display:none when hidden. -->
+					<ul class="dropdown-menu" role="menu">
+						<li><a href="#"><span class="fa fa-user"></span>My Profile</a></li>
+						<li><a href="#"><span class="fa fa-gear"></span>Settings</a></li>
+						<li class="divider"></li>
+						<li><a href="#"><span class="fa fa-power-off"></span>Logout</a></li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+	</nav>
+	<aside id="side-menu" class="aside" role="navigation">
+		<ul class="nav nav-list accordion">
+			<li class="nav-header">
+				<div class="link"><i class="fa fa-lg fa-globe"></i>Portal<i class="fa fa-chevron-down"></i></div>
+				<ul class="submenu">
+					<li><a href="#">Dashboard</a></li>
+					<li><a href="#">Settings</a></li>
+					<li><a href="#">Administration</a></li>
+				</ul>
+			</li>
+
+			<li class="nav-header">
+				<div class="link"><i class="fa fa-lg fa-users"></i>Users<i class="fa fa-chevron-down"></i></div>
+				<ul class="submenu">
+					<li><a href="#">Users</a></li>
+					<li><a href="#">New User</a></li>
+				</ul>
+			</li>
+
+			<li class="nav-header">
+				<div class="link"><i class="fa fa-cloud"></i>Sites<i class="fa fa-chevron-down"></i></div>
+				<ul class="submenu">
+					<li><a href="#">Search Sites</a></li>
+					<li><a href="#">New Site</a></li>
+					<li><a href="#">Jobs</a></li>
+				</ul>
+			</li>
+
+			<li class="nav-header">
+				<div class="link"><i class="fa fa-lg fa-map-marker"></i>Zones<i class="fa fa-chevron-down"></i></div>
+				<ul class="submenu">
+					<li><a href="#">Search Zones</a></li>
+					<li><a href="#">New Zone</a></li>
+				</ul>
+			</li>
+
+			<li class="nav-header">
+				<div class="link"><i class="fa fa-lg fa-file-image-o"></i>Reports<i class="fa fa-chevron-down"></i></div>
+				<ul class="submenu">
+					<li><a href="#">Entries</a></li>
+					<li><a href="#">Redirects</a></li>
+					<li><a href="#">Pingbacks</a></li>
+					<li><a href="#">Tags</a></li>
+				</ul>
+			</li>
+		</ul>
+	</aside>
+
+	<!--Body content ===================================================================================================================== -->
+	<div id="main-body" class="content">
+		<div id="top-bar" class="top-bar">
+			<a href="#menu" class="side-menu-link burger">
+				<span class='burger_inside' id='bgrOne'></span>
+				<span class='burger_inside' id='bgrTwo'></span>
+				<span class='burger_inside' id='bgrThree'></span>
+			</a>
+		</div>
+		<section id="main-inner" class="content-inner">
+			<h2>Sample</h2>
+			<h3>A responsive Top and Side Menu, resize your browser to find out</h3>
+		</section>
+	</div>
+
+</div>
+
+<script>
+$(function() {
+
+	// $time-estimate$ 1hr to get base layout and initialization.
+	// This need to happen in the initialization phase for the page - the heights need to be set in properties - and
+	// then the styles need to be rendered in the sub-components.
+	function setHeight() {
+		var windowHeight = $(window).height();
+		if ( windowHeight > 900 ) {
+			var nbHeight = $("#nav-bar").height();
+			var tbHeight = $("#top-bar").height();
+			console.log ( "init/h=", windowHeight, nbHeight );
+			var asideHeight = windowHeight - nbHeight ;
+			var bodHeight = windowHeight - ( nbHeight + tbHeight );
+			$("#side-menu").css({"height":asideHeight+"px"});
+			$("#main-body").css({"height":bodHeight+"px"});
+			$("#main-inner").css({"height":bodHeight+"px"});
+		}
+	}
+
+	// $time-estimate$ 8hr to translate belo code to React
+	var accordionActive = false;
+
+	setHeight();
+
+		var $topMenu = $('#top-menu');
+		var $sideMenu = $('#side-menu');
+				$sideMenu.removeClass('active');
+				$topMenu.addClass('active');
+
+				var $ddl = $('#side-menu .movable.nav-header');
+				$ddl.detach();
+				$ddl.removeClass('nav-header');
+				$ddl.addClass('dropdown');
+
+				$ddl.find('.link').removeClass('link').addClass('dropdown-toggle');
+				$ddl.find('.submenu').removeClass('submenu').addClass('dropdown-menu');
+
+				$('#side-menu #qform').detach().addClass('navbar-form').appendTo($topMenu.find('.nav'));
+				$ddl.appendTo($topMenu.find('.nav'));
+
+	$(window).on('resize', function() {
+		var windowWidth = $(window).width();
+		setHeight();
+		var $topMenu = $('#top-menu');
+		var $sideMenu = $('#side-menu');
+
+		if (windowWidth < 768) {
+			if ($topMenu.hasClass("active")) {
+console.log( "running !!! lt 768 !!! topMenu.hasClass active stuff" );
+				$topMenu.removeClass("active");
+				$sideMenu.addClass("active");
+
+				var $ddl = $('#top-menu .movable.dropdown');
+				$ddl.detach();
+				$ddl.removeClass('dropdown');
+				$ddl.addClass('nav-header');
+
+				$ddl.find('.dropdown-toggle').removeClass('dropdown-toggle').addClass('link');
+				$ddl.find('.dropdown-menu').removeClass('dropdown-menu').addClass('submenu');
+
+				$ddl.prependTo($sideMenu.find('.accordion'));
+				$('#top-menu #qform').detach().removeClass('navbar-form').prependTo($sideMenu);
+
+				if (!accordionActive) {
+					var Accordion2 = function(el, multiple) {
+						this.el = el || {};
+						this.multiple = multiple || false;
+
+						// Variables privadas
+						var links = this.el.find('.movable .link');
+						// Evento
+						links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown);
+						}
+
+					Accordion2.prototype.dropdown = function(e) {
+						var $el = e.data.el;
+						$this = $(this),
+							$next = $this.next();
+
+						$next.slideToggle();
+						$this.parent().toggleClass('open');
+
+						if (!e.data.multiple) {
+							$el.find('.movable .submenu').not($next).slideUp().parent().removeClass('open');
+						};
+					}
+
+					var accordion = new Accordion2($('ul.accordion'), false);
+					accordionActive = true;
+				}
+			}
+		} else {
+			if ($sideMenu.hasClass("active")) {
+console.log( "running sideMenu.hasClass active stuff" );
+				$sideMenu.removeClass('active');
+				$topMenu.addClass('active');
+
+				var $ddl = $('#side-menu .movable.nav-header');
+				$ddl.detach();
+				$ddl.removeClass('nav-header');
+				$ddl.addClass('dropdown');
+
+				$ddl.find('.link').removeClass('link').addClass('dropdown-toggle');
+				$ddl.find('.submenu').removeClass('submenu').addClass('dropdown-menu');
+
+				$('#side-menu #qform').detach().addClass('navbar-form').appendTo($topMenu.find('.nav'));
+				$ddl.appendTo($topMenu.find('.nav'));
+			}
+		}
+	});
+
+	/**/
+	var $menulink = $('.side-menu-link'),
+			$wrap = $('.wrap');
+
+	$menulink.click(function() {
+		$menulink.toggleClass('active');
+		$wrap.toggleClass('active');
+		return false;
+	});
+
+	/*Accordion*/
+	var Accordion = function(el, multiple) {
+		this.el = el || {};
+		this.multiple = multiple || false;
+
+		// Variables privadas
+		var links = this.el.find('.link');
+		// Evento
+		links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown);
+	}
+
+	Accordion.prototype.dropdown = function(e) {
+		var $el = e.data.el;
+		$this = $(this),
+			$next = $this.next();
+
+		$next.slideToggle();
+		$this.parent().toggleClass('open');
+
+		if (!e.data.multiple) {
+			$el.find('.submenu').not($next).slideUp().parent().removeClass('open');
+		};
+	}
+
+	var accordion = new Accordion($('ul.accordion'), false);
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,422 @@
+package main
+
+// TODO
+// 1. add to email-log.log - the date/time that it was run.
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/pschlump/Go-FTL/ses-aws/email-lib"
+	"github.com/pschlump/godebug"
+	"github.com/urfave/cli"
+)
+
+//	"github.com/aws/aws-sdk-go/aws"
+//	"github.com/aws/aws-sdk-go/aws/session"
+//	"github.com/aws/aws-sdk-go/service/ses"
+//	"github.com/pschlump/json" //	"encoding/json" - modified to allow dummy output of channels
+//	template "text/template"
+//
+//	"github.com/pschlump/filelib"
+//	ms "github.com/pschlump/templatestrings"
+
+type CommonConfig struct {
+	MyStatus   map[string]interface{} //
+	UserName   string                 //
+	Password   string                 //
+	OneTimeKey string                 //
+	Debug      map[string]bool        // make this a map[string]bool set of flags that you can turn on/off
+	Em         *emaillib.EmailLib     //
+	Sent       int                    //
+	Errs       int                    //
+}
+
+func main() {
+
+	app := cli.NewApp()
+	app.Name = "email-cli"
+	app.Usage = "Email - CLI version"
+	app.Version = "0.1.0"
+
+	cc := CommonConfig{
+		MyStatus: make(map[string]interface{}),
+		UserName: "",
+		Password: "",
+		Debug:    make(map[string]bool),
+	}
+	cc.MyStatus["cli"] = "y"
+
+	app.Before = func(ctx *cli.Context) error {
+
+		cc.Em = emaillib.NewEmailLib()
+
+		DebugFlags := ctx.GlobalString("debug")
+		ds := strings.Split(DebugFlags, ",")
+		for _, dd := range ds {
+			if dd != "" {
+				cc.Debug[dd] = true
+				fmt.Printf("Setting Debug Flag [%s] to true\n", dd)
+			}
+		}
+
+		// do setup - common function -- Need to be able to skip for i-am-alive remote!
+		cfg := ctx.GlobalString("cfg")
+		cc.Em.ReadCfg(cfg)
+
+		if cc.Debug["debug1"] {
+			// cc.Ss.SetDebug1()
+		}
+
+		return nil
+	}
+
+	create_Echo := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			username := ctx.String("username")
+			password := ctx.String("password")
+			fmt.Printf("username [%s] password [%s]\n", username, password)
+			args := ctx.Args()
+			argc := ctx.NArg()
+			for ii := 0; ii < argc; ii++ {
+				fmt.Printf("[%d] %q\n", ii, args.Get(ii))
+			}
+			return nil
+		}
+	}
+
+	create_ShowApps := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			fmt.Printf("%s\n", godebug.SVarI(cc.Em.ListApps()))
+			return nil
+		}
+	}
+
+	create_DelApps := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			app := ctx.String("app")
+			if !ChkEmpty(app, "--app NAME must be supplied") {
+				cc.Em.RemoveApp(app)
+			}
+			return nil
+		}
+	}
+
+	create_AddApps := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			app := ctx.String("app")
+			if !ChkEmpty(app, "--app NAME must be supplied") {
+				err := cc.Em.AddApp(app)
+				if err != nil {
+					fmt.Printf("Error: %s for adding app %s\n", err, app)
+				}
+			}
+			return nil
+		}
+	}
+
+	create_ShowTempl := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			app := ctx.String("app")
+			if !ChkEmpty(app, "--app NAME must be supplied") {
+				// func (el *EmailLib) ListTemplatesInApp(appName string) (rv []string, err error) {
+				name, err := cc.Em.ListTemplatesInApp(app)
+				if err != nil {
+					fmt.Printf("Error: %s for adding app %s\n", err, app)
+				} else {
+					fmt.Printf("%s\n", godebug.SVarI(name))
+				}
+			}
+			return nil
+		}
+	}
+
+	create_DelTempl := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			app := ctx.String("app")
+			tmpl := ctx.String("templ")
+			if !ChkEmpty(app, "--app NAME must be supplied") && !ChkEmpty(tmpl, "--tmpl NAME must be supplied") {
+				// func (el *EmailLib) RemoveTemplateFromApp(app, templateName, body string) (err error) {
+				err := cc.Em.RemoveTemplateFromApp(app, tmpl)
+				if err != nil {
+					fmt.Printf("Error: %s for adding app/templateName=%s/%s\n", err, app, tmpl)
+				}
+			}
+			return nil
+		}
+	}
+
+	create_AddTempl := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			app := ctx.String("app")
+			tmpl := ctx.String("templ")
+			file := ctx.String("file")
+			if !ChkEmpty(app, "--app NAME must be supplied") && !ChkEmpty(tmpl, "--tmpl NAME must be supplied") && !ChkEmpty(file, "--file NAME must be supplied") {
+				// func (el *EmailLib) AddTemplateToApp(app, templateName, body string) (err error) {
+				err := cc.Em.AddTemplateToApp(app, tmpl, file)
+				if err != nil {
+					fmt.Printf("Error: %s for adding app/templateName=%s/%s\n", err, app, tmpl)
+				}
+			}
+			return nil
+		}
+	}
+
+	buildMdata := func(ctx *cli.Context) (mdata map[string]string) {
+		argv := ctx.Args()
+		argc := ctx.NArg()
+		mdata = make(map[string]string)
+		for ii := 0; ii < argc; ii += 2 {
+			if ii+1 < argc {
+				mdata[argv[ii]] = argv[ii+1]
+			} else {
+				mdata[argv[ii]] = ""
+			}
+			// fmt.Printf("[%d] %q\n", ii, args.Get(ii))
+		}
+		return
+	}
+
+	create_Send1Email := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			app := ctx.String("app")
+			tmpl := ctx.String("tmpl")
+			to := ctx.String("to")
+
+			if ChkEmpty(app, "--app NAME must be supplied") {
+				cc.Errs++
+				ts := time.Now().Format(time.RFC3339)
+				fmt.Fprintf(os.Stderr, "Error: MissingAppName: %q %s, %s\n", app, ts, godebug.LF())
+				return nil
+			}
+			if ChkEmpty(tmpl, "--tmpl NAME must be supplied") {
+				cc.Errs++
+				ts := time.Now().Format(time.RFC3339)
+				fmt.Fprintf(os.Stderr, "Error: MissingTemplate: %q %s, %s\n", app, ts, godebug.LF())
+				return nil
+			}
+			if ChkEmpty(to, "--to NAME must be supplied") {
+				cc.Errs++
+				ts := time.Now().Format(time.RFC3339)
+				fmt.Fprintf(os.Stderr, "Error: MissingTo: %q %s, %s\n", app, ts, godebug.LF())
+				return nil
+			}
+
+			mdata := buildMdata(ctx)
+			// Process template with params, for to, Subject, from, body, html-body
+			// 		1. look into email-relay and see how processed
+			// 		2. rember to use default templates for errors
+			mdata["app"] = app
+			mdata["tmpl"] = tmpl
+			mdata["to"] = to
+
+			dSubject, dBodyHtml, dBodyText, err := cc.Em.TemplateEmail(mdata)
+			if err != nil {
+				cc.Errs++
+			} else {
+				err := cc.Em.SendEmailMessage(to, dSubject, dBodyHtml, dBodyText)
+				if err != nil {
+					cc.Errs++
+				} else {
+					cc.Sent++
+				}
+			}
+
+			return nil
+		}
+	}
+
+	create_SendEmailList := func() func(*cli.Context) error {
+		return func(ctx *cli.Context) error {
+			mdata := buildMdata(ctx)
+			_ = mdata
+
+			// xyzzy - implement
+
+			return nil
+		}
+	}
+
+	//
+	// CLI
+	// * -c/--cfg cfg.json
+	//
+	// * em show-apps
+	// ! em add-app
+	// ! em del-app
+	// ! em show-tmpl --app [name]
+	// ! em add-tmpl --app [name] --file [fn]
+	// ! em del-tmpl --app [name]
+	//
+	// ! em send --opts opts.json
+	// ! em send-list --list list.json
+	//
+
+	app.Commands = []cli.Command{
+		{
+			Name:   "echo",
+			Usage:  "echo test.",
+			Action: create_Echo(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "username, u",
+					Usage: "username or email to register",
+				},
+				cli.StringFlag{
+					Name:  "password, p",
+					Usage: "password for user",
+				},
+			},
+		},
+		{
+			Name:   "show-apps",
+			Usage:  "Show Apps that are Configured and Available.",
+			Action: create_ShowApps(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "unavail, u",
+					Usage: "Show apps that are not available",
+				},
+			},
+		},
+		{
+			Name:   "add-apps",
+			Usage:  "Add New Apps as Configured and Available.",
+			Action: create_AddApps(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "app, a",
+					Usage: "App Name to be added",
+				},
+			},
+		},
+		{
+			Name:   "del-apps",
+			Usage:  "Remove App - make it not available.",
+			Action: create_DelApps(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "app, a",
+					Usage: "App Name to be removed",
+				},
+			},
+		},
+		{
+			Name:   "show-tmpl",
+			Usage:  "Show Apps that are Configured and Available.",
+			Action: create_ShowTempl(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "app, a",
+					Usage: "App Name",
+				},
+			},
+		},
+		{
+			Name:   "add-tmpl",
+			Usage:  "Add New Apps as Configured and Available.",
+			Action: create_AddTempl(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "app, a",
+					Usage: "App Name",
+				},
+				cli.StringFlag{
+					Name:  "tmpl, t",
+					Usage: "Template Name",
+				},
+				cli.StringFlag{
+					Name:  "file, f",
+					Usage: "Template File",
+				},
+			},
+		},
+		{
+			Name:   "del-tmpl",
+			Usage:  "Remove App - make it not available.",
+			Action: create_DelTempl(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "app, a",
+					Usage: "App Name",
+				},
+				cli.StringFlag{
+					Name:  "tmpl, t",
+					Usage: "Template Name",
+				},
+				cli.StringFlag{
+					Name:  "file, f",
+					Usage: "Template File",
+				},
+			},
+		},
+		{
+			Name:   "send",
+			Usage:  "Send 1 Email.",
+			Action: create_Send1Email(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "app, a",
+					Usage: "App Name",
+				},
+				cli.StringFlag{
+					Name:  "to, t",
+					Usage: "to address",
+				},
+				cli.StringFlag{
+					Name:  "tmpl, T",
+					Usage: "template name",
+				},
+				cli.StringFlag{
+					Name:  "subject, s",
+					Usage: "subject for email",
+				},
+				// params to substitute are on CLI
+			},
+		},
+		{
+			Name:   "send-list",
+			Usage:  "Send Email to List.",
+			Action: create_SendEmailList(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file, f",
+					Usage: "Template File",
+				},
+			},
+		},
+	}
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "cfg, c",
+			Value:  "../cfg.json",
+			Usage:  "Global Configuration File.",
+			EnvVar: "APP_CFG_FILE",
+		},
+		cli.StringFlag{
+			Name:  "debug, D",
+			Value: "",
+			Usage: "Set debug flags [ show-feedback ]",
+		},
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func ChkEmpty(app string, errMsg string) bool {
+	if app == "" {
+		fmt.Printf("Error: %s\n", errMsg)
+		return true
+	}
+	return false
+}
+
+/* vim: set noai ts=4 sw=4: */

@@ -64,7 +64,6 @@ type Params struct {
 	search       map[string]int   // has to be allocated
 	search_ready bool             //
 	allParam     [MaxParams]Param // The parameters for the current operation
-	// parent       *MuxRouter     // // PJS Sun Nov 15 13:12:31 MST 2015
 }
 
 func InitParams(p *Params) {

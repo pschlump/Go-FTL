@@ -1,0 +1,39 @@
+{{define "filename"}}{{.seq}}-{{.timestamp}}.out{{end}}
+{{define "body"}}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+</head>
+<body>
+<pre>
+    
+    Debug Template
+    ==============
+    
+    templateFn: {{.templateFn}}
+    app:        {{.app}}
+    tmpl:       {{.tmpl}}
+    
+    to:         {{.to}}
+    toname:     {{.toname}}
+    from:       {{.from}}
+    fromname:   {{.fromname}}
+    subject:    {{.subject}}
+    bodyhtml:   {{.bodyhtml}}
+    bodytext:   {{.bodytext}}
+    p0:         {{.p0}}
+    p1:         {{.p1}}
+    p2:         {{.p2}}
+    p3:         {{.p3}}
+    p4:         {{.p4}}
+    p5:         {{.p5}}
+    p6:         {{.p6}}
+    p7:         {{.p7}}
+    p8:         {{.p8}}
+    p9:         {{.p9}}
+    
+</pre>
+</body>
+</html>
+{{end}}

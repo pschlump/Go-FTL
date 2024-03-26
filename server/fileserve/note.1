@@ -1,0 +1,126 @@
+xyzzyInit
+
+https://coolestguidesontheplanet.com/running-installing-sass-osx/ -- Setup for SASS SCSS
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+gob.AddPreRule([]PreRuleType{
+
+fs.go ----------------------------------------------------------------------------------------------------------------------------------------
+
+
+type UrlModifyFunc func(fcfg *FileServerType, www http.ResponseWriter, req *http.Request, urlIn string, g *FSConfig, rulNo int) (urlOut string, rootOut string, stat RuleStatus, err error)
+
+type InternalFuncType func(input, output string) (err error)
+
+type RuleStatus int
+
+const (
+	PreSuccess RuleStatus = iota // Use this result - it matched.
+	PreFail                      // Fail all results, return 404
+	PreNext                      // Do not use this, proceed to next, if no next then 404
+	PreReplace                   // Function  returns new root and or new name for file
+)
+
+type PreRuleType struct {
+	IfMatch       string        //
+	StripPrefix   string        //
+	UseRoot       string        //
+	StatusOnMatch RuleStatus    //
+	FxFlag        bool          //
+	Fx            UrlModifyFunc //			<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< function >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	MatchData     interface{}   //
+	IfFromSuffix  string        // From suffix .ts
+	IfToSuffix    []string      // To .js
+	CommandToRun  string        // typescript {{.f_base}}.ts
+	ReRun         bool          // if false(default) then check timestamps on input->output, else just run every time
+}
+
+//
+// Pre-Rules
+// Post-Rules
+// Data-Avail-Rules
+//
+type FSConfig struct {
+	Name                    string
+	IndexPage               []string // list of paths for IndexPage
+	MayShowDirectoryListing bool
+
+	// -----------------------------------------------------------------------------------------------------------
+	PreMangle bool // Process ULR before - this is like strip prefix
+	PreRule   []PreRuleType
+
+	// Logging Setup
+	// PostMangle      bool //
+	// LoggingEnabled  bool //
+	// DataAvailMangle bool //
+
+}
+
+
+
+
+
+
+fs_lib.go -----------------------------------------------------------------------------------------------------------------------------------
+
+type ExtProcessType struct {
+	ToExt        []string         //
+	FromExt      string           //
+	CommandToRun string           // typescript {{.f_base}}.ts
+	ReRun        bool             // if false(default) then check timestamps on input->output, else just run every time		-- xyzzy not implemented yet?
+	InternalFunc InternalFuncType // if true then if InternalFunc != nil, then call it.
+}
+
+var CommandLocationMap map[string]string
+var ExtProcessTable []*ExtProcessType
+
+
+
+
+
+
+
+
+
+-- done --
+
+// xyzzyInit - Convert names of functions into function pointers
+	var InternalFuncLookup map[string]InternalFuncTableType // xyzzyInit - Lookup of functions for ExtProcessType table
+
+//		"CommandLocationMapFileName":    { "type":[ "string" ], "default":"command_locaiton_map.json" },
+//		"ExtProcessTableFileName":       { "type":[ "string" ], "default":"ext_process_table.json" },
+
+//	CommandLocationMapFileName string
+//	ExtProcessTableFileName    string
+
+			// xyzzyInit - Remove this code
+			//		if hh.CommandLocationMapFileName != "" {
+			//			file, err := ioutil.ReadFile(hh.CommandLocationMapFileName)
+			//			if err != nil {
+			//				bufferhtml.G_Log.Warn(fmt.Sprintf("Error: Unable to open file %s for input, Line No:%d\n", hh.CommandLocationMapFileName, hh.LineNo))
+			//				return mid.ErrInternalError
+			//			}
+			//			err = json.Unmarshal(file, &CommandLocationMap)
+			//			if err != nil {
+			//				bufferhtml.G_Log.Warn(fmt.Sprintf("Error: Unable to JSON parse file %s for input, Line No:%d\n", hh.CommandLocationMapFileName, hh.LineNo))
+			//				return mid.ErrInternalError
+			//			}
+			//			hh.CommandLocationMap = CommandLocationMap
+			//		}
+			//		if hh.ExtProcessTableFileName != "" {
+			//			file, err := ioutil.ReadFile(hh.ExtProcessTableFileName)
+			//			if err != nil {
+			//				bufferhtml.G_Log.Warn(fmt.Sprintf("Error: Unable to open file %s for input, Line No:%d\n", hh.ExtProcessTableFileName, hh.LineNo))
+			//				return mid.ErrInternalError
+			//			}
+			//			err = json.Unmarshal(file, &ExtProcessTable) // xyzzy the config item
+			//			if err != nil {
+			//				bufferhtml.G_Log.Warn(fmt.Sprintf("Error: Unable to JSON parse file %s for input, Line No:%d\n", hh.ExtProcessTableFileName, hh.LineNo))
+			//				return mid.ErrInternalError
+			//			}
+			//			hh.ExtProcessTable = ExtProcessTable
+			//		}

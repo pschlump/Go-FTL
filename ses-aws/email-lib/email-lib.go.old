@@ -1,0 +1,564 @@
+package emaillib
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"html/template"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/pschlump/filelib"
+	"github.com/pschlump/godebug"
+	"github.com/pschlump/ms"
+)
+
+//	"github.com/aws/aws-sdk-go/aws"
+//	"github.com/aws/aws-sdk-go/aws/session"
+//	"github.com/aws/aws-sdk-go/service/ses"
+
+//
+// CLI
+// -c/--cfg cfg.json
+// -o/--opts opts.json -- hash with opts in it
+//
+// em show-apps
+// em add-app
+// em del-app
+// em show-tmpl --app [name]
+// em add-tmpl --app [name] --file [fn]
+// em del-tmpl --app [name]
+//
+// em valid --opts opts.json || --list list.json
+// em send --opts opts.json
+// em send-list --list list.json
+//
+
+type CfgType struct {
+	TemplateDir string   `json:"template_dir"`
+	ValidApps   []string `json:"valid_apps"`
+	DemoMode    string   `json:"demo_mode"`
+	DemoOutput  string   `json:"demo_file"`
+	Source      string   `json:"source"`
+	ReplyTo     string   `json:"reply_to"`
+	ReturnPath  string   `json:"return_path"`
+	AutoSave    string   `json:"auto_save"`
+}
+
+type EmailLib struct {
+	Cfg     CfgType
+	CfgFn   string
+	RawCfg  map[string]interface{} // raw config for pulling out environment variables
+	Apps    map[string][]string    // map of valid app-names to set of templates that each app has
+	Sess    *session.Session
+	Svc     *ses.SES
+	Debug   map[string]bool
+	DemoLog *os.File
+}
+
+// create new email object -
+func NewEmailLib() (rv *EmailLib) {
+	return &EmailLib{
+		Debug: make(map[string]bool),
+	}
+}
+
+// ReadCfg - read oncfig file - put config in email object
+func (el *EmailLib) ReadCfg(cfg string) {
+
+	el.CfgFn = cfg
+
+	// - read in file
+	var raw string
+	el.Cfg, raw = ReadCfg(cfg) // parse into RawCfg // parse into Cfg
+	if el.Debug["debug1"] {
+		fmt.Printf("after read : el.Cfg = %s, %s\n", godebug.SVarI(el.Cfg), godebug.LF())
+	}
+	el.RawCfg = make(map[string]interface{})
+	err := json.Unmarshal([]byte(raw), &el.RawCfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to parse %s for configuratin, error=%s\n", cfg, err)
+		os.Exit(1)
+	}
+
+	el.Apps = make(map[string][]string)
+	for _, app := range el.Cfg.ValidApps {
+		el.Apps[app] = make([]string, 0, 10)
+	}
+
+	// for-all "AWS_" keys - export into environment
+	for name, value := range el.RawCfg {
+		if len(name) > 4 && name[0:4] == "AWS_" {
+			if s, ok := value.(string); ok {
+				err := SetEnvVar(name, s)
+				if err != nil {
+					fmt.Printf("Error: %s - setting envirnment varilable %s to value %s\n", name, s)
+				}
+			}
+		}
+	}
+
+	// read in list of templates for each app.
+	for _, app := range el.Cfg.ValidApps {
+		dir := el.Cfg.TemplateDir + "/" + app
+		// fmt.Printf("direcotry with templates [%s]\n", dir)
+		fns, _ := GetFilenames(dir)
+		// fmt.Printf("list of fiels [%s]\n", godebug.SVar(fns))
+		for _, fn := range fns {
+
+			// noExt := RmExt(fn)
+			// el.Apps[app] = append(el.Apps[app], dir+"/"+noExt)
+
+			noExt := fn
+			el.Apps[app] = append(el.Apps[app], noExt)
+		}
+	}
+
+	//	// Create an EC2 service object in the "us-west-2" region
+	//	// Note that you can also configure your region globally by
+	//	// exporting the AWS_REGION environment variable
+	//	svc := ec2.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+	//
+	//	// Call the DescribeInstances Operation
+	//	resp, err := svc.DescribeInstances(nil)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	// resp has all of the response data, pull out instance IDs:
+	//	fmt.Println("> Number of reservation sets: ", len(resp.Reservations))
+	//	for idx, res := range resp.Reservations {
+	//		fmt.Println("  > Number of instances: ", len(res.Instances))
+	//		for _, inst := range resp.Reservations[idx].Instances {
+	//			fmt.Println("    - Instance ID: ", *inst.InstanceId)
+	//		}
+	//	}
+	//}
+
+	el.Sess, err = session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		return
+	}
+
+	el.Svc = ses.New(el.Sess)
+
+}
+
+func (el *EmailLib) IsValidApp(app string) (ok bool) {
+	_, ok = el.Apps[app]
+	return
+}
+
+// SetTemplateDir set apps/template directory to a new directory - Information is re-read, config on disk is not updated.
+func (el *EmailLib) SetTemplateDir(cfg string) (err error) {
+	// update template dir
+	el.Cfg.TemplateDir = cfg
+	// Xyzzy - check exists
+	// Xyzzy - check for valid apps
+	el.SyncWithDisk() // read in template names -- el.SyncWithDisk()
+	// el.SaveToDisk()   // write out the change config
+	return
+}
+
+// GetTemplateDir return the apps/template directory name.
+func (el *EmailLib) GetTemplateDir() string {
+	return el.Cfg.TemplateDir
+}
+
+// ListApps returns a list apps that are valid
+func (el *EmailLib) ListApps() (rv []string) {
+	return el.Cfg.ValidApps
+	//rv = make([]string, 0, len(el.Apps))
+	//for name := range el.Cfg.ValidApps {
+	//	rv = append(rv, name)
+	//}
+	return
+}
+
+// ListTemplateInApp return a list of the templates that are available in an app.  May not be synced with disk if you delete
+// a template after starting.  To resyncronize call el.SyncWithDisk()
+func (el *EmailLib) ListTemplatesInApp(appName string) (rv []string, err error) {
+	if list, ok := el.Apps[appName]; ok {
+		rv = list
+		return
+	}
+	err = fmt.Errorf("Error: invalid app name, not defined or not valid (%s)", appName)
+	return
+}
+
+// add app 1) Add new app in conifg, if directory is missing create it.
+func (el *EmailLib) AddApp(app string) (err error) {
+	if _, ok := el.Apps[app]; !ok {
+		el.Apps[app] = make([]string, 0, 10)
+	}
+	el.Cfg.ValidApps = append(el.Cfg.ValidApps, app)
+	if !filelib.Exists(el.Cfg.TemplateDir) {
+		os.Mkdir(el.Cfg.TemplateDir, 0700)
+	}
+	if !filelib.Exists(el.Cfg.TemplateDir + "/" + app) {
+		err = os.Mkdir(el.Cfg.TemplateDir+"/"+app, 0700) // if direcotry is missing el.Cfg.TemplateDir/app - then create it
+	}
+	if el.Cfg.AutoSave == "y" {
+		el.SaveToDisk()
+	}
+	return
+}
+
+// remove app 1) Remove name from in-meory config.  SaveToDisk to update config on disk.
+func (el *EmailLib) RemoveApp(app string) {
+	if _, ok := el.Apps[app]; ok {
+		delete(el.Apps, app)
+	}
+	t := make([]string, 0, len(el.Cfg.ValidApps))
+	for _, a := range el.Cfg.ValidApps {
+		if a != app {
+			t = append(t, a)
+		}
+	}
+	el.Cfg.ValidApps = t
+	//if filelib.Exists(el.Cfg.TemplateDir + "/" + app) {
+	// 	os.Rmdir(el.Cfg.TemplateDir)
+	//}
+	if el.Cfg.AutoSave == "y" {
+		el.SaveToDisk()
+	}
+}
+
+// xyzzy - add rename app, rename template
+
+// validate app -- check that directory exists, if not create it.  Re-Read the ../cfg.json, update it, save it with SVarI
+func (el *EmailLib) ValidateApp(app, templateName string) (err error) {
+	for name := range el.Apps {
+		err = os.Mkdir(el.Cfg.TemplateDir+"/"+name, 0700) // if direcotry is missing el.Cfg.TemplateDir/app - then create it
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+// add template to app -- 1) Open file, write it, add name in in config.
+func (el *EmailLib) AddTemplateToApp(app, templateName, body string) (err error) {
+	if _, ok := el.Apps[app]; !ok {
+		el.Apps[app] = make([]string, 0, 10)
+	}
+	el.Apps[app] = append(el.Apps[app], templateName)
+	os.Mkdir(el.Cfg.TemplateDir+"/"+app, 0700) // if direcotry is missing el.Cfg.TemplateDir/app - then create it
+	err = ioutil.WriteFile(el.Cfg.TemplateDir+"/"+app+"/"+templateName, []byte(body), 0600)
+	return
+}
+
+// remove template from app -- Remove template file, remove from in memory config
+func (el *EmailLib) RemoveTemplateFromApp(app, templateName string) (err error) {
+	if aa, ok := el.Apps[app]; ok {
+		for ii, templateName := range aa {
+			os.Remove(el.Cfg.TemplateDir + "/" + app + "/" + templateName)
+			el.Apps[app][ii] = "" // mark as removed
+		}
+	}
+	return
+}
+
+var templateError1 = errors.New("Invalid App")
+
+func (el *EmailLib) TemplateEmail(mdata map[string]string) (dSubject, dBodyHtml, dBodyText string, err error) {
+
+	app := mdata["app"]
+	tmpl := mdata["tmpl"]
+	// to := mdata["to"]
+
+	//			mdata["to"] = dToName
+	//			mdata["from"] = dFrom
+	//			mdata["subject"] = dSubject
+	//			mdata["bodyhtml"] = dBodyHtml
+	//			mdata["bodytext"] = dBodyText
+	//			mdata["p0"] = dP0
+	//			mdata["p1"] = dP1
+	//			mdata["p2"] = dP2
+	//			mdata["p3"] = dP3
+	//			mdata["p4"] = dP4
+	//			mdata["p5"] = dP5
+	//			mdata["p6"] = dP6
+	//			mdata["p7"] = dP7
+	//			mdata["p8"] = dP8
+	//			mdata["p9"] = dP9
+	for _, name := range []string{"p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9"} {
+		if _, ok := mdata[name]; !ok {
+			mdata[name] = ""
+		}
+	}
+	if _, ok := mdata["from"]; !ok {
+		mdata["from"] = "pschlump@gmail.com"
+	}
+	if _, ok := mdata["subject"]; !ok {
+		mdata["subject"] = "An Email From: pschlump@gmail.com"
+	}
+	bText, ok1 := mdata["bodytext"]
+	if _, ok := mdata["bodyhtml"]; !ok && ok1 {
+		mdata["bodyhtml"] = "<pre>" + bText + "</pre>"
+	}
+
+	if !el.IsValidApp(app) {
+		ts := time.Now().Format(time.RFC3339)
+		fmt.Fprintf(os.Stderr, "Error: InvalidApp: %q %s\n", app, ts)
+		err = templateError1
+		return
+	}
+
+	TemplateFn := filepath.Clean(el.Cfg.TemplateDir + filepath.Clean("/"+app+"/"+tmpl))
+
+	mdata["failed_to_find_template"] = ""
+	if !filelib.Exists(TemplateFn) {
+		ts := time.Now().Format(time.RFC3339)
+		fmt.Fprintf(os.Stderr, "Error: MissingTemplate: %q %s\n", TemplateFn, ts)
+		mdata["failed_to_find_template"] = TemplateFn
+		TemplateFn = "./debug.tmpl"
+	}
+
+	mdata["templateFn"] = TemplateFn
+
+	dSubject = RunTemplate(TemplateFn, "subject", mdata)
+	dBodyHtml = RunTemplate(TemplateFn, "body_html", mdata)
+	dBodyText = RunTemplate(TemplateFn, "body_text", mdata)
+	return
+
+}
+
+// xyzzy - send email -- -- formatted message send --
+//	1. Params for email
+//	2. Check params v.s. template needs
+//	3. Run template
+//	4. Validate "from" address as valid
+//	5. use SES to send it (if not in "demo" mode)
+//	6. Get back results (if not in "demo" mode)
+//	7. Log results
+//	8. If in demo mode -then- print email to results.txt file
+//
+func (el *EmailLib) SendEmailMessage(to, sub, bodyH, bodyT string) (err error) {
+
+	params := &ses.SendEmailInput{
+		Destination: &ses.Destination{
+			ToAddresses: []*string{
+				// aws.String("pschlump@gmail.com"),
+				aws.String(to),
+			},
+		},
+		Message: &ses.Message{
+			Subject: &ses.Content{
+				// Data: aws.String("Test 02 MessageData"),
+				Data: aws.String(sub),
+			},
+			Body: &ses.Body{
+				Html: &ses.Content{
+					// Data: aws.String("Yep 2 MessageData"),
+					Data: aws.String(bodyH),
+				},
+				Text: &ses.Content{
+					// Data: aws.String("Yep  2MessageData"),
+					Data: aws.String(bodyT),
+				},
+			},
+		},
+		Source: aws.String(el.Cfg.Source), // "pschlump@gmail.com"),
+		ReplyToAddresses: []*string{
+			aws.String(el.Cfg.ReplyTo), // "pschlump@gmail.com"),
+		},
+		ReturnPath: aws.String(el.Cfg.ReturnPath), // "pschlump@gmail.com"),
+		// ReturnPathArn: aws.String("AmazonResourceName"),
+		// SourceArn:     aws.String("AmazonResourceName"),
+	}
+
+	if el.Cfg.DemoMode != "y" {
+
+		// xyzzy - log the resultant email
+
+		resp, e0 := el.Svc.SendEmail(params)
+
+		if e0 != nil {
+			err = e0
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+
+		fmt.Println(resp)
+
+	} else {
+
+		if el.DemoLog == nil {
+			fp, err := Fopen(el.Cfg.DemoOutput, "a")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Fatal: Unable to pen %s for append, err=%s\n", el.Cfg.DemoOutput, err)
+				os.Exit(1)
+			}
+			el.DemoLog = fp
+		}
+
+		fmt.Fprintf(el.DemoLog, "Success: Not sent - in demo mode\n")
+		fmt.Fprintf(el.DemoLog, "======================================================================================\n")
+		fmt.Fprintf(el.DemoLog, "To: %s\n", to)
+		fmt.Fprintf(el.DemoLog, "Subject: %s\n", sub)
+		fmt.Fprintf(el.DemoLog, "HTML: %s\n", bodyH)
+		fmt.Fprintf(el.DemoLog, "Text: %s\n", bodyT)
+		fmt.Fprintf(el.DemoLog, "\n\n\n")
+
+	}
+
+	return
+}
+
+// SetEnvVar -- Set environment variable.
+func SetEnvVar(name, value string) (err error) {
+	err = os.Setenv(name, value)
+	return
+}
+
+// Xyzzy - To resyncronize call el.SyncWithDisk()
+func ReadCfg(fn string) (cfg CfgType, raw string) {
+	buf, err := ioutil.ReadFile(fn)
+	if err == nil {
+		raw = string(buf)
+		err = json.Unmarshal(buf, &cfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to parse %s for configuratin, error=%s\n", fn, err)
+			os.Exit(1)
+		}
+	}
+	return
+}
+
+// SyncWithDisk assumes that the version of data on dis is authorative and re-reads it.
+// If in-memory is authorative then a SaveToDisk() should be called instead.
+func (el *EmailLib) SyncWithDisk() {
+	// Xyzzy - implement.
+}
+
+// SaveToDisk takes copy of update info in memory and saves it to config file on disk.
+func (el *EmailLib) SaveToDisk() {
+	s := godebug.SVar(el.Cfg)
+	json.Unmarshal([]byte(s), &el.RawCfg)
+	s = godebug.SVarI(el.RawCfg)
+	ioutil.WriteFile(el.CfgFn, []byte(s), 0600)
+}
+
+// GetFilenames returns a list of filenames and directorys.
+func GetFilenames(dir string) (filenames, dirs []string) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, nil
+	}
+	for _, fstat := range files {
+		if !strings.HasPrefix(string(fstat.Name()), ".") {
+			if fstat.IsDir() {
+				dirs = append(dirs, fstat.Name())
+			} else {
+				filenames = append(filenames, fstat.Name())
+			}
+		}
+	}
+	return
+}
+
+func RmExt(filename string) string {
+	var extension = filepath.Ext(filename)
+	var name = filename[0 : len(filename)-len(extension)]
+	return name
+}
+
+var invalidMode = errors.New("Invalid Mode")
+
+func Fopen(fn string, mode string) (file *os.File, err error) {
+	file = nil
+	if mode == "r" {
+		file, err = os.Open(fn) // For read access.
+	} else if mode == "w" {
+		file, err = os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	} else if mode == "a" {
+		file, err = os.OpenFile(fn, os.O_RDWR|os.O_APPEND, 0660)
+		if err != nil {
+			file, err = os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		}
+	} else {
+		err = invalidMode
+	}
+	return
+}
+
+// ===================================================================================================================================================
+// Run a template and get the results back as a stirng.
+// Sample - used below.
+//func ExecuteATemplate(tmpl string, data map[string]interface{}) string {
+//	t := template.New("line-template")
+//	t, err := t.Parse(tmpl)
+//	if err != nil {
+//		fmt.Printf("Error(): Invalid template: %s\n", err)
+//		return tmpl
+//	}
+//
+//	// Create an io.Writer to write to a string
+//	var b bytes.Buffer
+//	foo := bufio.NewWriter(&b)
+//	err = t.ExecuteTemplate(foo, "line-template", data)
+//	if err != nil {
+//		fmt.Printf("Error(): Invalid template processing: %s\n", err)
+//		return tmpl
+//	}
+//	foo.Flush()
+//	s := b.String() // Fetch the data back from the buffer
+//	return s
+//}
+
+// ===================================================================================================================================================
+// Run a template and get the results back as a stirng.
+// This is the primary template runner for sending email.
+func RunTemplate(TemplateFn string, name_of string, g_data map[string]string) string {
+
+	rtFuncMap := template.FuncMap{
+		"Center":      ms.CenterStr,   //
+		"PadR":        ms.PadOnRight,  //
+		"PadL":        ms.PadOnLeft,   //
+		"PicTime":     ms.PicTime,     //
+		"FTime":       ms.StrFTime,    //
+		"PicFloat":    ms.PicFloat,    //
+		"nvl":         ms.Nvl,         //
+		"Concat":      ms.Concat,      //
+		"title":       strings.Title,  // The name "title" is what the function will be called in the template text.
+		"ifDef":       ms.IfDef,       //
+		"ifIsDef":     ms.IfIsDef,     //
+		"ifIsNotNull": ms.IfIsNotNull, //
+	}
+
+	var b bytes.Buffer
+	foo := bufio.NewWriter(&b)
+
+	t, err := template.New("simple-tempalte").Funcs(rtFuncMap).ParseFiles(TemplateFn)
+	// t, err := template.New("simple-tempalte").ParseFiles(TemplateFn)
+	if err != nil {
+		fmt.Printf("Error(12004): parsing/reading template, %s\n", err)
+		return ""
+	}
+
+	err = t.ExecuteTemplate(foo, name_of, g_data)
+	if err != nil {
+		fmt.Fprintf(foo, "Error(12005): running template=%s, %s\n", name_of, err)
+		return ""
+	}
+
+	foo.Flush()
+	s := b.String() // Fetch the data back from the buffer
+
+	fmt.Fprintf(os.Stderr, "Template Output is: ----->%s<-----\n", s)
+
+	return s
+
+}
+
+/* vim: set noai ts=4 sw=4: */

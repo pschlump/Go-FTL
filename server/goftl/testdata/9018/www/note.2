@@ -1,0 +1,30 @@
+
+//func (hdlr *DocImageProcType) redisGetCustomerId(www http.ResponseWriter, rw *goftlmux.MidBuffer, req *http.Request) (customer_id string) {
+//
+//	key := hdlr.RedisPrefix + req.Host
+//
+//	if db4 {
+//		fmt.Printf("redisGetCustomerId: %s key= [%s], %s\n", godebug.LF(), key, godebug.LF())
+//	}
+//
+//	conn, err := hdlr.gCfg.RedisPool.Get()
+//	defer hdlr.gCfg.RedisPool.Put(conn)
+//	if err != nil {
+//		logrus.Warn(fmt.Sprintf(`{"msg":"Error %s Unable to get redis pooled connection.","LineFile":%q}`+"\n", err, godebug.LF()))
+//		return "1"
+//	}
+//
+//	v, err := conn.Cmd("GET", key).Str()
+//	if err != nil {
+//		if db4 {
+//			fmt.Printf("Error on redis - user not found - invalid host - bad prefix - get(%s): host[%s] redisPrefix[%s] %s, %s\n", key, req.Host, hdlr.RedisPrefix, err, godebug.LF())
+//		}
+//		return "1"
+//	}
+//
+//	customer_id = v
+//	return
+//
+//}
+
+// const db4 = true

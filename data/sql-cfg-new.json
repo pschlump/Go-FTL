@@ -1,0 +1,96 @@
+	,"/api/registerEmail": { "g": "reg_email_list", "p": [ "to_addr", "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_email_list"]
+		, "valid": {
+			 "to_addr": 	{ "required":true, "type":"string", "max_len":400, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/deRegisterEmail": { "g": "dereg_email_list", "p": [ "to_addr", "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_email_list"]
+		, "valid": {
+			 "to_addr": 	{ "required":true, "type":"string", "max_len":400, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/confirmEmailList": { "g": "dereg_email_list", "p": [ "to_addr", "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_email_list"]
+		, "valid": {
+			 "to_addr": 	{ "required":true, "type":"string", "max_len":400, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/serverVersion": { "g": "server_version", "p": [ "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_version"]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/grabFeedback": { "g": "log_info", "p": [ "info", "$url$", "body", "$method$", "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_log_info"]
+		, "valid": {
+			 "info": 		{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"$url$":		{ "required":true, "type":"string" }
+			,"body": 		{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"$method$": 	{ "required":true, "type":"string", "max_len":10, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/logit": { "g": "log_info", "p": [ "info", "$url$", "body", "$METHOD$", "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_log_info"]
+		, "valid": {
+			 "info": 		{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"$url$":		{ "required":true, "type":"string" }
+			,"body": 		{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"$method$": 	{ "required":true, "type":"string", "max_len":10, "min_len":2 }
+			,"$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/saveEmailMessage": { "g": "save_email_in_db", "p": [ "email_group", "person_name", "email_addr", "message_body", "$ip$" ]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":["t_email_tab"]
+		, "valid": {
+			 "email_group": 	{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"person_name": 	{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"email_addr": 		{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"message_body": 	{ "required":true, "type":"string", "max_len":2000, "min_len":2 }
+			,"$ip$": 			{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/setup_test3": { "g": "setup_test3", "p": [ "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":[ "t_email_list", "t_log_info", "t_email_tab" ]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}
+	,"/api/sync_marker": { "g": "sync_marker_update", "p": [ "$ip$"]
+		, "LoginRequired":false
+		, "LineNo":"Line: __LINE__ File: __FILE__"
+		, "Method":["GET","POST"]
+		, "TableList":[ "t_sync_marker" ]
+		, "valid": {
+			 "$ip$": 		{ "required":true, "type":"string", "max_len":40, "min_len":4 }
+			}
+		}

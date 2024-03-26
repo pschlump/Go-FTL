@@ -1,0 +1,9 @@
+{{define "search-docs-library"}}
+<div>
+<ul>
+{{range $key, $value := .}}	
+	<li> <a http="#" onClick="menuTo('{{$value.link}}')"> <span class="search-title">{{$value.title}}</span></a> <br> {{$value.desc}} </li>
+{{end}}
+</ul>
+</div>
+{{end}}

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Pet</title>
+
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/font-awesome.min.css">
+<link rel="stylesheet" href="css/animate.css">
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/modernizr.custom.js"></script>
+
+<style>
+/* PJS New -------------------------------------- */
+.circular {
+	width: 300px;
+	height: 300px;
+	border-radius: 150px;
+	-webkit-border-radius: 150px;
+	-moz-border-radius: 150px;
+	background: url(../img/dsc_092_0455-edit1-crop300x300.jpg) no-repeat;
+	box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 8px rgba(0, 0, 0, .8);	
+	}
+.circular img {
+	opacity: 0;
+	filter: alpha(opacity=0);
+	}
+
+/* <div class="circular2"><img src="img/dsc_0051-2395-chantelle-195x195-crop-clr.jpg"></div> */
+.circular2 {
+	width: 185px;
+	height: 185px;
+	border-radius: 96px;
+	-webkit-border-radius: 96px;
+	-moz-border-radius: 96px;
+	background: url(../img/dsc_0051-2395-chantelle-195x195-crop-clr.jpg) no-repeat;
+	box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 8px rgba(0, 0, 0, .8);	
+	}
+.circular2 img {
+	-x-opacity: 0;
+	-x-filter: alpha(opacity=0);
+	}
+
+/* dsc-17400-0010-falcon-on-fence-250x250.jpg */
+.circular3 {
+	width: 248px;
+	height: 248px;
+	border-radius: 125px;
+	-webkit-border-radius: 125px;
+	-moz-border-radius: 125px;
+	background: url(../img/dsc-17400-0010-falcon-on-fence-250x250.jpg) no-repeat;
+	box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 8px rgba(0, 0, 0, .8);	
+	}
+.circular3 img {
+	opacity: 0;
+	filter: alpha(opacity=0);
+	}
+
+.circular4 {
+	width: 248px;
+	height: 248px;
+	border-radius: 125px;
+	-webkit-border-radius: 125px;
+	-moz-border-radius: 125px;
+	background: url(../img/port-round-square-250x250.png) no-repeat;
+	box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 8px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 8px rgba(0, 0, 0, .8);	
+	}
+.circular4 img {
+	opacity: 0;
+	filter: alpha(opacity=0);
+	}
+
+#team div img {
+    width: 200px;
+    margin-bottom: 20px;
+    position: relative;
+    display: block;
+    margin: 0px auto;
+	border-radius: 50%;
+}
+
+</style>
+</head>
+<body>
+
+    <a href="#header" id="at-top" class="top"><i class="fa fa-chevron-up"></i></a>
+
+    <section id="header" class="header">
+        <div class="top-menu">
+            <div class="container">
+                <div class="navigation" id="navigation-scroll">
+                        <div class="row">
+                            <div class="col-md-11 col-xs-10">
+                                <a href="index.html"><span id="logo">PetScape</span></a>
+                            </div>
+                            <div class="col-md-1 col-xs-2">
+                                <p class="nav-button">
+                                    <button id="trigger-overlay" type="button">
+                                    <i class="fa fa-bars"></i>
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <div class="container">
+            <div class="starting">
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="img/Dog.svg" alt="Pet" class="flipInY animated animated">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="banner-text">
+                            <h2 class="animation-box bounceIn animated"><strong class="strong">One Set Of Records</strong><br>
+                            for all your pet's needs</h2>
+                            <p>
+                                Track all of your pets veterinary and other records.  When you move all of your pet's 
+								records move with you.   Better records means better care.
+                            </p>
+							<!--
+                            <a href="#" class="btn btn-download animated fadeInLeft">
+                            <i class="fa fa-android pull-left"></i>
+                            <strong>Get it on</strong>
+                            <br/>Google Play </a>
+                            <a href="#" class="btn btn-download animated fadeInRight">
+                            <i class="fa fa-apple pull-left"></i>
+                            <strong>Get it on</strong>
+                            <br/>App store </a>   
+							-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="bigfeatures" class="img-block-3col wrapper">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <ul class="item-list-right item-list-big">
+                        <li class="fadeInLeft animated"> <i class="fa fa-film"></i> 
+                            <h3>Responsive design</h3>
+                            <p>Your project looks great on any device. Content can be easily read and a user understands freely what you wanted.</p>
+                        </li>
+                        <li class="fadeInLeft animated"> <i class="fa fa-bolt"></i> 
+                            <h3>6 Color schemes</h3>
+                            <p>The set of ready made CSS files with different color schemes will help you in quick landing’s adaptation according to your benchmark style.</p>
+                        </li>
+                        <li class="fadeInLeft animated"> <i class="fa fa-heart"></i> 
+                            <h3>PSD Is Included </h3>
+                            <p>The graphic source file in PSD format is included in the archive.</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-sm-4 col-sm-push-4">
+                    <ul class="item-list-left item-list-big">
+                        <li class="fadeInRight animated"> <i class="fa fa-life-ring"></i>
+                            <h3>Well Documentation</h3>
+                            <p>LUCY is shipped with well documented moduler codes. Meaningfull Comments in code will help you to customize it easily.</p>
+                        </li>
+                        <li class="fadeInRight animated"> <i class="fa fa-lock"></i>
+                            <h3>Easily Customizable</h3>
+                            <p>LUCY is easy to customize. No heavy coding is required to customize it with your real contents.</p>
+                        </li>
+                        <li class="fadeInRight animated"> <i class="fa fa-star"></i>
+                            <h3>Future Support</h3>
+                            <p>We will update LUCY and fix bugs if you found one for a long time.</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-sm-4 col-sm-pull-4 text-center">
+                    <div class="animation-box bounceIn animated">
+                        <img class="highlight-left animated" src="img/spark.png" height="192" width="48" alt=""> 
+                        <img class="highlight-right animated" src="img/spark.png" height="192" width="48" alt="">
+                        <img class="screen" src="img/front.png" alt="" height="581" width="300">
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </section>
+
+<!--
+	1. lock == keep records safe
+	2. archive == records kept safe for all time
+	3. asterisk == available when you need them
+	4. bolt == send documents via e-mail to ...
+	5. certificate == authenticity of records are verifiable correct
+	6. 
+-->
+
+    <div id="speciality" class="wrapper">
+        <div class="container">
+            <h2 class="animation-box bounceIn animated">SPECIALITY</h2>
+            <div class="virticle-line"></div>
+            <div class="circle"></div>
+            <div class="row">
+                <div class="col-sm-4 animated fadeInLeft">
+                    <div class="special-icon">
+                        <i class="fa fa-rocket"></i>
+                    </div>
+                    <h3>Free App</h3>
+                    <p>
+                        Your project looks great on any device. Content can be easily read and a user understands freely.
+                    </p>
+                </div>
+                <div class="col-sm-4 animation-box bounceIn animated">
+                    <div class="special-icon">
+                        <i class="fa fa-usd"></i>
+                    </div>
+                    <h3>In App Purchases</h3>
+                    <p>
+                        Your project looks great on any device. Content can be easily read and a user understands freely.
+                    </p>
+                </div>
+                <div class="col-sm-4 animated fadeInRight">
+                    <div class="special-icon">
+                        <i class="fa fa-cogs"></i>
+                    </div>
+                    <h3>Easy to UseP</h3>
+                    <p>
+                        Your project looks great on any device. Content can be easily read and a user understands freely.
+                    </p>
+                </div>
+            </div>
+        </div> 
+    </div> 
+
+    <section id="features" class="wrapper features">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-sm-6 animated fadeInLeft">
+                    <img src="img/mb2.png" alt="" class="pull-right left-img">
+                </div>
+                <div class="col-md-6 col-sm-6 animated fadeInRight">
+                    <div class="features-list">
+                        <h3>FREE FEATURES</h3>
+                        <p>
+                            Your project looks great on any device. Content can be easily read and a user understands freely what you wanted.
+                        </p>
+                        <ul class="right">
+                            <li class="li"><i class="fa fa-chevron-right"></i> Photo Filters x 15</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> Photo Frames x 3</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> Time Lapse</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> Photo Editor</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> Photo Gallery</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> Touch to Focus</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> White Balance</li>
+                            <li class="li"><i class="fa fa-chevron-right"></i> ISO Levels</li>
+                        </ul>
+                    </div> 
+                </div>
+            </div> 
+            <div class="row">
+                <div class="col-md-6 col-sm-6 animated fadeInLeft">
+                    <div class="features-list-left">
+                        <h3>PREMIUM FEATURES</h3>
+                        <p>
+                            Your project looks great on any device. Content can be easily read and a user understands freely what you wanted.
+                        </p>
+                        <ul class="left">
+                            <li class="li">Photo Filters x 15 <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">Photo Frames x 3 <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">Time Lapse <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">Photo Editor <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">Photo Gallery <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">Touch to Focus <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">White Balance <i class="fa fa-chevron-left"></i></li>
+                            <li class="li">ISO Levels <i class="fa fa-chevron-left"></i></li>
+                        </ul>
+                    </div> <!-- .features-list -->
+                </div>
+                <div class="col-md-6 col-sm-6 animated fadeInRight">
+                    <img src="img/mb2v.png" alt="" class="pull-left right-img">
+                </div>
+            </div> 
+        </div> 
+    </section>
+
+    <div id="team" class="wrapper">
+        <div class="container-fluid">
+            <h2 class="animation-box bounceIn animated">Team</h2>
+            <div class="virticle-line"></div>
+            <div class="circle"></div>
+            <div class="row">
+                <div class="col-md-2 col-sm-4 col-md-offset-4 animated fadeInLeft">
+                    <img src="img/Erin_pic1_c1.jpg" alt="CEO/President">
+                    <h3>Erin Nelson </H3>
+                    <p>CEO/President</p>
+                </div>
+                <div class="col-md-2 col-sm-4 animation-box bounceIn animated">
+                    <img src="img/philip_img_1580_c2.jpg" alt="CTO">
+                    <h3>Philip Schlump</h3>
+                    <p>CTO</p>
+                </div>
+            </div>
+        </div> 
+    </div> 
+
+    <section id="pricing" class="wrapper">
+        <div class="banner-overlay bg-color-grad"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-offset-2 col-md-8">
+                    <ul class="pricing-table">
+                        <li class="flipInY animated animated" style="visibility: visible;">
+                            <h3>Standard</h3>
+                            <span> $2.99 <small>per month</small> </span>
+                            <ul class="benefits-list">
+                                <li>Responsive</li>
+                                <li>Documentation</li>
+                                <li class="not">Multiplatform</li>
+                                <li class="not">Video background</li>
+                                <li class="not">Support</li>
+                            </ul>
+                            <a href="#" target="_blank" class="buy"><i class="fa fa-shopping-cart"></i></a>
+                        </li>
+                        <li class="gold flipInY animated animated" style="visibility: visible; -webkit-animation-delay: 0.4s;">
+                            <div class="stamp"><i class="fa fa-star-o"></i>Best choice</div>
+                            <h3>Gold</h3>
+                            <span> $7.99 <small>per month</small> </span>
+                            <ul class="benefits-list">
+                                <li>Responsive</li>
+                                <li>Documentation</li>
+                                <li>Multiplatform</li>
+                                <li>Video background</li>
+                                <li>Support</li>
+                            </ul>
+                            <a href="#" target="_blank" class="buy"> <i class="fa fa-shopping-cart"></i></a>
+                        </li>
+                        <li class="silver flipInY animated animated" style="visibility: visible; -webkit-animation-delay: 0.2s;">
+                            <h3>Sliver</h3>
+                            <span> $4.99 <small>per month</small> </span>
+                            <ul class="benefits-list">
+                                <li>Responsive</li>
+                                <li>Documentation</li>
+                                <li>Multiplatform</li>
+                                <li class="not">Video background</li>
+                                <li class="not">Support</li>
+                            </ul> 
+                            <a href="#" target="_blank" class="buy"> <i class="fa fa-shopping-cart"></i></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="contact" class="wrapper">
+        <div  class="container">
+            <div class="row">
+                <div class="col-md-3 contact-item col-sm-6 col-xs-12 animated fadeInLeft">
+                    <i class="fa fa-map-marker"></i>
+                    <h3>Address</h3>
+                    <p class="contact">
+                        Lamabazar, 353 <br>
+                        Monuntain View, USA
+                    </p>
+                </div>
+                <div class="col-md-3 contact-item col-sm-6 col-xs-12 animated fadeInLeft">
+                    <i class="fa fa-phone"></i>
+                    <h3>Phone</h3>
+                    <p class="contact">
+                        Local: 1-200-123-hello <br>
+                        Mobile: 2-800-123-hello
+                    </p>
+                </div>
+                <div class="col-md-3 contact-item col-sm-6 col-xs-12 animated fadeInRight">
+                    <i class="fa fa-print"></i>
+                    <h3>Fax</h3>
+                    <p class="contact">
+                        Office: 2148-287-8300 <br>
+                        Home: 2528-782-8200
+                    </p>
+                </div>
+                <div class="col-md-3 contact-item col-sm-6 col-xs-12 animated fadeInRight">
+                    <i class="fa fa-envelope"></i>
+                    <h3>Email Address</h3>
+                    <p class="contact">
+                        <a href="mailto:info@themewagon.com">info@themewagon.com</a> <br>
+                        <a href="www.themewagon.com">www.themewagon.com</a>
+                    </p>
+                </div>
+            </div>
+			<form class="is-form row form wrapper" id="form01" method="POST" action="http://localhost:9001/api/table/pet_save_data?api_table_key=xyzzy">
+                <h3>Leave A Message</h3>
+				<input type="hidden" name="website-group" value="pet" />
+				<div class="col-sm-4 col-xs-12 form-group">
+					<label class="sr-only">Name</label>
+					<input name="name" class="form-control" type="text" placeholder="First Name">
+				</div> 
+				<div class="col-sm-4 col-xs-12 form-group">
+					<label class="sr-only">Email</label>
+					<input name="email" class="form-control" type="email" placeholder="Email address">
+				</div> 
+				<div class="row">
+					<div class="col-md-12 col-xs-12 form-group">
+						<label class="sr-only">Optional Message</label>
+						<textarea class="message form-control" placeholder="Write message"></textarea>
+					</div> 
+					<input class="btn btn-sub" type="submit" value="Join Us">
+				</div>
+            </form> 
+        </div> 
+    </section> 
+
+    <section id="footer" class="wrapper">
+        <div class="container text-center">
+            <div class="footer-logo">
+                <h1 class="text-center animation-box bounceIn animated">lucy</h1>
+            </div>
+            <ul class="social-icons text-center">
+                <li class="animated fadeInLeft facebook"><a href="#"><i class="fa fa-facebook"></i></a></li>
+                <li class="animated fadeInRight twitter"><a href="#"><i class="fa fa-twitter"></i></a>
+                <li class="animated fadeInLeft linkedin"><a href="#"><i class="fa fa-linkedin"></i></a></li>
+                <li class="animated fadeInRight googleplus"><a href="#"><i class="fa fa-google-plus"></i></a></li>
+                <li class="animated fadeInLeft github"><a href="#"><i class="fa fa-github"></i></a>
+            </ul>
+
+            <div class="copyright">
+                <div>Copyright © 2017 Philip Schlump</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="overlay overlay-hugeinc">
+        <button type="button" class="overlay-close">Close</button>
+        <nav>
+        <ul>
+            <li class="hideit"><a href="#header">Home</a></li>
+            <li class="hideit"><a href="#bigfeatures">Feature</a></li>
+            <li class="hideit"><a href="#speciality">Speciality</a></li>
+            <li class="hideit"><a href="#team">Team</a></li>
+            <li class="hideit"><a href="#contact">Contact Us</a></li>
+        </ul>
+        </nav>
+    </div>
+    <script src="js2/jquery-2.1.4.js"></script> 
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/classie.js"></script>		<!-- used in below - replace with jQ and delete -->
+<script>
+
+(function() {
+	var triggerBttn = document.getElementById( 'trigger-overlay' ),
+		overlay = document.querySelector( 'div.overlay' ),
+		closeBttn = overlay.querySelector( 'button.overlay-close' );
+		transEndEventNames = {
+			'WebkitTransition': 'webkitTransitionEnd',
+			'MozTransition': 'transitionend',
+			'OTransition': 'oTransitionEnd',
+			'msTransition': 'MSTransitionEnd',
+			'transition': 'transitionend'
+		}
+		transEndEventName = transEndEventNames[ Modernizr.prefixed( 'transition' ) ],
+		support = { transitions : Modernizr.csstransitions };
+
+	function toggleOverlay() {
+		if( classie.has( overlay, 'open' ) ) {
+			classie.remove( overlay, 'open' );
+			classie.add( overlay, 'close' );
+			var onEndTransitionFn = function( ev ) {
+				if( support.transitions ) {
+					if( ev.propertyName !== 'visibility' ) return;
+					this.removeEventListener( transEndEventName, onEndTransitionFn );
+				}
+				classie.remove( overlay, 'close' );
+			};
+			if( support.transitions ) {
+				overlay.addEventListener( transEndEventName, onEndTransitionFn );
+			}
+			else {
+				onEndTransitionFn();
+			}
+		}
+		else if( !classie.has( overlay, 'close' ) ) {
+			classie.add( overlay, 'open' );
+		}
+	}
+
+	$(".overlay ul li a").click(function(){
+		toggleOverlay();
+	});
+
+	triggerBttn.addEventListener( 'click', toggleOverlay );
+	closeBttn.addEventListener( 'click', toggleOverlay );
+})();
+
+function submitIt ( event, id ) {
+
+	console.log( "Handler for #"+id+".submit() called." );
+	event.preventDefault();
+
+	var frm = $('#'+id);
+	var arr = {};
+	frm.serializeArray().map(function(x){arr[x.name] = x.value;}); 
+	arr = { "data": arr };
+console.log ( "arr=", arr );
+	$.ajax({
+		type: frm.attr('method'),
+		url: frm.attr('action'),
+		// data: frm.serialize(),
+		dataType: 'json',
+		data: JSON.stringify(arr),
+		contentType: 'application/json; charset=utf-8',
+		success: function (data) {
+			console.log ( 'data=', data );	 // already parsed.
+			if ( data.status && data.status != "success" ) {
+				alert ( data.msg );
+			}
+			$("#output").text( JSON.stringify(data, null, 4) );
+		},
+		error: function(resp) {
+			console.log("error=",resp);
+			alert("got error status="+resp.status+" "+resp.statusText);
+		}
+	});
+}
+
+$(document).ready(function(){
+	$(".hideit").click(function(){
+		$(".overlay").hide();
+	});
+	$("#trigger-overlay").click(function(){
+		$(".overlay").show();
+	});
+
+// ok
+	 var backToTop = $('#at-top');
+	 var topBar = $('.top-menu');
+	 document.onscroll = function scroll() {
+		if ($(window).scrollTop() < 700) {
+			topBar.removeClass('fixed');
+			backToTop.removeClass('show-top');
+			return
+		} 
+		topBar.addClass('fixed');
+		backToTop.addClass('show-top');
+	 };
+
+	$( "#form01" ).submit(function( event ) { submitIt ( event, 'form01' ); });	// save data
+
+});
+
+$(function() {
+	 $('a[href*=#]:not([href=#])').click(function() {
+		 if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+			 var target = $(this.hash);
+			 target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+			 if (target.length) {
+				 $('html,body').animate({
+					 scrollTop: target.offset().top
+				 }, 1000);
+				 return false;
+			 }
+		 }
+	});
+});
+
+</script>
+</body>
+</html>

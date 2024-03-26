@@ -1,0 +1,18 @@
+{
+	"http://www.go-ftl.com/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:8088", "http://192.154.97.74:8088"  ],
+        "plugins":[
+			  { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/"]
+				, "AppName": "www.go-ftl.com"
+				, "AppRoot": "/home/pschlump/go-ftl/data"
+				, "ApiTableKey": "8HbvBJR1qWkpMgGxzqj2sRvuXg"
+				, "StatusMessage":"Version 0.0.7 Date Sat Apr 21 17:36:31 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths":"/" 
+				, "Root": "/home/pschlump/go-ftl/www"
+			} }
+		]
+	}
+}

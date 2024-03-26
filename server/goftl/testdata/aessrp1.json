@@ -1,0 +1,135 @@
+{
+	"comment1":"This is a test to replace test001 auth with AesSrp strong auth"
+	,"http://localhost:9001/": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:9001", "http://dev2.test1.com:9999/", "http://auth2.test1.com:9001", "http://192.168.0.157:9001" ],
+        "plugins":[
+			  { "Status": { "LineNo":__LINE__
+				, "Paths": "/Status"
+			} }
+			, { "CORS": { "LineNo":__LINE__
+				, "Paths":    			"/"
+				, "RedisPrefix":        "vorig:"
+				, "AllowedHeaders":		"*"
+				, "AllowCredentials":	true
+			} }
+			, { "LimitJson": { "LineNo":__LINE__
+				, "Paths": [ "/api/session/", "/api/admin" ]
+				, "Allowed": [
+						{ "Path": [ "/api/session/login" ],           "ItemsRemoved": [ "customer_id", "auth_token", "config", "privs", "user_id", "seq" ] }
+					,	{ "Path": [ "/api/admin/change_password" ],   "ItemsRemoved": [ "customer_id", "config", "privs", "user_id", "username", "auth_token" ] }
+					,	{ "Path": [ "/api/session/change_password" ], "ItemsRemoved": [ "customer_id", "config", "privs", "user_id", "username", "auth_token" ] }
+					]
+			} }
+			, { "SessionRedis": { "LineNo":__LINE__
+				, "Paths": "/"
+			} }
+			, { "Status": { "LineNo":__LINE__
+				, "Paths": "/Stat1"
+			} }
+			, { "Status": { "LineNo":__LINE__
+				, "Paths": "/Stat2"
+			} }
+			, { "TabServer2": { "LineNo":__LINE__
+				, "Paths":["/api/session/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":		"Public Version 0.0.6 Tue Apr 25 18:08:49 MDT 2017 File:__FILE__ Line:__LINE__"
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "ApiTableKey": 		""
+				, "ApiStatus":			"/api/session/"
+			} }
+
+            , { "SrpAesAuth": { "LineNo":__LINE__,
+				"Paths": [ "/api/" ],
+				"MatchPaths": [ "/" ],
+				"TwoFactorRequired": "n",
+				"AllowReregisterDeviceID": true,
+				"AdminPassword": "9b8c8031-4b6e-465e-7ca1-6c8084917b1c",
+				"InDemoMode": true,
+				"InTestMode": true,
+				"DbUserCols": [ "RealName", "User_id", "$user_id$" ],
+				"EmailApp": "qr-today.com",
+				"DbUserColsDb": [ "", "id" ],
+				"PwRecoverTemplate1":  		   	"{{.HTTPS}}{{.HOST}}/index.html/unable-to-pwrecov1",
+				"PwRecoverTemplate2":   		"{{.HTTPS}}{{.HOST}}/index.html/unable-to-pwrecov2",
+				"PwRecoverTemplate3":    		"{{.HTTPS}}{{.HOST}}/index.html/PwRecov2",
+				"AnonUserPaths": [ "/api/getQrTrackList" ],
+                "NonEmailAccts": [ "admin", "root" ],
+				"SecurityConfig": {
+					"AccessLevels": {
+						"admin": [ "admin" ],
+						"anon": [ "public" ],
+						"public": [ "*" ],
+						"root": [ "root", "admin", "user", "public" ],
+						"user": [ "user", "admin" ]
+					},
+					"MayAccessApi": {
+						"DeviceID": [
+							"/api/srp_register",
+							"/api/srp_login",
+							"/api/srp_challenge",
+							"/api/srp_validate",
+							"/api/srp_getNg",
+							"/api/send_support_message",
+							"/api/version",
+							"/api/srp_logout",
+							"/api/get2FactorFromDeviceID"
+						],
+						"anon-user": [
+							 "/api/getQrTrackList" 
+							,"/api/table/q_apikey" 
+							,"/api/table/q_refed" 
+						],
+						"admin":  [ "*" ],
+						"anon":   [ "*" ],
+						"public": [ "*" ],
+						"root":   [ "*" ],
+						"user":   [ "*" ]
+					},
+					"Privilages": {
+						"admin": [ "MayChangeOtherPassword", "MayCreateAdminAccounts", "MayChangeOtherAttributes" ]
+					},
+					"Roles": [ "public", "user", "admin", "root" ]
+				}
+			} }
+            , { "DumpRequest": { "LineNo":__LINE__, "Msg":"Request Encrypted - After AES/SRP.", "Paths":"/api/encStatus", "Final":"yes" } }
+
+			, { "Status": { "LineNo":__LINE__
+				, "Paths": "/api/admin/status"
+			} }
+			, { "TabServer2": { "LineNo":__LINE__
+				, "Paths":["/api/admin/change_password"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":		"Public Version 0.0.6 Tue Apr 25 18:08:49 MDT 2017 File:__FILE__ Line:__LINE__"
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "ApiTableKey": 		""
+				, "ApiStatus":			"/api/admin/"
+				, "Final":				"yes"
+			} }
+			, { "TabServer2": { "LineNo":__LINE__
+				, "Paths":["/api/admin/","/api/table/","/api/list/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/midlib/SessionRedis"
+				, "StatusMessage":		"Logged In: Version 0.0.6 Tue Apr 25 18:08:49 MDT 2017 File:__FILE__ Line:__LINE__"
+				, "ApiTableKey": 		""
+			} }
+			, { "FileServer": { "LineNo":__LINE__
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9001/www"
+			} }
+		]
+	}
+	, "http://localhost:9011/": { "LineNo":__LINE__,
+        "listen_to":[ "http://localhost:9011", "http://dev2.test1.com:9011" ],
+        "plugins":[
+			  { "Status": { "LineNo":__LINE__
+				, "Paths": "/Status"
+			} }
+			, { "FileServer": { "LineNo":__LINE__
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9011/www"
+			} }
+		]
+	}
+}

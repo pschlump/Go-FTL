@@ -1,0 +1,21 @@
+package main
+
+func main() {
+}
+
+//
+// CLI
+// -c/--cfg cfg.json
+// -o/--opts opts.json -- hash with opts in it
+//
+// em show-apps
+// em add-app
+// em del-app
+// em show-tmpl --app [name]
+// em add-tmpl --app [name] --file [fn]
+// em del-tmpl --app [name]
+//
+// em valid --opts opts.json || --list list.json
+// em send --opts opts.json
+// em send-list --list list.json
+//

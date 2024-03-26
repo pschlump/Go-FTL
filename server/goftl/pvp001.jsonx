@@ -1,0 +1,266 @@
+{
+
+	"http://localhost:9019/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://127.0.0.1:9019" ],
+        "plugins":[
+			  { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Status"
+			} }
+			, { "Monitor": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Monitor"
+			} }
+			, { "CORS": { "LineNo":{{ __line_no__ }}
+				, "Paths":    			"/"
+				, "RedisPrefix":        "vorig:"
+				, "AllowedHeaders":		"*"
+				, "AllowCredentials":	true
+			} }
+			, { "JSONp":{ "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/api^", "/Ran^", "/Stat" ]
+			} }
+			, { "RewriteProxy": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/Ran/RandomStatus^", "/Ran/RandomValue^" ]
+				, "MatchRE": [
+						"/Ran/"
+					]
+				, "ReplaceRE": [
+						"/"
+					]
+				, "Dest": "http://127.0.0.1:10000/" 
+			} },
+			, { "Acb1": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/acb1^"
+			} }
+			, { "X2fa": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/x2fa^"
+				, "Server2faURL": "http://127.0.0.1:9019/2fa"
+			} }
+			, { "HostToCustomerId": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat4"
+			} }
+			, { "HardcodeRewrite": { "LineNo":{{ __line_no__ }}
+                 	, "Paths": [ "/api^" ]
+					, "MatchReplace": [
+						  { "Match": "/api/v001/table/v1_animal1", 				"Replace": "/api/table/v1_animal1"		 	}
+						, { "Match": "/api/v001/table/ListAnimal", 				"Replace": "/api/table/ListAnimal"		 	}
+						, { "Match": "/api/v001/table/v1_animal1_event", 		"Replace": "/api/table/v1_animal1_event"	}
+						, { "Match": "/api/v001/table/v1_ranch_name", 			"Replace": "/api/table/v1_ranch_name"		}
+					]
+			} },
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat3"
+			} }
+			, { "DocImageProc": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/procImgRow"
+				, "InputPath": "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/www/image" 
+				, "OutputPath": "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/www/img-final" 
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat2"
+			} }
+			, { "DirectoryBrowse": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/image" ]
+				, "TemplateName": "image.tmpl"
+				, "TemplateRoot": [	"/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/www/tmpl" ]
+			} },
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat0"
+			} }
+			, { "LimitJson": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/api/session/", "/api/admin" ]
+				, "Allowed": [
+					 	{ "Path": [ "/api/session/login_p1of2^" ],     "ItemsRemoved": [ "customer_id", "auth_token", "config", "privs", "seq" ] }
+					,	{ "Path": [ "/api/session/login_p2of2^" ],     "ItemsRemoved": [ "customer_id", "auth_token", "config", "privs", "seq", "2fa", "auth_tok_2part", "use_2fa" ] }
+					,	{ "Path": [ "/api/session/login^" ],           "ItemsRemoved": [ "customer_id", "auth_token", "config", "privs", "seq" ] }
+					,	{ "Path": [ "/api/admin/change_password^" ],   "ItemsRemoved": [ "customer_id", "config", "privs", "username", "auth_token" ] }
+					,	{ "Path": [ "/api/session/change_password^" ], "ItemsRemoved": [ "customer_id", "config", "privs", "username", "auth_token" ] }
+					]
+			} }
+			, { "SessionRedis": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat1"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/table^", "/api/status^", "/api/v001^", "/api/session/", "/api/call^" ]
+				, "AppName": 			"acb.2c-why.com"
+				, "AppRoot":            "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Public (acb) Version 0.0.1 Mon Sep 17 20:19:47 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "DisplayURL2fa":      "http://127.0.0.1:9021/msetup.html"
+				, "QRShortURL":			"http://127.0.0.1:2004"
+				, "ApiTableKey": 		"kip.philip"
+				, "ApiStatus":			"/api/status/"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/table/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Public (pet) Version 0.0.7 Fri Oct 27 08:17:21 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "DisplayURL2fa":      "http://127.0.0.1:9021/msetup.html"
+				, "QRShortURL":			"http://127.0.0.1:2004"
+				, "ApiTableKey": 		"xyzzy"
+				, "ApiStatus":			"/api/session/"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/api/session/", "/api/store/" ]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Public Version 0.0.6 Tue Sep 20 18:08:49 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "DisplayURL2fa":      "http://127.0.0.1:9021/msetup.html"
+				, "QRShortURL":			"http://127.0.0.1:2004"
+				, "ApiTableKey": 		""
+				, "ApiStatus":			"/api/session/"
+			} }
+			, { "LoginRequired": { "LineNo":{{ __line_no__ }}
+				,"Paths": [ "/api/admin/", "/admin/", "/api/table/", "/api/list/" ]
+				,"StrongLoginReq":   	"no"
+				,"AuthMethod":	    	["Authentication:Bearer"]
+				,"Final":		    	"no"
+				,"KeyFile": 			"./test-key/sample_key.pub"
+				,"ValidationSource":	"jwt"
+				,"CheckXsrfToken":   	"yes"
+				,"RemoteValidate":		"no"
+				,"RemoteValidateURL":	"http://localhost:9001/api/session/validate_auth_token" 
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/admin/status"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/admin/change_password"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Public Version 0.0.6 Tue Sep 20 18:08:49 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "DisplayURL2fa":      "http://127.0.0.1:9021/msetup.html"
+				, "QRShortURL":			"http://127.0.0.1:2004"
+				, "ApiTableKey": 		""
+				, "ApiStatus":			"/api/admin/"
+				, "Final":				"yes"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/admin/","/api/table/","/api/list/"]
+				, "AppName": 			"auth.2c-why.com"
+				, "AppRoot": 			"/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Logged In: Version 0.0.6 Tue Sep 20 18:08:49 MDT 2017 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "ApiTableKey": 		""
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/www"
+			} }
+		]
+	}
+
+	, "http://localhost:9017/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://127.0.0.1:9017" ],
+        "plugins":[
+			  { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Status"
+			} }
+			, { "Monitor": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Monitor"
+			} }
+			, { "HostToCustomerId": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat4"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat0"
+			} }
+			, { "SessionRedis": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "LoginRequired": { "LineNo":{{ __line_no__ }}
+				,"Paths": [ "/api/admin/", "/admin/", "/api/table/", "/api/list/" ]
+				,"StrongLoginReq":   	"no"
+				,"AuthMethod":	    	["Authentication:Bearer"]
+				,"Final":		    	"no"
+				,"KeyFile": 			"./test-key/sample_key.pub"
+				,"ValidationSource":	"jwt"
+				,"CheckXsrfToken":   	"yes"
+				,"RemoteValidate":		"no"
+				,"RemoteValidateURL":	"http://127.0.0.1:9019/api/session/validate_auth_token" 
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/admin/status"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/table^", "/api/status^", "/api/v001^", "/api/session/", "/api/call^" ]
+				, "AppName": 			"acb.2c-why.com"
+				, "AppRoot":            "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Public (acb) Version 0.0.1 Mon Sep 17 20:19:47 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "DisplayURL2fa":      "http://127.0.0.1:9021/msetup.html"
+				, "QRShortURL":			"http://127.0.0.1:2004"
+				, "ApiTableKey": 		"kip.philip"
+				, "ApiStatus":			"/api/status/"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/logged-in-www"
+			} }
+		]
+	}
+
+	, "http://localhost:9021/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://127.0.0.1:9021" ],
+        "plugins":[
+			  { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Status"
+			} }
+			, { "Monitor": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Monitor"
+			} }
+			, { "HostToCustomerId": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat4"
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Stat0"
+			} }
+			, { "SessionRedis": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "LoginRequired": { "LineNo":{{ __line_no__ }}
+				,"Paths": [ "/api/admin/", "/admin/", "/api/table/", "/api/list/" ]
+				,"StrongLoginReq":   	"no"
+				,"AuthMethod":	    	["Authentication:Bearer"]
+				,"Final":		    	"no"
+				,"KeyFile": 			"./test-key/sample_key.pub"
+				,"ValidationSource":	"jwt"
+				,"CheckXsrfToken":   	"yes"
+				,"RemoteValidate":		"no"
+				,"RemoteValidateURL":	"http://127.0.0.1:9019/api/session/validate_auth_token" 
+			} }
+			, { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/api/admin/status"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":[ "/api/table^", "/api/status^", "/api/v001^", "/api/session/", "/api/call^" ]
+				, "AppName": 			"acb.2c-why.com"
+				, "AppRoot":            "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/data/..."
+				, "StatusMessage":		"""Public (acb) Version 0.0.1 Mon Sep 17 20:19:47 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "DisplayURL2fa":      "http://127.0.0.1:9021/msetup.html"
+				, "QRShortURL":			"http://127.0.0.1:2004"
+				, "ApiTableKey": 		"kip.philip"
+				, "ApiStatus":			"/api/status/"
+			} }
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+				, "Root": "/Users/corwin/go/src/github.com/American-Certified-Brands/pvp/logged-in-www/2fa"
+			} }
+		]
+	}
+}

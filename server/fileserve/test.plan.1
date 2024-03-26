@@ -1,0 +1,192 @@
+
+https://www.keycdn.com/blog/http-security-headers/ -- Security Headers
+
+1. Verify that	
+	1. Name resoved sites work
+	2. Can have "localhost" attached to 1 of the name resoved sites	
+	3. Can build .ts -> .js file
+	4. Can build .jsx (babbel) -> .js 
+2. Build - the 2nd Angular 2 demo
+3. Create an "issue" for 5 min angular demo - missing file - style sheet not correct.
+4. 
+
+Develop
+	0. Config file to load all of this
+		0. Chagne config to have a struct for Cmd/Params and parse that at load time
+		0. Config - now global - should move into handler struct
+		0. Locaiton of config files - where -
+			0. Per-user - Per-site - Per-File
+
+Test
+	1. func dirList(www http.ResponseWriter, f File, req *http.Request, name string) {
+
+// ===================================================================================================================================
+
+Test
+	1. Test themes / per-user themes
+
+Caching and theme/user cookies.
+	1. could have a list of theme roots.
+	2. If theme/user cookies are configured then must set caching to re-validate on every request.
+
+// ===================================================================================================================================
+
+7. .dev.html -> .html ( compression )
+	https://github.com/tdewolff/minify (all of them)
+	https://github.com/tdewolff/minify/tree/master/cmd/minify
+		CLI for xml, json, css etc.
+
+7. Image ( compression )
+	7. Implement Brotellie compression
+7. Tracing / Logging
+
+// HTTP file system request handler with logging, URL rewrite capability and extensible validation
+
+// https://github.com/klauspost/compress
+// 	-- Faster gzip - use in server!!!
+
+// Has E-tag calculator in it - using sha1 and shows how to fetch file.
+//		https://github.com/golang/gddo/blob/master/httputil/static.go
+//		See:  ~/note/static.go
+
+// TODO : xyzzy3 - log errors for all files
+// xyzzyA - PreLog
+// xyzzyE - msut return size + fileInfo.ModTime
+
+
+Later:
+	7. .html -> .html ( compression )
+
+https://github.com/tdewolff/minify/tree/master/cmd/minify
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Usage: minify [options] [inputs]
+
+Options:
+  -a, --all=false: Minify all files, including hidden files and files in hidden directories
+  -l, --list=false: List all accepted filetypes
+      --match="": Filename pattern matching using regular expressions, see https://github.com/google/re2/wiki/Syntax
+      --mime="": Mimetype (text/css, text/javascript, ...), optional for input filenames, has precendence over -type
+  -o, --output="": Output (concatenated) file (stdout when empty) or directory
+  -r, --recursive=false: Recursively minify directories
+      --type="": Filetype (css, html, js, ...), optional for input filenames
+  -v, --verbose=false: Verbose
+
+  --url="": URL of the file to enable URL minification
+  --html-keep-default-attrvals=false: Preserve default attribute values
+  --html-keep-whitespace=false: Preserve whitespace characters but still collapse multiple whitespace into one
+
+Input:
+  Files or directories, optional when using piping
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// note pjs - this is the main entry point to generating a file server
+
+// FileServer returns a handler that serves HTTP requests
+// with the contents of the file system rooted at root.
+//
+// To use the operating system's file system implementation,
+// use http.Dir:
+//
+//     http.Handle("/", http.FileServer(aCfg))
+/*
+func FileServer(g *FSConfig) http.Handler {
+	return &FileHandler{Cfg: g}
+}
+*/
+
+
+
+
+1G
+-- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done -- -- done --
+*0. Setup .md -> html rule
+
+*1. Verify that we reach the .md -> .html code
+
+*2. Test chunks of code with a _test.go code	
+	*1. func UrlFileExt(fcfg *FileServerType, www http.ResponseWriter, req *http.Request, urlIn string, g *FSConfig, rulNo int) (urlOut string, rootOut string, stat RuleStatus, err error) {
+		*-- and down
+	*2. func RmExt(filename string) string {
+	1. Mapings
+	2. Abs path to commands
+7. Add option for in-code procssing instead of just execute command
+	1. .md -> .html
+	2. pack-css
+	3. etc.
+7. Split our code out from the (C) of the Go Authors
+1. Fix the Root[0] problem - xyzzyRoot0
+Develop Middleware
+	*1. Add ability to take XML or JSON and convert to table data so can template it.
+		Take from buffer, parse and put into .Table
+	+2. Add compression middleware
+
+*3. Do an AngularJS 2.x demo project
+	*1. Upgrade node.js to current
+	*2. Install tsc
+	*3. Do a tsc compile and run a simple tsc script	
+

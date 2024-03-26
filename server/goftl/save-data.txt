@@ -1,0 +1,72 @@
+
+type RSaveDataInterface interface {
+	RSetValue(key string, val map[string]string)
+	RGetValue(key string) (val map[string]string, ok bool)
+	RUpdValue(key string, val map[string]string)
+}
+
+///////////////////////////////// redis sim /////////////////////////////////////////////////////////////////////////
+type RSaveData struct {
+	Rdb     map[string]string
+	RdbLock sync.Mutex
+}
+
+// Verify that RSaveSata fits to the interface
+var _ RSaveDataInterface = (*RSaveData)(nil)
+
+func NewRSaveData() *RSaveData {
+	return &RSaveData{
+		Rdb: make(map[string]string),
+	}
+}
+
+func (rs *RSaveData) RSetValue(key string, val map[string]string) {
+	rs.RdbLock.Lock()
+	defer rs.RdbLock.Unlock()
+	s := rs.RSerial(val)
+	rs.Rdb[key] = s
+}
+func (rs *RSaveData) RGetValue(key string) (val map[string]string, ok bool) {
+	ok = true
+	rs.RdbLock.Lock()
+	defer rs.RdbLock.Unlock()
+	s, tok := rs.Rdb[key]
+	if !tok {
+		ok = false
+		return
+	}
+	val = rs.RDeSerial(s)
+	return
+}
+func (rs *RSaveData) RUpdValue(key string, val map[string]string) {
+	rs.RdbLock.Lock()
+	defer rs.RdbLock.Unlock()
+	s, ok := rs.Rdb[key]
+	if !ok {
+		s := rs.RSerial(val)
+		rs.Rdb[key] = s
+		return
+	}
+	val2 := rs.RDeSerial(s)
+	for kk, vv := range val {
+		val2[kk] = vv
+	}
+	s = rs.RSerial(val2)
+	rs.Rdb[key] = s
+}
+func (rs *RSaveData) RSerial(val map[string]string) (rv string) {
+	trv, err := json.Marshal(val)
+	if err != nil {
+		rv = "{}"
+	}
+	rv = string(trv)
+	return
+}
+func (rs *RSaveData) RDeSerial(s string) (rv map[string]string) {
+	err := json.Unmarshal([]byte(s), &rv)
+	if err != nil {
+		fmt.Printf(`{"status":"error","code":"0028","msg":"Error(19912): %v"}\n`, err)
+	}
+	return
+}
+

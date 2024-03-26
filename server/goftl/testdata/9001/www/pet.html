@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="apple-touch-icon" href="favicon.png?v=2">
+	<link rel="shortcut icon" sizes="120x120" href="favicon.png?v=2">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>PJS Test code for authentication (jQuery/Bootstrap version)</title>
+	<script src="js/jquery-2.1.4.js"></script>
+	<link rel="stylesheet" href="http://localhost:8088/style/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="http://localhost:8088/style/bootstrap-theme.min.css">
+<style>
+.panel-heading {
+	font-size: x-large;
+}
+</style>
+</head>
+<body>
+	<div class="page-header"><h1> pet.html </h1></div>
+
+	<div class="content container">
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> test pet_save_data </div>
+						<div class="panel-body">
+							<form class="is-form" id="form01" method="POST" action="http://localhost:9001/api/table/pet_save_data?api_table_key=xyzzy">
+								<div class="form-group ">
+									<label class="form-control-label">Data</label>
+									<input class="form-control" name="data" type="text">	   
+								</div>
+								<div class="form-group ">
+									<input name="app" type="hidden" value="web-test-application">
+									<button class="btn btn-primary" type="submit">Submit</button>		
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Output </div>
+						<div class="panel-body">
+							<pre id="output"></pre>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+<script>
+
+var auth_token = "";
+var xsrf_token = "";
+var jwt_token = "";
+var setCookie = "n";
+var setTheCookie = function() {}
+
+function createCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime()+(days*24*60*60*1000));
+		expires = "; expires="+date.toGMTString();
+	} 
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) {
+			return c.substring(nameEQ.length,c.length);
+		}
+	}
+	return null;
+}
+
+function delCookie(name) {
+	createCookie(name,"",-1);
+}
+
+function URLStrToHash(query) {
+	var rv = {};
+	var decode = function (s) { return decodeURIComponent(s.replace(/^\?/,"").replace(/\+/g, " ")); };
+
+	var p1 = query.replace(/([^&=]+)=?([^&]*)/g,function(j,n,v){
+		n = decode(n);
+		v = decode(v);
+		if ( typeof(rv[n]) === "undefined" ) {
+			rv[n] = ( typeof v === "undefined" ) ? "" : v;
+		} else if ( typeof(rv[n]) === "string" ) {
+			var x = rv[n];
+			rv[n] = [];
+			rv[n].push ( x );
+			rv[n].push ( v );
+		} else {
+			rv[n].push ( v );
+		}
+		return "";
+	});
+	return rv;
+}
+
+//var v = URLStrToHash("a=12&b=22&c&d");
+//console.log ( 'v=', v );
+//var v = URLStrToHash("a=12&b=22&x=aa&x=bb&x=cc&x=dd&x=ee&d=888888");
+//console.log ( 'v=', v );
+
+function Id(x){
+	return document.getElementById(x);
+}
+
+var g_origin = window.location.origin;
+if ( ! g_origin ) {			// Probablyl running on Opera
+	g_origin = window.location.protocol + "//" + window.location.host;
+}
+
+var g_param = URLStrToHash ( window.location.search );
+
+console.log ( window.location.search );
+console.log ( "g_param=", g_param );
+
+var rc = getCookie('recovery_token');
+if ( rc != "" ) {
+	console.log ( "Cooky recovery token set",rc);
+}
+if ( g_param.recovery_token ) {
+	console.log ( "Setting recovery token",g_param.recovery_token);
+	createCookie('recovery_token',g_param.recovery_token);
+}
+
+function submitIt ( event, id ) {
+	console.log( "Handler for #"+id+".submit() called." );
+	event.preventDefault();
+
+	var frm = $('#'+id);
+	$.ajax({
+		type: frm.attr('method'),
+		url: frm.attr('action'),
+		data: frm.serialize(),
+		success: function (data) {
+			console.log ( 'data=', data );	 // already parsed.
+			if ( data.status == "success" && data.xsrf_token ) {
+				xsrf_token = data.xsrf_token;
+			}
+			if ( data.status == "success" && data.auth_token ) {
+				auth_token = data.auth_token;
+				$('.is-auth-token').val(auth_token);
+				setTheCookie(auth_token);
+			}
+			if ( data.status == "success" && data.jwt_token ) {
+				jwt_token = data.jwt_token;
+			}
+			if ( data.status && data.status != "success" ) {
+				alert ( data.msg );
+			}
+			$("#output").text( JSON.stringify(data, null, 4) );
+		},
+		error: function(resp) {
+			console.log("error=",resp);
+			alert("got error status="+resp.status+" "+resp.statusText);
+		}
+	});
+}
+
+$( "#form01" ).submit(function( event ) { submitIt ( event, 'form01' ); });	// save data
+
+</script>
+
+</body>
+</html>

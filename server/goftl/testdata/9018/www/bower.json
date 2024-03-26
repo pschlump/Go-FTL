@@ -1,0 +1,21 @@
+{
+  "name": "www.excellent-answers.com",
+  "authors": [
+    "Philip Schlump <pschlump@gmail.com>"
+  ],
+  "description": "track documents using blockchain",
+  "main": "main-file",
+  "license": "MIT",
+  "homepage": "www.2c-why.com",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "eonasdan-bootstrap-datetimepicker": "^4.17.47"
+  }
+}

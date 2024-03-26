@@ -1,0 +1,15 @@
+{
+
+"run": [ "phase0" ],
+, "platform": [ "Mac", "Linux", "Win7", "ARM" ]
+
+, "phase0": [
+	{ "cd": "./server/midlib/Cookie",
+		"platform": [ "Mac", "Linux", "Win7" ],
+		"cmds": [ 
+			{ "cmd": [ "go test", "!chkPASS" ] }
+		]
+	}
+]
+
+}

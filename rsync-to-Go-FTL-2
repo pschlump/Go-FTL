@@ -1,0 +1,11 @@
+#!/bin/bash
+ 
+to=/Users/corwin/Projects/Go-FTL-2
+
+for i in img blog test1 email-templates t data doc vendor ses-aws system-test note w old tools server ; do
+	rsync -va --delete "$i" $to
+done
+
+tar -cf - LICENSE gen-doc-cfg.json test-run.json inc.go goftl_cli.go Dockerfile Makefile README.md rsync-to-Go-FTL-2 \
+	| ( cd $to; tar -xf - )
+

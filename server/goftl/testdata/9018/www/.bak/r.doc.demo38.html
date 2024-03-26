@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="apple-touch-icon" href="favicon.png?v=2">
+	<link rel="shortcut icon" sizes="120x120" href="favicon.png?v=2">
+	<!-- <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>Document tracking - web version - demo.</title>
+	<script src="js/jquery-3.3.1.min.js"></script>
+	<link rel="stylesheet" href="style/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+	<link rel="stylesheet" href="style/bootstrap-theme.min.css">
+	<script src="style/bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="/bower_components/moment/min/moment.min.js"></script>
+<script type="text/javascript" src="/bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+<link rel="stylesheet" href="/bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
+
+<script>
+var config = "prod";
+// var config = "test";
+</script>
+
+<style>
+.panel-heading {
+	font-size: x-large;
+}
+.pl10 {
+	padding-left: 10px;
+}
+.imgList {
+	border: 4px solid gray;
+}
+.imageSelected {
+	border: 4px solid green;
+}
+.imageNotSelected {
+	border: 4px solid black;
+}
+</style>
+</head>
+<body>
+	<!--
+	<div class="page-header"><h1 class=pl10> r.doc.demo38.html </h1></div>
+	<div class="page-header"><h2 class=pl10> shares code with electron/desktop version </h2></div>
+	-->
+	<div class="page-header"><h1 class=pl10> Digital Document Demo </h1></div>
+
+	<div class="content container">
+
+		<div id="docTop" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Document Tracking </div>
+						<div class="panel-body">
+								<div class="form-group ">
+									<button class="btn btn-primary" id="bNew1" type="button">New Document</button> 
+									<button class="btn btn-primary" id="bSearch1" type="button">Document Search</button> 
+									<button class="btn btn-primary" id="bList1" type="button">Document List</button> 
+									<button class="btn btn-primary" id="bUpdate1" type="button">Document Update</button> 
+								</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="docNew" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> New Document </div>
+						<div class="panel-body">
+							<div id="listImg"></div>
+							<div class="form-group ">
+								<button class="btn btn-primary" id="bAddDocument" type="button">Create Document Images</button> 
+								<button class="btn btn-primary" id="bTop1" type="button">Menu</button> 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="docAttr" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> New Document Information </div>
+						<div class="panel-body">
+							<form class="is-form" id="form01" method="POST" action="api/table/dt_document">
+								<div class="form-group ">
+									<label class="form-control-label">Category</label>
+									<input class="form-control" id="tCategory" name="tCategory" type="hidden">	   
+									<div class="dropdown">
+										<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Category <span class="caret"></span></button>
+										<ul id="paintCatList2" class="dropdown-menu">
+										</ul>
+									</div>
+									<span id="catOut"></span>
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Tags</label>
+									<input class="form-control" id="tTags" name="tTags" type="hidden">	   
+									<div>
+										<button type="button" class="btn btn-primary" data-toggle="collapse" data-target="#tagsPanel2">Tags <span class="caret"></span></button>
+										<div id="tagsPanel2" class="collapse">
+										</div>
+										<input type="text" width="40%" id="newTag" name="newTag">
+									</div>
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Title</label>
+									<input class="form-control" id="tTitle" name="tTitle" type="text">	   
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Decription</label>
+									<input class="form-control" id="tDesc" name="tDesc" type="text">	   
+								</div>
+								<div class="form-group ">
+									<button class="btn btn-primary" id="bAddDocumentPt2" type="button">Create Document</button> 
+									<button class="btn btn-primary" id="bTop5" type="button">Menu</button> 
+									<button class="btn btn-primary" id="bShowDoc" type="button">(test) Show Document</button> 
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="showPDF" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div id=thePDF></div>
+					<div class="panel panel-info">
+						<div class="panel-body">
+							<div id="listImg"></div>
+							<div class="form-group ">
+								<button class="btn btn-primary" id="bTop6" type="button">Menu</button> 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<script>
+		var ssCategory;
+		function setCategory(x){ ssCategory = x; $("#catOut").html("Category Selected: "+x); $("#sCategory").val(x); }
+		</script>
+
+		<div id="docSearch" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Document Search </div>
+						<div class="panel-body">
+							<form class="is-form" id="form02" method="POST" action="api/table/dt_document">
+								<div class="form-group ">
+									<!-- Dropdown of categories -->
+									<label class="form-control-label">Category</label>
+									<input class="form-control" id="sCategory" name="sCategory" type="hidden">	   
+									<div class="dropdown">
+										<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Category <span class="caret"></span></button>
+										<ul id="paintCatList" class="dropdown-menu">
+										</ul>
+									</div>
+									<span id="catOut"></span>
+								</div>
+								<div class="form-group ">
+									<!-- List of potential tags -->
+									<label class="form-control-label">Tags</label>
+									<input class="form-control" id="sTags" name="sTags" type="hidden">	   
+									<div>
+										<button type="button" class="btn btn-primary" data-toggle="collapse" data-target="#tagsPanel">Tags <span class="caret"></span></button>
+										<div id="tagsPanel" class="collapse">
+										</div>
+									</div>
+								</div>
+								<div class="form-group ">
+									<label class="form-control-label">Words In Decription or Title</label>
+									<input class="form-control" id="sWords" name="sWords" type="text">	   
+								</div>
+								<div class="form-group">
+									<!-- date entry control -->
+									<label class="form-control-label">Date Range</label>
+								</div>
+								<div class="form-group row">
+									<!-- <input class="form-control" id="sBegDate" name="sBegDate" type="text"> -->
+									<!-- <input class="form-control" id="sEndDate" name="sEndDate" type="text"> -->
+									<div class="col-md-6">
+										<div class='input-group date' id='datetimepicker1'>
+											<input type='text' class="form-control" id="sBegDate" name="sBegDate" />
+											<span class="input-group-addon">
+												<span class="glyphicon glyphicon-calendar"></span>
+											</span>
+										</div>
+									</div>
+									<div class="col-md-6">
+										<div class='input-group date' id='datetimepicker2'>
+											<input type='text' class="form-control" id="sEndDate" name="sEndDate" />
+											<span class="input-group-addon">
+												<span class="glyphicon glyphicon-calendar"></span>
+											</span>
+										</div>
+									</div>
+								</div>
+								<script type="text/javascript">
+									$(function () {
+										$('#datetimepicker1').datetimepicker();
+										$('#datetimepicker2').datetimepicker();
+									});
+								</script>
+								<div class="form-group ">
+									<button class="btn btn-primary" id="searchGo" type="button">Search Now</button> 
+									<button class="btn btn-primary" id="bTop2" type="button">Menu</button> 
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="docList" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Document List </div>
+						<div class="panel-body">
+							<!-- display gird of specified/current document, or all documents, most recent first. -->
+							<div id="outdata"></div>
+							<div class="form-group ">
+								<button class="btn btn-primary" id="bTop3" type="button">Menu</button> 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="docUpdate" class="my_page">
+			<div class="row">
+				<div class="col-sm-10">
+					<div class="panel panel-info">
+						<div class="panel-heading"> Document Update </div>
+						<div class="panel-body">
+								<div class="form-group ">
+									<button class="btn btn-primary" id="bTop4" type="button">Menu</button> 
+								</div>
+						</div>
+						<!-- xyzzy - documents are update with a history to the previous document version - so you can never remove
+						an old document - only append a new one on top, There is no "delete" - if you want to delete a document you
+						udpate to an empty-page document.
+						-->
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 
+
+			docTop - menu of [ New ] [ Search ] [ List ]
+
+			docNew
+			docSearch
+			docList
+			docUpdate [ Add Chained Document ]
+
+			1. Switch based on menu - only show current. (Pull from UW student stuff)
+			2. Top - buttons/tabs what?
+			3. New - list documents/images in "path" - with checklist to add, then
+				3a. Collect and present form for attribtue data.
+			4. List - Display a list of documents - with Update button
+			5. Search - perform a search - then display with docList
+			6. Update - show old documents as history - then Latest
+
+		-->
+
+	</div>
+
+<script>
+
+// Library ------------------------------------------------------------------------------
+
+function createCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime()+(days*24*60*60*1000));
+		expires = "; expires="+date.toGMTString();
+	} 
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) {
+			return c.substring(nameEQ.length,c.length);
+		}
+	}
+	return null;
+}
+
+function delCookie(name) {
+	createCookie(name,"",-1);
+}
+
+function URLStrToHash(query) {
+	var rv = {};
+	var decode = function (s) { return decodeURIComponent(s.replace(/^\?/,"").replace(/\+/g, " ")); };
+
+	var p1 = query.replace(/([^&=]+)=?([^&]*)/g,function(j,n,v){
+		n = decode(n);
+		v = decode(v);
+		if ( typeof(rv[n]) === "undefined" ) {
+			rv[n] = ( typeof v === "undefined" ) ? "" : v;
+		} else if ( typeof(rv[n]) === "string" ) {
+			var x = rv[n];
+			rv[n] = [];
+			rv[n].push ( x );
+			rv[n].push ( v );
+		} else {
+			rv[n].push ( v );
+		}
+		return "";
+	});
+	return rv;
+}
+
+function Id(x){
+	return document.getElementById(x);
+}
+
+var g_origin = window.location.origin;
+if ( ! g_origin ) {			// Probablyl running on Opera
+	g_origin = window.location.protocol + "//" + window.location.host;
+}
+
+var g_param = URLStrToHash ( window.location.search );
+
+var curPage = "docTop";
+
+function doPage( pn ) {
+	curPage = pn;
+    $(".my_page").hide();
+    $("#"+curPage).show();
+	// $("#outErr").html("");		
+}
+
+var category;
+var category_map = {};
+var n_category;
+var tags;
+
+function getCategories() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/dt_category",
+	  data: param
+	}).done(function(data) {
+		category = data.data;
+		n_category = data.meta.count[0].nRows;
+		// console.log ( "cagegory", category );
+		// console.log ( "meta", data.meta );
+		// console.log ( "meta.count", data.meta.count );
+		// console.log ( "meta.count.nRows", data.meta.count[0].nRows );
+
+		// <li><a href="#" onClick="setCategory('html')">HTML</a></li>
+		var s = "";
+		for ( var ii = 0; ii < n_category; ii++ ) {
+			var na = category[ii].category_name;
+			s += "<li><a href=\"#\" onClick=\"setCategory('"+na+"')\">"+na+"</a></li>";
+			category_map[ na ] = category[ii].id;
+		}
+		$("#paintCatList").html(s);
+		$("#paintCatList2").html(s);
+	});
+}
+
+function LookupCactegoryId(name) {
+	var id = category_map[name];
+	return id;
+}
+
+var tagsSet = {};
+var tagsValue;
+
+function getTags() {
+	var ranNum = Math.random();
+	var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+	$.ajax({
+	  method: "GET",
+	  url: "/api/table/dt_tags",
+	  data: param
+	}).done(function(data){
+		if ( data.status === "success" ) {
+			tags = data.data;
+			console.log ( "tags", tags );
+			// <div id="tagsPanel" class="collapse">
+			var s = "";
+			for ( var ii = 0, mx = tags.length; ii < mx; ii++ ) {
+				var na = tags[ii].tag_name;
+				s += "<div><label><input class=\"tagsCheckbox\" type=\"checkbox\" value=\""+na+"\"> "+na+"</label></div>";
+			}
+			$("#tagsPanel").html(s);
+			$("#tagsPanel2").html(s);
+			$('.tagsCheckbox').change(function() {
+				var vv = $(this).val();
+				if(this.checked) {
+					tagsSet[vv] = true;
+					console.log ( "val=", $(this).val() );
+				} else {
+					tagsSet[vv] = false;
+					console.log ( "remove=", $(this).val() );
+				}
+				var t = "", com = "";
+				for ( key in tagsSet ) {
+					if ( tagsSet[key] ) {
+						t = t + com + key;
+						com = "|";
+					}
+				}
+				tagsValue = t;
+				$("#sTags").val(t);
+				$("#tTags").val(t);
+			});
+		}
+	});
+}
+
+getCategories();
+getTags();
+
+function displayDoc(pos,id) {
+	console.log ( "displayDoc", pos, id );
+}
+
+
+/*
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">First</th>
+      <th scope="col">Last</th>
+      <th scope="col">Handle</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">1</th>
+      <td>Mark</td>
+      <td>Otto</td>
+      <td>@mdo</td>
+    </tr>
+    <tr>
+      <th scope="row">2</th>
+      <td>Jacob</td>
+      <td>Thornton</td>
+      <td>@fat</td>
+    </tr>
+    <tr>
+      <th scope="row">3</th>
+      <td>Larry</td>
+      <td>the Bird</td>
+      <td>@twitter</td>
+    </tr>
+  </tbody>
+</table>
+*/
+
+function renderTableTo ( loc, data ) {
+	var sA = [];
+	sA.push ( "<table class=\"table table-striped\">" );
+	sA.push ( "\t<thead>" );
+	sA.push ( "\t\t<tr>" );
+		sA.push ( "<th scope=\"col\">Description</th>" );
+		sA.push ( "<th scope=\"col\">Date</th>" );
+		sA.push ( "<th scope=\"col\">Action</th>" );
+	sA.push ( "\t\t</tr>" );
+	sA.push ( "\t</thead>" );
+	sA.push ( "\t<tbody>" );
+	for ( var ii = 0, mx = data.data.length; ii < mx; ii++ ) {
+		sA.push ( "\t\t<tr>" );
+			sA.push ( "<td>"+data.data[ii].desc+"</td>" );
+			sA.push ( "<td>"+data.data[ii].created+"</td>" );
+			sA.push ( "<td><button class=\"btn btn-primary\" type=\"button\" onClick=\"displayDoc("+ii+",'"+data.data[ii].id+"')\">Display</button></td>" );
+		sA.push ( "\t\t</tr>" );
+	}
+	sA.push ( "\t</tbody>" );
+	sA.push ( "<table>" );
+	var s = sA.join("\n");
+	$(loc).html(s);
+}
+
+// List of images that will be used to build the PDF document.
+
+var imgListSelected = [];
+var pdfURL ;
+function AddImageSelected ( pPos, pName ) {
+	var ipPos = parseInt(pPos);
+	for ( var jj = 0, mx = imgListSelected.length; jj < mx; jj++ ) {
+		if ( imgListSelected[jj].pos == ipPos && imgListSelected[jj].name == pName ) {
+			return;
+		}
+	}
+	imgListSelected.push ( { pos: ipPos, name: pName } );
+}
+function RmImageSelected ( pPos, pName ) {
+	var ipPos = parseInt(pPos);
+	for ( var jj = 0, mx = imgListSelected.length; jj < mx; jj++ ) {
+		if ( imgListSelected[jj].pos == ipPos && imgListSelected[jj].name == pName ) {
+			imgListSelected[jj] = { pos: -1 };
+		}
+	}
+}
+function ResetImageSelected ( ) {
+	imgListSelected = [];
+}
+
+
+// <div id="listImg"></div>
+function renderImageTableTo ( loc, data ) {
+	var sA = [];
+	sA.push ( "<table class=\"table table-striped\">" );
+	sA.push ( "\t<thead>" );
+	sA.push ( "\t\t<tr>" );
+		sA.push ( "<th scope=\"col\">Image</th>" );
+		sA.push ( "<th scope=\"col\">Action</th>" );
+	sA.push ( "\t\t</tr>" );
+	sA.push ( "\t</thead>" );
+	sA.push ( "\t<tbody>" );
+	for ( var ii = 0, mx = data.length-1; ii < mx; ii++ ) {
+		sA.push ( "\t\t<tr>" );
+			sA.push ( "<td><label><img class=\"imgList\" id=\"nImg"+ii+"\"width=\"200\" src='/image/"+data[ii].name+"'>&nbsp;<input type=\"checkbox\" class=\"selectedImg\" value=\""+ii+":"+data[ii].name+"\"></label></td>" );
+			// sA.push ( "<td><button class=\"btn btn-primary\" type=\"button\" onClick=\"addImage("+ii+",'"+data[ii].name+"')\">Add To Doc</button></td>" );
+		sA.push ( "\t\t</tr>" );
+	}
+	sA.push ( "\t</tbody>" );
+	sA.push ( "<table>" );
+	var s = sA.join("\n");
+	$(loc).html(s);
+}
+
+function getImageList() {
+	var ranNum = Math.random();
+	var param = { "_ran_": ranNum };
+	$.ajax({
+	  method: "GET",
+	  url: "/image",
+	  data: param
+	}).done(function(data){
+		ResetImageSelected();
+		var d2 = JSON.parse(data);
+		renderImageTableTo("#listImg",d2);
+		// sA.push ( "<td><label><img id=\"nImg'+ii+'\"width=\"200\" src='/image/"+data[ii].name+"'>&nbsp;<input type=\"checkbox\" class=\"selectedImg\" value=\"'+ii+':'+data[ii].name+'\"></label></td>" );
+		$('.selectedImg').change(function(ev) {
+			console.log("x(2)=",ev);
+			var checked = ev.target.checked;
+			console.log("checked=",checked);
+			if ( checked ) {
+				console.log ( "is Checked" );
+			} else {
+				console.log ( "is ***NOT*** Checked" );
+			}
+			var vv = $(this).val();
+			console.log ( "vv=", vv ); 
+			var vvp = vv.split(":",2);
+			console.log ( "vvp=", vvp ); 
+			if ( checked ) {
+				$("#nImg"+vvp[0]).toggleClass(function(){ return "imageSelected"; });
+				AddImageSelected ( vvp[0], vvp[1] );
+			} else {
+				$("#nImg"+vvp[0]).toggleClass(function(){ return "imageNotSelected"; });
+				RmImageSelected ( vvp[0], vvp[1] );
+			}
+		});
+	});
+}
+
+
+
+
+
+
+
+// Display Correct Page -----------------------------------
+$(document).ready(function() {
+	doPage( curPage );
+
+	if ( config == "prod" ) {
+		$("#bShowDoc").hide();
+	}
+
+	$("#bNew1").click(function() {
+		getImageList();
+		doPage( "docNew" );
+	});
+	$("#bSearch1").click(function() {
+		doPage( "docSearch" );
+	});
+	$("#bList1").click(function() {
+		doPage( "docList" );
+	});
+	$("#bUpdate1").click(function() {
+		doPage( "docUpdate" );
+	});
+
+	var docTopFunc = function() {
+		doPage( "docTop" );
+	}
+	$("#bTop1").click(docTopFunc);
+	$("#bTop2").click(docTopFunc);
+	$("#bTop3").click(docTopFunc);
+	$("#bTop4").click(docTopFunc);
+	$("#bTop5").click(docTopFunc);
+	$("#bTop6").click(docTopFunc);
+
+	var ProcessImageRow = function ( Param ) {
+		$.ajax( {
+		  method: "POST",
+		  url: "/api/procImgRow",
+		  data: Param
+		})
+			.done(function( data ) {
+				// console.log( "ProcessImageRow.done()", data );
+				// data = JSON.parse ( data );
+				console.log( "ProcessImageRow.done() 2", data );
+				pdfURL = data.pdfURL;
+				if ( config == "prod" ) {
+					$("#thePDF").html("<iframe src="+pdfURL+" style=\"width:800px; height:500px;\" frameborder=\"1\"></iframe>");
+					doPage( "showPDF" );
+				}
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+			});
+	}
+
+	var form01Action = function( imgList ) {
+		// xyzzy - setup buttons - on Search/Action
+		/* 	type: frm.attr('method'),
+			url: frm.attr('action'),
+			data: frm.serialize(),
+		*/
+		var ranNum = Math.random();
+		var frm = $('#form01');
+		var frmData = frm.serializeArray();	// Array of name/value map pairs
+		// console.log ( "searialize data", frm.serialize() );
+		console.log ( "searialize data", frmData);
+		var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+		for ( var ii = 0; ii < frmData.length; ii++ ) {
+			param[frmData[ii].name] = frmData[ii].value;
+		}
+		console.log ( "searialize data map", param);
+
+		// xyzzy - put up spinner - on z-index 100000
+
+		var tTags = $("#tTags").val();				// uses same data as create new form.
+		var tCategory = $("#sCategory").val();		// uses same data as create new form.
+		var tTitle = $("#tTitle").val();
+		var tDesc = $("#tDesc").val();
+		console.log ( "tTags=", tTags );
+		console.log ( "tCategory=", tCategory );
+		console.log ( "tTitle=", tTitle );
+		console.log ( "tDesc=", tDesc );
+
+		var category_id = LookupCactegoryId(tCategory);
+
+		param["tags"] = tTags;
+		param["title"] = tTitle;
+		param["desc"] = tDesc;
+		param["category_id"] = category_id;
+		param["category"] = tCategory;
+		param["category_orig"] = tCategory;
+		param["image_list"] = JSON.stringify ( imgListSelected );
+
+		$.ajax( {
+		  method: "POST",
+		  url: "/api/table/dt_document",
+		  data: param
+		})
+			.done(function( data ) {
+				console.log( ".done()", data );
+				if ( data.status === "success" ) {
+					// xyzzy - have data.id - is ID of parametric data - make 2nd call?
+					param["id"] = data.id;
+					ProcessImageRow ( param );
+				} else {
+					// Xyzzy - Reprot Error
+					console.log ( "Report Error", data )
+				}
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+			});
+
+	}
+
+	// <button class="btn btn-primary" id="bAddDocument" type="button">Create Document Images</button> 
+	$("#bAddDocument").click(function() {
+		doPage( "docAttr" );
+	});
+	// <button class="btn btn-primary" id="bAddDocumentPt2" type="button">Create Document</button> 
+	$("#bAddDocumentPt2").click(function() {
+		console.log ( "Save data with images to server" );
+		form01Action ( imgListSelected );
+	});
+
+	$("#bShowDoc").click(function() {
+		// <div id=thePDF></div>
+		// https://stackoverflow.com/questions/4853898/display-pdf-within-web-browser
+		// $("#thePDF").html("<iframe src="http://docs.google.com/gview?url=http://path.com/to/your/pdf.pdf&embedded=true" style="width:600px; height:500px;" frameborder="0"></iframe>
+		$("#thePDF").html("<iframe src="+pdfURL+" style=\"width:800px; height:500px;\" frameborder=\"1\"></iframe>");
+		doPage( "showPDF" );
+	});
+
+	// See above...
+	// sA.push ( "<td><label><img id=\"nImg'+ii+'\"width=\"200\" src='/image/"+data[ii].name+"'>&nbsp;<input type=\"checkbox\" class=\"selectedImg\" value=\"'+ii+':'+data[ii].name+'\"></label></td>" );
+	//$('.selectedImg').change(function(x) {
+	//	console.log("x=",x);
+	//});
+
+	var form02Action = function() {
+		/* 	type: frm.attr('method'),
+			url: frm.attr('action'),
+			data: frm.serialize(),
+		*/
+		var ranNum = Math.random();
+		var frm = $('#form02');
+		var frmData = frm.serializeArray();	// Array of name/value map pairs
+		// console.log ( "searialize data", frm.serialize() );
+		console.log ( "searialize data", frmData);
+		var param = { "api_table_key": "kip.philip", "_ran_": ranNum };
+		for ( var ii = 0; ii < frmData.length; ii++ ) {
+			param[frmData[ii].name] = frmData[ii].value;
+		}
+		console.log ( "searialize data map", param);
+		// xyzzy - put up spinner - on z-index 100000
+
+		// $("input[name=first_name]").val();
+		var sCategory = $("#sCategory").val();
+		var sTags = $("#sTags").val();
+		var sWords = $("#sWords").val();
+		var sBegDate = $("#sBegDate").val();
+		var sEndDate = $("#sEndDate").val();
+
+		// Add where clause to query - if no where then it will just pull back all documents in default sorted order.  This is a
+		// paged set so it is reasonable to pull.  Default sorted order is fast - hits a database index.
+		if ( sCategory != "" || sTags != "" || sWords != ""  || sBegDate != "" || sEndDate != "" ) {
+			var wh = {"op":"and", "List":[]};
+
+			if ( sCategory != "" ) {
+				wh.List.push ( {"op":"in", "name":"category", "List":[{"Val1s":sCategory}] } );	// op:= or op:== is invalid query.
+			}
+
+			if ( sTags != "" ) {
+				// wh.List.push ( {"op":"in", "name":"tag_list", "List":[{"Val1s":sTags}] } );	
+				var t1 = [];
+				for ( key in tagsSet ) {
+					if ( tagsSet[key] ) {
+						t1.push ( { "Val1s": key } );
+					}
+				}
+				wh.List.push ( {"op":"in", "name":"tag_list", "List":t1 } );	
+			}
+
+			if ( sWords != "" ) {
+				wh.List.push ( {"op":"==", "name":"key_word", "Val1s": sWords} ); // op must be = or ==	
+			}
+
+			// https://eonasdan.github.io/bootstrap-datetimepicker/
+			// https://stackoverflow.com/questions/44971954/how-to-get-am-pm-from-the-date-time-string-using-moment-js
+			// https://stackoverflow.com/questions/46931440/convert-datetime-to-iso-format
+
+			if ( sBegDate != "" && sEndDate != "" ) {
+				var pBeg = moment(sBegDate, 'DD/MM/YYYY H:mm A')
+				var begISO = pBeg.toISOString();
+				var pEnd = moment(sEndDate, 'DD/MM/YYYY H:mm A')
+				var endISO = pBeg.toISOString();
+				console.log('Beg,End', begISO,endISO);
+				wh.List.push ( {"op":"between", "name":"created", "Val1d": begISO, "Val2d": endISO} ); 
+			} else if ( sBegDate != "" ) {
+				var pBeg = moment(sBegDate, 'DD/MM/YYYY H:mm A')
+				console.log('Beg', pBeg);
+				var begISO = pBeg.toISOString();
+				console.log('Beg', begISO);
+				wh.List.push ( {"op":">=", "name":"created", "Val1d": begISO} );
+			} else if ( sEndDate != "" ) {
+				var pEnd = moment(sEndDate, 'DD/MM/YYYY H:mm A')
+				var endISO = pBeg.toISOString();
+				console.log('End', endISO);
+				wh.List.push ( {"op":"<=", "name":"created", "Val1d": endISO} ); 
+			}	
+
+			wh_s = JSON.stringify ( wh );
+			param["where"] = wh_s;
+		}
+
+		$.ajax( {
+		  method: "GET",
+		  url: "/api/table/dt_document",
+		  data: param
+		})
+			.done(function( data ) {
+				console.log( ".done()", data );
+				// xyzzy - if status == "success" {
+
+					renderTableTo ( "#outdata", data );
+					doPage( "docList" );
+
+				// xyzzy - else 
+					// xyzzy - take message and put in error page.
+					// xyzzy - switch to error page.
+			})
+			.fail(function( err ) {
+				console.log( "error", err );
+				// xyzzy - take message and put in error page.
+				// xyzzy - switch to error page.
+			})
+			.always(function() {
+				console.log( "complete/alwasy called" );
+				// xyzzy - take down spinner.
+			});
+
+	}
+	$( "#form02" ).submit(function( event ) { 
+		event.preventDefault();
+		form02Action();
+	});
+	$("#searchGo").click(form02Action);
+
+});
+
+
+</script>
+
+</body>
+</html>

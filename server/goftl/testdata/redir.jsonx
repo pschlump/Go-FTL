@@ -1,0 +1,6 @@
+			, { "Redirect": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/q/" ]
+				, "To": [
+					{ "To":"http://192.168.0.157:2004/q/{{.THE_REST}}" }
+				]
+			} }

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Make the page mobile compatible -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>Welcome: Just Registered</title>
+</head>
+<body>
+
+<h1> Newly Registered </h1>
+<h2> Welcome </h2>
+
+<ol>
+	<li> take URL parameters - from redirct and put into local storage/cookies etc.
+			xsrf_token, auth_token, xsrf_mode?
+		</li>
+	<li> chagne URL on client side back to /t02.html"
+		</li>
+</ol>
+
+<a id="link-to-app" href="/t02.html"> click to start using the application. </a>
+
+<script src="js/jquery-2.1.4.js"></script>
+<script>
+
+// 
+//	<script src="js/jquery-2.1.4.js">
+//	<link rel="stylesheet" href="http://localhost:8088/style/bootstrap.min.css"> <!-- version 3.3.7 Bootstrap -->
+//	<link rel="stylesheet" href="http://localhost:8088/style/bootstrap-theme.min.css">
+// 
+// CLI -
+// 	xsrf_token
+// 	auth_token
+// 	?email_addr
+//	?real_name
+//
+
+
+function createCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime()+(days*24*60*60*1000));
+		expires = "; expires="+date.toGMTString();
+	} 
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) {
+			return c.substring(nameEQ.length,c.length);
+		}
+	}
+	return null;
+}
+
+function delCookie(name) {
+	createCookie(name,"",-1);
+}
+
+
+function URLStrToHash(query) {
+	var rv = {};
+	var decode = function (s) { return decodeURIComponent(s.replace(/^\?/,"").replace(/\+/g, " ")); };
+
+	var p1 = query.replace(/([^&=]+)=?([^&]*)/g,function(j,n,v){
+		n = decode(n);
+		v = decode(v);
+		if ( typeof(rv[n]) === "undefined" ) {
+			rv[n] = ( typeof v === "undefined" ) ? "" : v;
+		} else if ( typeof(rv[n]) === "string" ) {
+			var x = rv[n];
+			rv[n] = [];
+			rv[n].push ( x );
+			rv[n].push ( v );
+		} else {
+			rv[n].push ( v );
+		}
+		return "";
+	});
+	return rv;
+}
+
+//var v = URLStrToHash("a=12&b=22&c&d");
+//console.log ( 'v=', v );
+//var v = URLStrToHash("a=12&b=22&x=aa&x=bb&x=cc&x=dd&x=ee&d=888888");
+//console.log ( 'v=', v );
+
+function Id(x){
+	return document.getElementById(x);
+}
+
+var g_origin = window.location.origin;
+if ( ! g_origin ) {			// Probablyl running on Opera
+	g_origin = window.location.protocol + "//" + window.location.host;
+}
+
+var g_param = URLStrToHash ( window.location.search );
+
+console.log ( window.location.search );
+console.log ( "g_param=", g_param );
+
+// set as cookies!
+if ( g_param.auth_token ) {
+	createCookie('auth_token',g_param.auth_token);
+}
+if ( g_param.xsrf_token ) {
+	createCookie('xsrf_token',g_param.xsrf_token);
+}
+if ( g_param.jwt_token ) {
+	createCookie('jwt_token',g_param.jwt_token);
+}
+if ( g_param.redir_to_app ) {
+	if ( g_param.redir_to_app !== "" ) {
+		console.log ( "Setting href to", g_param.redir_to_app);
+		$("#link-to-app").attr("href", g_param.redir_to_app);
+
+		// timeout-redirect to APP - set location!
+		setTimeout(function(){
+			alert("Redirect To: "+g_param.redir_to_app);
+			window.location.replace(g_param.redir_to_app);
+		}, 5000);
+
+	}
+}
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+"Item":
+    {
+        "chat-bot": {
+            "Name": "chat-bot: ~/Projects/demo-Go-FTL-Socket-IO, ~/Projects/q-demo/chat-bot"
+        ,   "TTL": 60
+        ,   "Group": [ "host:192.168.0.157,chat-background-process" ]
+        }
+    ,   "sio-demo-server": {
+            "Name": "sio-demo.sh: 192.168.0.157:16001"
+        ,   "TTL": 60
+        ,   "Group": [ "host:192.168.0.157,Go-FTL-server" ]
+        }
+    }
+}

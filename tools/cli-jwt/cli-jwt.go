@@ -12,13 +12,13 @@ import (
 	"os"
 	"regexp"
 
-	jwt "github.com/dgrijalva/jwt-go"
-
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pschlump/MiscLib"
-	"github.com/pschlump/check-json-syntax/lib"
 	"github.com/pschlump/godebug"
-	"github.com/pschlump/json" //	"encoding/json"
+	"github.com/pschlump/json"
 )
+
+// jwt "github.com/dgrijalva/jwt-go"
 
 type ConfigType struct {
 	KeyDir  string // ~/data

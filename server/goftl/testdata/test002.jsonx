@@ -1,0 +1,43 @@
+{
+	"http://localhost:9018/": { "LineNo":{{ __line_no__ }},
+        "listen_to":[ "http://localhost:9018", "http://192.168.0.200:9018" ],
+        "plugins":[
+			  { "Status": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/Status"
+			} }
+			, { "HostToCustomerId": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+			} }
+			, { "HardcodeRewrite": { "LineNo":{{ __line_no__ }}
+                 	, "Paths": [ "/api^" ]
+					, "MatchReplace": [
+						  { "Match": "/api/v001/table/v1_animal1", 				"Replace": "/api/table/v1_animal1"		 	}
+						, { "Match": "/api/v001/table/ListAnimal", 				"Replace": "/api/table/ListAnimal"		 	}
+						, { "Match": "/api/v001/table/v1_animal1_event", 		"Replace": "/api/table/v1_animal1_event"	}
+						, { "Match": "/api/v001/table/v1_ranch_name", 			"Replace": "/api/table/v1_ranch_name"		}
+					]
+			} },
+			, { "DocImageProc": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/procImgRow"
+			} }
+			, { "TabServer2": { "LineNo":{{ __line_no__ }}
+				, "Paths":["/api/table^","/api/status^","/api/v001^"]
+				, "AppName": 			"acb.2c-why.com"
+				, "AppRoot":            "/Users/pschlump/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/acb/..."
+				, "StatusMessage":		"""Public (acb) Version 0.0.1 Mon Sep 17 20:19:47 MDT 2018 File:{{ __file_name_nq__ }} Line:{{ __line_no__ }}"""
+				, "KeyFilePrivate": 	"./test-key/sample_key"
+				, "ApiTableKey": 		"kip.philip"
+				, "ApiStatus":			"/api/status/"
+			} }
+			, { "DirectoryBrowse": { "LineNo":{{ __line_no__ }}
+				, "Paths": [ "/image" ]
+				, "TemplateName": "image.tmpl"
+				, "TemplateRoot": [ "/Users/pschlump/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9018/www/tmpl" ]
+			} },
+			, { "FileServer": { "LineNo":{{ __line_no__ }}
+				, "Paths": "/"
+				, "Root": "/Users/pschlump/go/src/github.com/pschlump/Go-FTL/server/goftl/testdata/9018/www"
+			} }
+		]
+	}
+}

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<!-- saved from url=(0057)https://coderexample.com/single-page-apps-jquery-routing/ -->
+<html class=" js flexbox flexboxlegacy canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths" lang="en-US" prefix="og: http://ogp.me/ns#"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="theme-color" content="#f4645f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Single Page Apps with jQuery Routing - Coder Example</title>
+<link rel="icon" sizes="192x192" href="https://coderexample.com/wp-content/uploads/2016/03/ce_favicon.png">
+<link rel="profile" href="https://gmpg.org/xfn/11">
+<link rel="pingback" href="https://coderexample.com/xmlrpc.php">
+
+<!-- favicon -->
+
+
+<!--[if IE]><![endif]-->
+
+
+<!-- This site is optimized with the Yoast SEO plugin v4.2.1 - https://yoast.com/wordpress/plugins/seo/ -->
+<meta name="keywords" content="Single Page Apps with jQuery Routing, jquery routing, sammy js, spa in jquery,">
+<link rel="canonical" href="https://coderexample.com/single-page-apps-jquery-routing/">
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Single Page Apps with jQuery Routing">
+<meta property="og:description" content="Single page apps are becoming the hot cake in the web industry, Everyone wants to build SPA or Single page apps. In this article, we will do a quick rundown SPA using jQuery and without using any MV* frameworks like React, Angular, Vue etc.">
+<meta property="og:url" content="https://coderexample.com/single-page-apps-jquery-routing/">
+<meta property="og:site_name" content="Coder Example">
+<meta property="article:publisher" content="https://facebook.com/coderexample">
+<meta property="article:author" content="https://www.facebook.com/arkaindas">
+<meta property="article:tag" content="jquery routing">
+<meta property="article:tag" content="spa">
+<meta property="article:section" content="Ajax">
+<meta property="article:published_time" content="2016-09-01T01:24:19+05:30">
+<meta property="article:modified_time" content="2016-09-01T20:31:14+05:30">
+<meta property="og:updated_time" content="2016-09-01T20:31:14+05:30">
+<meta property="og:image" content="https://coderexample.com/wp-content/uploads/2016/09/jquery_router.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:description" content="Single page apps are becoming the hot cake in the web industry, Everyone wants to build SPA or Single page apps. In this article, we will do a quick rundown SPA using jQuery and without using any MV* frameworks like React, Angular, Vue etc.">
+<meta name="twitter:title" content="Single Page Apps with jQuery Routing">
+<meta name="twitter:site" content="@coderexample">
+<meta name="twitter:image" content="https://coderexample.com/wp-content/uploads/2016/09/jquery_router.png">
+<meta name="twitter:creator" content="@arkaindas">
+<!-- / Yoast SEO plugin. -->
+
+<link rel="dns-prefetch" href="https://fonts.googleapis.com/">
+<link rel="dns-prefetch" href="https://s.w.org/">
+<link rel="alternate" type="application/rss+xml" title="Coder Example » Feed" href="https://coderexample.com/feed/">
+<link rel="alternate" type="application/rss+xml" title="Coder Example » Comments Feed" href="https://coderexample.com/comments/feed/">
+<link rel="alternate" type="application/rss+xml" title="Coder Example » Single Page Apps with jQuery Routing Comments Feed" href="https://coderexample.com/single-page-apps-jquery-routing/feed/">
+		<script async="" src="./jq-single-page_files/saved_resource"></script><script id="twitter-wjs" src="./jq-single-page_files/widgets.js"></script><script id="facebook-jssdk" src="./jq-single-page_files/sdk.js"></script><script async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/2.2.1\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/2.2.1\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/coderexample.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=4.7.5"}};
+			!function(a,b,c){function d(a){var b,c,d,e,f=String.fromCharCode;if(!k||!k.fillText)return!1;switch(k.clearRect(0,0,j.width,j.height),k.textBaseline="top",k.font="600 32px Arial",a){case"flag":return k.fillText(f(55356,56826,55356,56819),0,0),!(j.toDataURL().length<3e3)&&(k.clearRect(0,0,j.width,j.height),k.fillText(f(55356,57331,65039,8205,55356,57096),0,0),b=j.toDataURL(),k.clearRect(0,0,j.width,j.height),k.fillText(f(55356,57331,55356,57096),0,0),c=j.toDataURL(),b!==c);case"emoji4":return k.fillText(f(55357,56425,55356,57341,8205,55357,56507),0,0),d=j.toDataURL(),k.clearRect(0,0,j.width,j.height),k.fillText(f(55357,56425,55356,57341,55357,56507),0,0),e=j.toDataURL(),d!==e}return!1}function e(a){var c=b.createElement("script");c.src=a,c.defer=c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var f,g,h,i,j=b.createElement("canvas"),k=j.getContext&&j.getContext("2d");for(i=Array("flag","emoji4"),c.supports={everything:!0,everythingExceptFlag:!0},h=0;h<i.length;h++)c.supports[i[h]]=d(i[h]),c.supports.everything=c.supports.everything&&c.supports[i[h]],"flag"!==i[h]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[i[h]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(g=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",g,!1),a.addEventListener("load",g,!1)):(a.attachEvent("onload",g),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),f=c.source||{},f.concatemoji?e(f.concatemoji):f.wpemoji&&f.twemoji&&(e(f.twemoji),e(f.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script><script src="./jq-single-page_files/wp-emoji-release.min.js" type="text/javascript" defer=""></script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+<link rel="stylesheet" id="fb_data_style-css" href="./jq-single-page_files/fbstyle.css" type="text/css" media="all">
+<link rel="stylesheet" id="cresta-social-crestafont-css" href="./jq-single-page_files/csscfont.css" type="text/css" media="all">
+<link rel="stylesheet" id="cresta-social-wp-style-css" href="./jq-single-page_files/cresta-wp-css.css" type="text/css" media="all">
+<link rel="stylesheet" id="cresta-social-googlefonts-css" href="./jq-single-page_files/css" type="text/css" media="all">
+<link rel="stylesheet" id="sparkling-bootstrap-css" href="./jq-single-page_files/bootstrap.min.css" type="text/css" media="all">
+<link rel="stylesheet" id="sparkling-icons-css" href="./jq-single-page_files/font-awesome.min.css" type="text/css" media="all">
+<link rel="stylesheet" id="sparkling-fonts-css" href="./jq-single-page_files/css(1)" type="text/css" media="all">
+<link rel="stylesheet" id="sparkling-style-css" href="./jq-single-page_files/style.css" type="text/css" media="all">
+<link rel="stylesheet" id="an_style-css" href="./jq-single-page_files/rUhdpdoOwxxA.css" type="text/css" media="all">
+<script type="text/javascript" src="./jq-single-page_files/jquery.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/modernizr.min.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/bootstrap.min.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/functions.min.js"></script>
+<link rel="https://api.w.org/" href="https://coderexample.com/wp-json/">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://coderexample.com/xmlrpc.php?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://coderexample.com/wp-includes/wlwmanifest.xml"> 
+<meta name="generator" content="WordPress 4.7.5">
+<link rel="shortlink" href="https://coderexample.com/?p=524">
+<link rel="alternate" type="application/json+oembed" href="https://coderexample.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F">
+<link rel="alternate" type="text/xml+oembed" href="https://coderexample.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F&amp;format=xml">
+<style type="text/css">.cresta-share-icon .sbutton {text-shadow: 1px 1px 0px rgba(0, 0, 0, .4);}#crestashareiconincontent {float: left;}</style><style type="text/css">.entry-content {font-family: verdana; font-size:18px; font-weight: normal; color:#000000;}</style><link rel="amphtml" href="https://coderexample.com/single-page-apps-jquery-routing/amp/"><link rel="stylesheet" type="text/css" href="./jq-single-page_files/shCore.css"><link rel="stylesheet" type="text/css" href="./jq-single-page_files/shThemeDefault.css"><style type="text/css" id="syntaxhighlighteranchor"></style>
+
+<script type="text/javascript">
+/* jQuery(document).ready(function(){
+jQuery(window).scroll(function(){
+  if (jQuery(window).scrollTop() >= 250) {
+    jQuery('#ce-sticky').addClass('ce-sticky');
+   }
+   else {
+    jQuery('#ce-sticky').removeClass('ce-sticky');
+   }
+});
+}); */
+
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59250028-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script async="" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-9909650163450537",
+    enable_page_level_ads: true
+  });
+</script>
+<script type="text/javascript" async="" src="./jq-single-page_files/embed.js"></script><script async="" type="text/javascript" src="./jq-single-page_files/count.js"></script><script type="text/javascript" charset="utf-8" async="" src="./jq-single-page_files/button.38c92cc0f88c473b4a9509c5027be028.js"></script><style type="text/css">.fb_hidden{position:absolute;top:-10000px;z-index:10001}.fb_reposition{overflow:hidden;position:relative}.fb_invisible{display:none}.fb_reset{background:none;border:0;border-spacing:0;color:#000;cursor:auto;direction:ltr;font-family:"lucida grande", tahoma, verdana, arial, sans-serif;font-size:11px;font-style:normal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal}.fb_reset>div{overflow:hidden}.fb_link img{border:none}@keyframes fb_transform{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.fb_animate{animation:fb_transform .3s forwards}
+.fb_dialog{background:rgba(82, 82, 82, .7);position:absolute;top:-10000px;z-index:10001}.fb_reset .fb_dialog_legacy{overflow:visible}.fb_dialog_advanced{padding:10px;-moz-border-radius:8px;-webkit-border-radius:8px;border-radius:8px}.fb_dialog_content{background:#fff;color:#333}.fb_dialog_close_icon{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 0 transparent;cursor:pointer;display:block;height:15px;position:absolute;right:18px;top:17px;width:15px}.fb_dialog_mobile .fb_dialog_close_icon{top:5px;left:5px;right:auto}.fb_dialog_padding{background-color:transparent;position:absolute;width:1px;z-index:-1}.fb_dialog_close_icon:hover{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -15px transparent}.fb_dialog_close_icon:active{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -30px transparent}.fb_dialog_loader{background-color:#f6f7f9;border:1px solid #606060;font-size:24px;padding:20px}.fb_dialog_top_left,.fb_dialog_top_right,.fb_dialog_bottom_left,.fb_dialog_bottom_right{height:10px;width:10px;overflow:hidden;position:absolute}.fb_dialog_top_left{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/ye/r/8YeTNIlTZjm.png) no-repeat 0 0;left:-10px;top:-10px}.fb_dialog_top_right{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/ye/r/8YeTNIlTZjm.png) no-repeat 0 -10px;right:-10px;top:-10px}.fb_dialog_bottom_left{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/ye/r/8YeTNIlTZjm.png) no-repeat 0 -20px;bottom:-10px;left:-10px}.fb_dialog_bottom_right{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/ye/r/8YeTNIlTZjm.png) no-repeat 0 -30px;right:-10px;bottom:-10px}.fb_dialog_vert_left,.fb_dialog_vert_right,.fb_dialog_horiz_top,.fb_dialog_horiz_bottom{position:absolute;background:#525252;filter:alpha(opacity=70);opacity:.7}.fb_dialog_vert_left,.fb_dialog_vert_right{width:10px;height:100%}.fb_dialog_vert_left{margin-left:-10px}.fb_dialog_vert_right{right:0;margin-right:-10px}.fb_dialog_horiz_top,.fb_dialog_horiz_bottom{width:100%;height:10px}.fb_dialog_horiz_top{margin-top:-10px}.fb_dialog_horiz_bottom{bottom:0;margin-bottom:-10px}.fb_dialog_iframe{line-height:0}.fb_dialog_content .dialog_title{background:#6d84b4;border:1px solid #365899;color:#fff;font-size:14px;font-weight:bold;margin:0}.fb_dialog_content .dialog_title>span{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/yd/r/Cou7n-nqK52.gif) no-repeat 5px 50%;float:left;padding:5px 0 7px 26px}body.fb_hidden{-webkit-transform:none;height:100%;margin:0;overflow:visible;position:absolute;top:-10000px;left:0;width:100%}.fb_dialog.fb_dialog_mobile.loading{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/ya/r/3rhSv5V8j3o.gif) white no-repeat 50% 50%;min-height:100%;min-width:100%;overflow:hidden;position:absolute;top:0;z-index:10001}.fb_dialog.fb_dialog_mobile.loading.centered{width:auto;height:auto;min-height:initial;min-width:initial;background:none}.fb_dialog.fb_dialog_mobile.loading.centered #fb_dialog_loader_spinner{width:100%}.fb_dialog.fb_dialog_mobile.loading.centered .fb_dialog_content{background:none}.loading.centered #fb_dialog_loader_close{color:#fff;display:block;padding-top:20px;clear:both;font-size:18px}#fb-root #fb_dialog_ipad_overlay{background:rgba(0, 0, 0, .45);position:absolute;bottom:0;left:0;right:0;top:0;width:100%;min-height:100%;z-index:10000}#fb-root #fb_dialog_ipad_overlay.hidden{display:none}.fb_dialog.fb_dialog_mobile.loading iframe{visibility:hidden}.fb_dialog_content .dialog_header{-webkit-box-shadow:white 0 1px 1px -1px inset;background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#738ABA), to(#2C4987));border-bottom:1px solid;border-color:#1d4088;color:#fff;font:14px Helvetica, sans-serif;font-weight:bold;text-overflow:ellipsis;text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0;vertical-align:middle;white-space:nowrap}.fb_dialog_content .dialog_header table{-webkit-font-smoothing:subpixel-antialiased;height:43px;width:100%}.fb_dialog_content .dialog_header td.header_left{font-size:12px;padding-left:5px;vertical-align:middle;width:60px}.fb_dialog_content .dialog_header td.header_right{font-size:12px;padding-right:5px;vertical-align:middle;width:60px}.fb_dialog_content .touchable_button{background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#4966A6), color-stop(.5, #355492), to(#2A4887));border:1px solid #29487d;-webkit-background-clip:padding-box;-webkit-border-radius:3px;-webkit-box-shadow:rgba(0, 0, 0, .117188) 0 1px 1px inset, rgba(255, 255, 255, .167969) 0 1px 0;display:inline-block;margin-top:3px;max-width:85px;line-height:18px;padding:4px 12px;position:relative}.fb_dialog_content .dialog_header .touchable_button input{border:none;background:none;color:#fff;font:12px Helvetica, sans-serif;font-weight:bold;margin:2px -12px;padding:2px 6px 3px 6px;text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0}.fb_dialog_content .dialog_header .header_center{color:#fff;font-size:16px;font-weight:bold;line-height:18px;text-align:center;vertical-align:middle}.fb_dialog_content .dialog_content{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/y9/r/jKEcVPZFk-2.gif) no-repeat 50% 50%;border:1px solid #555;border-bottom:0;border-top:0;height:150px}.fb_dialog_content .dialog_footer{background:#f6f7f9;border:1px solid #555;border-top-color:#ccc;height:40px}#fb_dialog_loader_close{float:left}.fb_dialog.fb_dialog_mobile .fb_dialog_close_button{text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0}.fb_dialog.fb_dialog_mobile .fb_dialog_close_icon{visibility:hidden}#fb_dialog_loader_spinner{animation:rotateSpinner 1.2s linear infinite;background-color:transparent;background-image:url(http://static.xx.fbcdn.net/rsrc.php/v3/yD/r/t-wz8gw1xG1.png);background-repeat:no-repeat;background-position:50% 50%;height:24px;width:24px}@keyframes rotateSpinner{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.fb_iframe_widget{display:inline-block;position:relative}.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}.fb_iframe_widget iframe{position:absolute}.fb_iframe_widget_fluid_desktop,.fb_iframe_widget_fluid_desktop span,.fb_iframe_widget_fluid_desktop iframe{max-width:100%}.fb_iframe_widget_fluid_desktop iframe{min-width:220px;position:relative}.fb_iframe_widget_lift{z-index:1}.fb_hide_iframes iframe{position:relative;left:-10000px}.fb_iframe_widget_loader{position:relative;display:inline-block}.fb_iframe_widget_fluid{display:inline}.fb_iframe_widget_fluid span{width:100%}.fb_iframe_widget_loader iframe{min-height:32px;z-index:2;zoom:1}.fb_iframe_widget_loader .FB_Loader{background:url(http://static.xx.fbcdn.net/rsrc.php/v3/y9/r/jKEcVPZFk-2.gif) no-repeat;height:32px;width:32px;margin-left:-16px;position:absolute;left:50%;z-index:4}</style><link rel="preload" as="style" href="https://c.disquscdn.com/next/embed/styles/lounge.e52b2f99308b09ef7684f62bab4d6f07.css"><link rel="preload" as="script" href="https://c.disquscdn.com/next/embed/common.bundle.b2c634a04700d668e072b1d5f9909f67.js"><link rel="preload" as="script" href="https://c.disquscdn.com/next/embed/lounge.bundle.ae843aee26babde22e49b9b7dce2109c.js"><link rel="preload" as="script" href="https://disqus.com/next/config.js"><script src="./jq-single-page_files/alfie.f51946af45e0b561c60f768335c9eb79.js" async="" charset="UTF-8"></script></head><body class="post-template-default single single-post postid-524 single-format-standard group-blog"><div id="fb-root" class=" fb_reset"><div style="position: absolute; top: -10000px; height: 0px; width: 0px;"><div><iframe name="fb_xdm_frame_https" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" id="fb_xdm_frame_https" aria-hidden="true" title="Facebook Cross Domain Communication Frame" tabindex="-1" src="./jq-single-page_files/XBwzv5Yrm_1.html" style="border: none;"></iframe></div></div><div style="position: absolute; top: -10000px; height: 0px; width: 0px;"><div></div></div></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=496223437090509";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<style>
+/*india independence day special
+#content{
+ background-color:#f5a55f;
+ filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#f5a55f, endColorstr=#e4eef2);
+ background-image:-moz-linear-gradient(top, #f5a55f 26%, #e4eef2 40%,#468c4a 98%);
+background-image:linear-gradient(top, #f5a55f 26%, #e4eef2 40%,#468c4a 98%);
+background-image:-webkit-linear-gradient(top, #f5a55f 26%, #e4eef2 40%,#468c4a 98%);
+background-image:-o-linear-gradient(top, #f5a55f 26%, #e4eef2 40%,#468c4a 98%);
+background-image:-ms-linear-gradient(top, #f5a55f 26%, #e4eef2 40%,#468c4a 98%);
+ background-image:-webkit-gradient(linear, right top, right bottom, color-stop(26%,#f5a55f), color-stop(40%,#e4eef2),color-stop(98%,#468c4a));
+}*/
+</style>
+
+
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+<div id="page" class="hfeed site">
+
+	<header id="masthead" class="site-header" role="banner">
+		<nav class="navbar navbar-default" role="navigation" id="ce-sticky">
+			<div class="container">
+				<div class="row">
+					<div class="site-navigation-inner col-sm-12">
+		        <div class="navbar-header">
+		            <button type="button" class="btn navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+		                <span class="sr-only">Toggle navigation</span>
+		                <span class="icon-bar"></span>
+		                <span class="icon-bar"></span>
+		                <span class="icon-bar"></span>
+		            </button>
+
+				
+					<div id="logo">
+						<a href="https://coderexample.com/"><img src="./jq-single-page_files/coderexample.png" height="64" width="300" alt="Coder Example"></a>
+					</div><!-- end of #logo -->
+
+				
+				
+		        </div>
+					<div class="collapse navbar-collapse navbar-ex1-collapse"><ul id="menu-mymenu" class="nav navbar-nav"><li id="menu-item-8" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-8"><a title="Home" href="https://coderexample.com/">Home</a></li>
+<li id="menu-item-7" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-7"><a title="Javascript" href="https://coderexample.com/category/js/">Javascript</a></li>
+<li id="menu-item-22" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-22"><a title="Php" href="https://coderexample.com/category/php/">Php</a></li>
+<li id="menu-item-369" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-369"><a title="Css" href="https://coderexample.com/category/css/">Css</a></li>
+</ul></div>					</div>
+		    </div>
+		  </div>
+		</nav><!-- .site-navigation -->
+	</header><!-- #masthead -->
+
+	<div id="content" class="site-content">
+
+		<div class="top-section">
+								</div>
+
+		<div class="container main-content-area">
+			<div class="row">
+				<div class="main-content-inner col-sm-12 col-md-8 pull-left">
+	<div id="primary" class="content-area">
+		<main id="main" class="site-main" role="main">
+
+		
+			
+<article id="post-524" class="post-524 post type-post status-publish format-standard has-post-thumbnail hentry category-ajax category-js tag-jquery-routing tag-spa">
+		<div class="post-inner-content">
+		<header class="entry-header page-header">
+	<!--da removed-->
+			<h1 class="entry-title ">Single Page Apps with jQuery Routing</h1>
+			
+			<!--da single start-->
+<div style="height:auto;">
+<script async="" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- single_page_header -->
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9909650163450537" data-ad-slot="6791011401" data-ad-format="auto"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+                       </div>
+<!--da single end-->
+
+			<div class="entry-meta">
+				<span class="posted-on"><i class="fa fa-calendar"></i> <a href="https://coderexample.com/single-page-apps-jquery-routing/" rel="bookmark"><time class="entry-date published" datetime="2016-09-01T01:24:19+00:00">September 1, 2016</time><time class="updated" datetime="2016-09-01T20:31:14+00:00">September 1, 2016</time></a></span><span class="byline"> <i class="fa fa-user"></i> <span class="author vcard"><a class="url fn n" href="https://coderexample.com/author/ce/">Arkaprava Majumder</a></span></span>
+								<span class="cat-links"><i class="fa fa-folder-open-o"></i>
+					 <a href="https://coderexample.com/category/ajax/" rel="category tag">Ajax</a>, <a href="https://coderexample.com/category/js/" rel="category tag">Javascript</a>				</span>
+								
+				<div class="fb-save fb_iframe_widget" data-uri="https://coderexample.com/single-page-apps-jquery-routing/" data-size="small" fb-xfbml-state="rendered" fb-iframe-plugin-query="app_id=496223437090509&amp;container_width=648&amp;locale=en_US&amp;sdk=joey&amp;size=small&amp;uri=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F"><span style="vertical-align: bottom; width: 122px; height: 20px;"><iframe name="f13c342d7415274" width="1000px" height="1000px" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" title="fb:save Facebook Social Plugin" src="./jq-single-page_files/save.html" style="border: none; visibility: visible; width: 122px; height: 20px;" class=""></iframe></span></div>
+
+			</div><!-- .entry-meta -->
+		</header><!-- .entry-header -->
+
+		<div class="entry-content">
+			<p>Single page apps are becoming the hot cake in the web industry, Everyone wants to build SPA or Single page apps. In this article, we will do a quick rundown SPA using jQuery and without using any  MV* frameworks like React, Angular, Vue etc. </p>
+<p><img src="./jq-single-page_files/jquery_router.png" alt="Single Page Apps with jQuery Routing" width="1200" height="630" class="aligncenter size-full wp-image-525" srcset="https://coderexample.com/wp-content/uploads/2016/09/jquery_router.png 1200w, https://coderexample.com/wp-content/uploads/2016/09/jquery_router-300x158.png 300w, https://coderexample.com/wp-content/uploads/2016/09/jquery_router-768x403.png 768w, https://coderexample.com/wp-content/uploads/2016/09/jquery_router-1024x538.png 1024w" sizes="(max-width: 1200px) 100vw, 1200px"></p>
+<h2>Overview</h2>
+<p>Since we are building a spa and we don’t want any page refreshes, we’ll use <a href="http://sammyjs.org/" target="_blank">sammy.js</a> for routing. Sammy  is a 5.2K jQuery dependent library. A typical Sammy routing script is like:</p>
+<div><div id="highlighter_481432" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">01</div><div class="line number2 index1 alt1">02</div><div class="line number3 index2 alt2">03</div><div class="line number4 index3 alt1">04</div><div class="line number5 index4 alt2">05</div><div class="line number6 index5 alt1">06</div><div class="line number7 index6 alt2">07</div><div class="line number8 index7 alt1">08</div><div class="line number9 index8 alt2">09</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript keyword">var</code> <code class="jscript plain">app = $.sammy(</code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number2 index1 alt1">&nbsp;</div><div class="line number3 index2 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number4 index3 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript comments">//your function</code></div><div class="line number5 index4 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number6 index5 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#about/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number7 index6 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript comments">//your function </code></div><div class="line number8 index7 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number9 index8 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#contact/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number10 index9 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript comments">//your function</code></div><div class="line number11 index10 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number12 index11 alt1"><code class="jscript plain">});</code></div><div class="line number13 index12 alt2"><code class="jscript plain">app.run();</code></div></div></td></tr></tbody></table></div></div>
+<p>first we have to initialize the application using $.sammy and stored the instance into app. In sammy we can define a route using</p>
+<div><div id="highlighter_398948" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'path/'</code><code class="jscript plain">,</code><code class="jscript keyword">function</code><code class="jscript plain">(){</code></div><div class="line number2 index1 alt1"><code class="jscript plain">...</code></div><div class="line number3 index2 alt2"><code class="jscript plain">});&nbsp; </code></div></div></td></tr></tbody></table></div></div>
+<p>Each route has a callback function where we can write our logic, bind the data specific to each view/page/screen, As each route is representing a view.</p>
+<p>After defining all routes we can bootstrap our spa using app.run(); </p>
+<h2>Our blog App</h2>
+<p>To clear the concept lets jump into a somewhat more realistic example.  We’re just going to make a simple blog. Which has  the main page(ie, Home) and About page. In homepage or index page we’ll have a list of blogs, clicking each item will take us to blog details page. Meanwhile, you can check our demo <a href="https://coderexample.com/demo/single-page-apps-with-jquery-routing/" target="_blank">here</a>.</p>
+<p>We’ll be using static JSON data blog list and we’ll use Sammy templating plugin to separate the each view.</p>
+<h2>File structure</h2>
+<div><div id="highlighter_87031" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">01</div><div class="line number2 index1 alt1">02</div><div class="line number3 index2 alt2">03</div><div class="line number4 index3 alt1">04</div><div class="line number5 index4 alt2">05</div><div class="line number6 index5 alt1">06</div><div class="line number7 index6 alt2">07</div><div class="line number8 index7 alt1">08</div><div class="line number9 index8 alt2">09</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">- index.html </code><code class="xml comments">&lt;!-- main layout --&gt;</code></div><div class="line number2 index1 alt1"><code class="xml plain">- app.js </code><code class="xml comments">&lt;!-- stores all our routing logic --&gt;</code></div><div class="line number3 index2 alt2"><code class="xml plain">- css</code></div><div class="line number4 index3 alt1"><code class="xml plain">--- style.css </code></div><div class="line number5 index4 alt2"><code class="xml plain">- js</code></div><div class="line number6 index5 alt1"><code class="xml plain">--- jquery-1.11.3.min.js</code></div><div class="line number7 index6 alt2"><code class="xml plain">--- sammy.min.js</code></div><div class="line number8 index7 alt1"><code class="xml plain">--- sammy.template.js </code></div><div class="line number9 index8 alt2"><code class="xml plain">- data</code></div><div class="line number10 index9 alt1"><code class="xml plain">--- articles.json</code></div><div class="line number11 index10 alt2"><code class="xml plain">- templates </code><code class="xml comments">&lt;!-- the templates pages that will be injected into the main layout --&gt;</code></div><div class="line number12 index11 alt1"><code class="xml plain">--- article.template</code></div><div class="line number13 index12 alt2"><code class="xml plain">--- article-detail.template</code></div><div class="line number14 index13 alt1"><code class="xml plain">--- about.template</code></div></div></td></tr></tbody></table></div></div>
+<h2>Markup</h2>
+<p>We’ll be using HTML5 boilerplate template for the markup</p>
+<div><div id="highlighter_279553" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">01</div><div class="line number2 index1 alt1">02</div><div class="line number3 index2 alt2">03</div><div class="line number4 index3 alt1">04</div><div class="line number5 index4 alt2">05</div><div class="line number6 index5 alt1">06</div><div class="line number7 index6 alt2">07</div><div class="line number8 index7 alt1">08</div><div class="line number9 index8 alt2">09</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;!</code><code class="xml keyword">DOCTYPE</code> <code class="xml plain">html&gt;</code></div><div class="line number2 index1 alt1"><code class="xml plain">&lt;</code><code class="xml keyword">html</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">head</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">meta</code> <code class="xml color1">name</code><code class="xml plain">=</code><code class="xml string">"viewport"</code> <code class="xml color1">content</code><code class="xml plain">=</code><code class="xml string">"width=device-width, initial-scale=1.0"</code><code class="xml plain">&gt;</code></div><div class="line number5 index4 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">script</code>&nbsp; <code class="xml color1">src</code><code class="xml plain">=</code><code class="xml string">"js/jquery-1.11.3.min.js"</code> <code class="xml color1">type</code><code class="xml plain">=</code><code class="xml string">"text/javascript"</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">script</code><code class="xml plain">&gt;</code></div><div class="line number6 index5 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">script</code>&nbsp; <code class="xml color1">src</code><code class="xml plain">=</code><code class="xml string">"js/sammy.min.js"</code> <code class="xml color1">type</code><code class="xml plain">=</code><code class="xml string">"text/javascript"</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">script</code><code class="xml plain">&gt;</code></div><div class="line number7 index6 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">script</code> <code class="xml color1">src</code><code class="xml plain">=</code><code class="xml string">"js/sammy.template.js"</code> <code class="xml color1">type</code><code class="xml plain">=</code><code class="xml string">"text/javascript"</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">script</code><code class="xml plain">&gt;</code></div><div class="line number8 index7 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">link</code> <code class="xml color1">rel</code><code class="xml plain">=</code><code class="xml string">"stylesheet"</code> <code class="xml color1">href</code><code class="xml plain">=</code><code class="xml string">"css/style.css"</code> <code class="xml plain">/&gt;</code></div><div class="line number9 index8 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">script</code> <code class="xml color1">src</code><code class="xml plain">=</code><code class="xml string">"app.js"</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">script</code><code class="xml plain">&gt;</code></div><div class="line number10 index9 alt1"><code class="xml plain">&lt;/</code><code class="xml keyword">head</code><code class="xml plain">&gt;</code></div><div class="line number11 index10 alt2">&nbsp;</div><div class="line number12 index11 alt1"><code class="xml plain">&lt;</code><code class="xml keyword">body</code><code class="xml plain">&gt;</code></div><div class="line number13 index12 alt2"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">div</code> <code class="xml color1">class</code><code class="xml plain">=</code><code class="xml string">"header-container"</code><code class="xml plain">&gt;</code></div><div class="line number14 index13 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">header</code> <code class="xml color1">class</code><code class="xml plain">=</code><code class="xml string">"wrapper clearfix"</code><code class="xml plain">&gt;</code></div><div class="line number15 index14 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">nav</code><code class="xml plain">&gt;</code></div><div class="line number16 index15 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">ul</code><code class="xml plain">&gt;</code></div><div class="line number17 index16 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">li</code><code class="xml plain">&gt;&lt;</code><code class="xml keyword">a</code> <code class="xml color1">href</code><code class="xml plain">=</code><code class="xml string">"#/"</code><code class="xml plain">&gt;Home&lt;/</code><code class="xml keyword">a</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">li</code><code class="xml plain">&gt;</code></div><div class="line number18 index17 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">li</code><code class="xml plain">&gt;&lt;</code><code class="xml keyword">a</code> <code class="xml color1">href</code><code class="xml plain">=</code><code class="xml string">"#/about/"</code><code class="xml plain">&gt;About&lt;/</code><code class="xml keyword">a</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">li</code><code class="xml plain">&gt; </code><code class="xml comments">&lt;!-- defining nav url according to route--&gt;</code></div><div class="line number19 index18 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">ul</code><code class="xml plain">&gt;</code></div><div class="line number20 index19 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">nav</code><code class="xml plain">&gt;</code></div><div class="line number21 index20 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">header</code><code class="xml plain">&gt;</code></div><div class="line number22 index21 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">div</code><code class="xml plain">&gt;</code></div><div class="line number23 index22 alt2">&nbsp;</div><div class="line number24 index23 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">div</code> <code class="xml color1">class</code><code class="xml plain">=</code><code class="xml string">"main-container"</code><code class="xml plain">&gt;</code></div><div class="line number25 index24 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">div</code> <code class="xml color1">class</code><code class="xml plain">=</code><code class="xml string">"main wrapper clearfix"</code><code class="xml plain">&gt;</code></div><div class="line number26 index25 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">div</code> <code class="xml color1">id</code><code class="xml plain">=</code><code class="xml string">"app"</code><code class="xml plain">&gt;</code></div><div class="line number27 index26 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml comments">&lt;!-- template will be injected here --&gt;</code></div><div class="line number28 index27 alt1"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">div</code><code class="xml plain">&gt;</code></div><div class="line number29 index28 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">div</code><code class="xml plain">&gt;</code></div><div class="line number30 index29 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">div</code><code class="xml plain">&gt;</code></div><div class="line number31 index30 alt2"><code class="xml plain">&lt;/</code><code class="xml keyword">body</code><code class="xml plain">&gt;</code></div><div class="line number32 index31 alt1"><code class="xml plain">&lt;/</code><code class="xml keyword">html</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<h2>Defining Routes</h2>
+<div><div id="highlighter_844857" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">01</div><div class="line number2 index1 alt1">02</div><div class="line number3 index2 alt2">03</div><div class="line number4 index3 alt1">04</div><div class="line number5 index4 alt2">05</div><div class="line number6 index5 alt1">06</div><div class="line number7 index6 alt2">07</div><div class="line number8 index7 alt1">08</div><div class="line number9 index8 alt2">09</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div><div class="line number33 index32 alt2">33</div><div class="line number34 index33 alt1">34</div><div class="line number35 index34 alt2">35</div><div class="line number36 index35 alt1">36</div><div class="line number37 index36 alt2">37</div><div class="line number38 index37 alt1">38</div><div class="line number39 index38 alt2">39</div><div class="line number40 index39 alt1">40</div><div class="line number41 index40 alt2">41</div><div class="line number42 index41 alt1">42</div><div class="line number43 index42 alt2">43</div><div class="line number44 index43 alt1">44</div><div class="line number45 index44 alt2">45</div><div class="line number46 index45 alt1">46</div><div class="line number47 index46 alt2">47</div><div class="line number48 index47 alt1">48</div><div class="line number49 index48 alt2">49</div><div class="line number50 index49 alt1">50</div><div class="line number51 index50 alt2">51</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript comments">//app.js</code></div><div class="line number2 index1 alt1"><code class="jscript plain">(</code><code class="jscript keyword">function</code><code class="jscript plain">($) {</code></div><div class="line number3 index2 alt2">&nbsp;</div><div class="line number4 index3 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">var</code> <code class="jscript plain">app = $.sammy(</code><code class="jscript string">'#app'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number5 index4 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.use(</code><code class="jscript string">'Template'</code><code class="jscript plain">);</code></div><div class="line number6 index5 alt1">&nbsp;</div><div class="line number7 index6 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.around(</code><code class="jscript keyword">function</code><code class="jscript plain">(callback) {</code></div><div class="line number8 index7 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">var</code> <code class="jscript plain">context = </code><code class="jscript keyword">this</code><code class="jscript plain">;</code></div><div class="line number9 index8 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.load(</code><code class="jscript string">'data/articles.json'</code><code class="jscript plain">)</code></div><div class="line number10 index9 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">.then(</code><code class="jscript keyword">function</code><code class="jscript plain">(items) {</code></div><div class="line number11 index10 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.items = items;</code></div><div class="line number12 index11 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">})</code></div><div class="line number13 index12 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">.then(callback);</code></div><div class="line number14 index13 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number15 index14 alt2">&nbsp;</div><div class="line number16 index15 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">(context) {</code></div><div class="line number17 index16 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.app.swap(</code><code class="jscript string">''</code><code class="jscript plain">);</code></div><div class="line number18 index17 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">$.each(</code><code class="jscript keyword">this</code><code class="jscript plain">.items, </code><code class="jscript keyword">function</code><code class="jscript plain">(i, item) {</code></div><div class="line number19 index18 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.render(</code><code class="jscript string">'templates/article.template'</code><code class="jscript plain">, {id: i, item: item})</code></div><div class="line number20 index19 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">.appendTo(context.$element());</code></div><div class="line number21 index20 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number22 index21 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number23 index22 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code>&nbsp;</div><div class="line number24 index23 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/about/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">(context) {</code></div><div class="line number25 index24 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">var</code> <code class="jscript plain">str=location.href.toLowerCase();</code></div><div class="line number26 index25 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.app.swap(</code><code class="jscript string">''</code><code class="jscript plain">);</code></div><div class="line number27 index26 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.render(</code><code class="jscript string">'templates/about.template'</code><code class="jscript plain">, {})</code></div><div class="line number28 index27 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">.appendTo(context.$element());</code></div><div class="line number29 index28 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number30 index29 alt1">&nbsp;</div><div class="line number31 index30 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/article/:id'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">(context) {</code></div><div class="line number32 index31 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.item = </code><code class="jscript keyword">this</code><code class="jscript plain">.items[</code><code class="jscript keyword">this</code><code class="jscript plain">.params[</code><code class="jscript string">'id'</code><code class="jscript plain">]];</code></div><div class="line number33 index32 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">if</code> <code class="jscript plain">(!</code><code class="jscript keyword">this</code><code class="jscript plain">.item) { </code><code class="jscript keyword">return</code> <code class="jscript keyword">this</code><code class="jscript plain">.notFound(); }</code></div><div class="line number34 index33 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.partial(</code><code class="jscript string">'templates/article-detail.template'</code><code class="jscript plain">);</code></div><div class="line number35 index34 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number36 index35 alt1">&nbsp;</div><div class="line number37 index36 alt2">&nbsp;</div><div class="line number38 index37 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.before(</code><code class="jscript string">'.*'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number39 index38 alt2">&nbsp;</div><div class="line number40 index39 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">var</code> <code class="jscript plain">hash = document.location.hash;</code></div><div class="line number41 index40 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">$(</code><code class="jscript string">"nav"</code><code class="jscript plain">).find(</code><code class="jscript string">"a"</code><code class="jscript plain">).removeClass(</code><code class="jscript string">"current"</code><code class="jscript plain">);</code></div><div class="line number42 index41 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">$(</code><code class="jscript string">"nav"</code><code class="jscript plain">).find(</code><code class="jscript string">"a[href='"</code><code class="jscript plain">+hash+</code><code class="jscript string">"']"</code><code class="jscript plain">).addClass(</code><code class="jscript string">"current"</code><code class="jscript plain">);</code></div><div class="line number43 index42 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number44 index43 alt1">&nbsp;</div><div class="line number45 index44 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number46 index45 alt1">&nbsp;</div><div class="line number47 index46 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">$(</code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number48 index47 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">app.run(</code><code class="jscript string">'#/about/'</code><code class="jscript plain">);</code></div><div class="line number49 index48 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number50 index49 alt1">&nbsp;</div><div class="line number51 index50 alt2"><code class="jscript plain">})(jQuery);</code></div></div></td></tr></tbody></table></div></div>
+<p>First, we have initialized our app in “#app” div, where we’ll inject different template according to route path. We also mentioned that we’ll be using the <a href="http://sammyjs.org/download#packages" target="_blank">sammy template engine.</a></p>
+<div><div id="highlighter_862975" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">this.use('Template');</code></div></div></td></tr></tbody></table></div></div>
+<p>we have fetched blog data from articles.json using Jquery load(you can also use $.get or $.post) method and stored into the context variable.</p>
+<p>Now time to define our for route or index page using “#/”</p>
+<div><div id="highlighter_11808" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">(context) {</code></div><div class="line number2 index1 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">context.app.swap(</code><code class="jscript string">''</code><code class="jscript plain">);</code></div><div class="line number3 index2 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">$.each(</code><code class="jscript keyword">this</code><code class="jscript plain">.items, </code><code class="jscript keyword">function</code><code class="jscript plain">(i, item) {</code></div><div class="line number4 index3 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.render(</code><code class="jscript string">'templates/article.template'</code><code class="jscript plain">, {id: i, item: item})</code></div><div class="line number5 index4 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">.appendTo(context.$element());</code></div><div class="line number6 index5 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">});</code></div><div class="line number7 index6 alt2"><code class="jscript plain">});</code></div></div></td></tr></tbody></table></div></div>
+<p>we already have data in context, we are looping through all the data and rendering it in article.template. we are also using context.app.swap(”); method just need to clear the content area (ie, #app) before rendering the templates.</p>
+<div><div id="highlighter_412928" class="syntaxhighlighter  xml"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="xml plain">&lt;</code><code class="xml keyword">article</code><code class="xml plain">&gt;</code></div><div class="line number2 index1 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">section</code><code class="xml plain">&gt;</code></div><div class="line number3 index2 alt2"><code class="xml spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="xml plain">&lt;</code><code class="xml keyword">a</code> <code class="xml plain">href="#/article/&lt;%= id %&gt;"&gt;&lt;</code><code class="xml keyword">h2</code><code class="xml plain">&gt;&lt;%= item.title %&gt;&lt;/</code><code class="xml keyword">h2</code><code class="xml plain">&gt;&lt;/</code><code class="xml keyword">a</code><code class="xml plain">&gt;</code></div><div class="line number4 index3 alt1"><code class="xml spaces">&nbsp;&nbsp;</code><code class="xml plain">&lt;/</code><code class="xml keyword">section</code><code class="xml plain">&gt;</code></div><div class="line number5 index4 alt2"><code class="xml plain">&lt;/</code><code class="xml keyword">article</code><code class="xml plain">&gt;</code></div></div></td></tr></tbody></table></div></div>
+<p>as we are using templating engine so we can write dynamic value using &lt;%= yourdata %&gt;. you can see we have also linked article details page for each article using #/article/&lt;%= id %&gt;</p>
+<p>It will take us to article-detail.template, where we can show article image, excerpt etc.</p>
+<p>Behind the scene, we also defined a route for article details page in app.js. we are getting article index as an URL parameter and passing the data to article-detail.template.</p>
+<div><div id="highlighter_493761" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/article/:id'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">(context) {</code></div><div class="line number2 index1 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.item = </code><code class="jscript keyword">this</code><code class="jscript plain">.items[</code><code class="jscript keyword">this</code><code class="jscript plain">.params[</code><code class="jscript string">'id'</code><code class="jscript plain">]];</code></div><div class="line number3 index2 alt2"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">if</code> <code class="jscript plain">(!</code><code class="jscript keyword">this</code><code class="jscript plain">.item) { </code><code class="jscript keyword">return</code> <code class="jscript keyword">this</code><code class="jscript plain">.notFound(); }</code></div><div class="line number4 index3 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript keyword">this</code><code class="jscript plain">.partial(</code><code class="jscript string">'templates/article-detail.template'</code><code class="jscript plain">);</code></div><div class="line number5 index4 alt2"><code class="jscript plain">});</code></div></div></td></tr></tbody></table></div></div>
+<p>Similarly, we have also created a static page called “about” and rendering into about.template.</p>
+<div><div id="highlighter_23062" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript keyword">this</code><code class="jscript plain">.get(</code><code class="jscript string">'#/about/'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">(context) {</code></div><div class="line number2 index1 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">var</code> <code class="jscript plain">str=location.href.toLowerCase();</code></div><div class="line number3 index2 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.app.swap(</code><code class="jscript string">''</code><code class="jscript plain">);</code></div><div class="line number4 index3 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">context.render(</code><code class="jscript string">'templates/about.template'</code><code class="jscript plain">, {})</code></div><div class="line number5 index4 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">.appendTo(context.$element());</code></div><div class="line number6 index5 alt1"><code class="jscript plain">});</code></div></div></td></tr></tbody></table></div></div>
+<p>Done. oops no, we forgot to bootstrap our app using app.run() where you can also mention your default route. If want to open about page first then you need to define <strong>app.run(‘#/about/’)</strong>. </p>
+<div><div id="highlighter_623840" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript plain">$(</code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number2 index1 alt1"><code class="jscript spaces">&nbsp;&nbsp;</code><code class="jscript plain">app.run(</code><code class="jscript string">'#/about/'</code><code class="jscript plain">);</code></div><div class="line number3 index2 alt2"><code class="jscript plain">});</code></div></div></td></tr></tbody></table></div></div>
+<p>if you want to make some operation before calling each route you can use before method. here we are selecting current nav menu according to current route path.</p>
+<div><div id="highlighter_199072" class="syntaxhighlighter  jscript"><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="jscript keyword">this</code><code class="jscript plain">.before(</code><code class="jscript string">'.*'</code><code class="jscript plain">, </code><code class="jscript keyword">function</code><code class="jscript plain">() {</code></div><div class="line number2 index1 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript keyword">var</code> <code class="jscript plain">hash = document.location.hash;</code></div><div class="line number3 index2 alt2"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">$(</code><code class="jscript string">"nav"</code><code class="jscript plain">).find(</code><code class="jscript string">"a"</code><code class="jscript plain">).removeClass(</code><code class="jscript string">"current"</code><code class="jscript plain">);</code></div><div class="line number4 index3 alt1"><code class="jscript spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="jscript plain">$(</code><code class="jscript string">"nav"</code><code class="jscript plain">).find(</code><code class="jscript string">"a[href='"</code><code class="jscript plain">+hash+</code><code class="jscript string">"']"</code><code class="jscript plain">).addClass(</code><code class="jscript string">"current"</code><code class="jscript plain">);</code></div><div class="line number5 index4 alt2"><code class="jscript plain">});</code></div></div></td></tr></tbody></table></div></div>
+<p>So this was a very simple article on getting started with jquery routing. Now you can go ahead and create larger single page applications. One thing remember routing would need a web server running, either you can use a PHP server or node server. You can also try firefox. Chrome has blocked AJAX requests to any protocol other than http://. or https://, so if you’re just running this code on your local machine the app won’t work as the local file has link started with file://.</p>
+<!--www.crestaproject.com Social Button in Content Start--><div id="crestashareiconincontent" class="cresta-share-icon first_style"><div class="sbutton crestaShadow facebook-cresta-share" id="facebook-cresta-c"><a rel="nofollow" href="https://www.facebook.com/sharer.php?u=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F&amp;t=Single+Page+Apps+with+jQuery+Routing" title="Share to Facebook" onclick="window.open(this.href,&#39;targetWindow&#39;,&#39;toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=700,height=450&#39;);return false;"><i class="cs c-icon-cresta-facebook"></i></a></div><div class="sbutton crestaShadow twitter-cresta-share" id="twitter-cresta-c"><a rel="nofollow" href="https://twitter.com/intent/tweet?text=Single+Page+Apps+with+jQuery+Routing&amp;url=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F&amp;via=coderexample" title="Share to Twitter" onclick="window.open(this.href,&#39;targetWindow&#39;,&#39;toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=700,height=450&#39;);return false;"><i class="cs c-icon-cresta-twitter"></i></a></div><div class="sbutton crestaShadow googleplus-cresta-share" id="googleplus-cresta-c"><a rel="nofollow" href="https://plus.google.com/share?url=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F" title="Share to Google Plus" onclick="window.open(this.href,&#39;targetWindow&#39;,&#39;toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=700,height=450&#39;);return false;"><i class="cs c-icon-cresta-gplus"></i></a></div><div class="sbutton crestaShadow linkedin-cresta-share" id="linkedin-cresta-c"><a rel="nofollow" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fcoderexample.com%2Fsingle-page-apps-jquery-routing%2F&amp;title=Single+Page+Apps+with+jQuery+Routing&amp;source=https://coderexample.com/" title="Share to LinkedIn" onclick="window.open(this.href,&#39;targetWindow&#39;,&#39;toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=700,height=450&#39;);return false;"><i class="cs c-icon-cresta-linkedin"></i></a></div><div class="sbutton crestaShadow print-cresta-share" id="print-cresta-c"><a rel="nofollow" href="https://coderexample.com/single-page-apps-jquery-routing/#" title="Print this page" onclick="window.print();"><i class="cs c-icon-cresta-print"></i></a></div><div style="clear: both;"></div></div><div style="clear: both;"></div><!--www.crestaproject.com Social Button in Content End-->
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$.post('https://coderexample.com/wp-admin/admin-ajax.php', {action: 'wpt_view_count', id: '524'});
+});
+</script>
+
+
+
+
+
+
+
+<p><a href="https://coderexample.com/download/single-page-apps-with-jquery-routing.zip" target="_blank" class="btn btn-default read-more" title="Download"> Download</a><a href="https://coderexample.com/demo/single-page-apps-with-jquery-routing/" target="_blank" class="btn btn-default read-more" title="Demo">Demo</a></p><br>					</div><!-- .entry-content -->
+
+		<footer class="entry-meta">
+
+	    		      <!-- tags -->
+	      <div class="tagcloud" style="display: block;"><i class="fa fa-tag"></i> 
+	          <a href="https://coderexample.com/tag/jquery-routing/" class="tag-style"> jquery routing</a> <a href="https://coderexample.com/tag/spa/" class="tag-style"> spa</a> 
+	      </div>
+	      <!-- end tags -->
+	      
+		</footer><!-- .entry-meta -->
+	</div>
+
+</article><!-- #post-## -->
+			
+<div id="disqus_thread"><iframe id="dsq-app1" name="dsq-app1" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="./jq-single-page_files/saved_resource.html" style="width: 1px !important; min-width: 100% !important; border: none !important; overflow: hidden !important; height: 834px !important;" horizontalscrolling="no" verticalscrolling="no"></iframe></div>
+
+
+				<nav class="navigation post-navigation" role="navigation">
+		<h1 class="screen-reader-text">Post navigation</h1>
+		<div class="nav-links">
+			<div class="nav-previous"><a href="https://coderexample.com/reading-csv-file-using-javascript/" rel="prev"><i class="fa fa-chevron-left"></i> Reading csv file using javascript</a></div><div class="nav-next"><a href="https://coderexample.com/browser-bookmark-javascript-bot/" rel="next">Browser bookmark javascript bot <i class="fa fa-chevron-right"></i></a></div>		</div><!-- .nav-links -->
+	</nav><!-- .navigation -->
+	
+		
+		</main><!-- #main -->
+	</div><!-- #primary -->
+
+</div>
+	<div id="secondary" class="widget-area col-sm-12 col-md-4" role="complementary">
+		<div class="well">
+						<aside id="search-2" class="widget widget_search"><form method="get" class="form-search" action="https://coderexample.com/">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="input-group">
+        <input type="text" class="form-control search-query" value="" name="s" id="s" placeholder="Search...">
+        <span class="input-group-btn">
+          <button type="submit" class="btn btn-default" name="submit" id="searchsubmit" value="Go" style=""><span class="glyphicon glyphicon-search"></span></button>
+        </span>
+      </div>
+    </div>
+  </div>
+</form></aside>
+
+    <aside id="feedburnerformwidget-2" class="widget widget_feedburnerformwidget">
+    <!-- Plugin Feedburner Form-->
+    <div class="fb-container">
+        <h3 class="widget-title">Join other 2000+ web developers who decided to subscribe my newsletter to stay up to date with Angularjs, Php, NodeJs, Javascript and other cool topics regarding web development.  I promise I won’t spam you :)</h3>        <div class="fbf-text">
+                        </div>
+        <form class="fbf-widget" action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#39;https://feedburner.google.com/fb/a/mailverify?uri=TlOB&#39;, &#39;popupwindow&#39;, &#39;scrollbars=yes,width=550,height=520&#39;);return true">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="input-group"> 
+						<input type="text" class="form-control" value="" name="email" placeholder="Your email:">
+						<input type="hidden" value="TlOB" name="uri">
+						<input type="hidden" name="loc" value="en_US">
+						<span class="input-group-btn"> 
+							<button type="submit" class="btn btn-default" name="submit" style="">
+								<span class="glyphicon glyphicon-envelope"></span>
+							</button> 
+						</span>
+					</div>
+				</div>
+			</div>
+        </form>
+
+    
+    
+    </div>
+    <!-- Plugin Feedburner Form-->
+		</aside>
+    <aside id="text-5" class="widget widget_text">			<div class="textwidget"><script async="" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- sidebar_box_300_250 -->
+<ins class="adsbygoogle" style="display:inline-block;width:300px;height:250px" data-ad-client="ca-pub-9909650163450537" data-ad-slot="7067531009"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script></div>
+		</aside><aside id="text-13" class="widget widget_text">			<div class="textwidget"><iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" class="twitter-follow-button twitter-follow-button-rendered" title="Twitter Follow Button" src="./jq-single-page_files/follow_button.5f60791584f95f2ec483faec8b16a58b.en.html" style="position: static; visibility: visible; width: 232px; height: 20px;" data-screen-name="coderexample"></iframe> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script></div>
+		</aside><aside id="sparkling-social-2" class="widget sparkling-social"><h3 class="widget-title">Follow us</h3>
+    <!-- social icons -->
+    <div class="social-icons sticky-sidebar-social">
+
+
+    <div class="social-icons"><a href="https://fb.com/coderexample" title="Follow us on Facebook" class="facebook" target="_blank"><i class="social_icon fa fa-facebook"></i></a><a href="https://twitter.com/coderexample" title="Follow us on Twitter" class="twitter" target="_blank"><i class="social_icon fa fa-twitter"></i></a><a href="https://github.com/coderexample" title="Follow us on GitHub" class="github" target="_blank"><i class="social_icon fa fa-github"></i></a></div>
+
+    </div><!-- end social icons -->
+
+
+		</aside>	
+		<aside id="wpt_widget-3" class="widget widget_wpt">	
+		<div class="wpt_widget_content" id="wpt_widget-3_content">	
+			<ul class="wpt-tabs has-3-tabs">
+                                                            <li class="tab_title selected"><a href="https://coderexample.com/single-page-apps-jquery-routing/#" id="popular-tab">Popular</a></li>	
+                                                                                <li class="tab_title"><a href="https://coderexample.com/single-page-apps-jquery-routing/#" id="tags-tab">Tags</a></li>	
+                                                                                                                    <li class="tab_title"><a href="https://coderexample.com/single-page-apps-jquery-routing/#" id="comments-tab">Comments</a></li>	
+                                     
+			</ul> <!--end .tabs-->	
+			<div class="clear"></div>  
+			<div class="inside">        
+					
+					<div id="popular-tab-content" class="tab-content" style="display: block;">       
+				<ul>				
+						
+						<li>
+										
+								<div class="wpt_thumbnail wpt_thumb_small">	
+                                    <a title="DataTable demo (Server side) in Php,Mysql and Ajax Part:1" href="https://coderexample.com/datatable-demo-server-side-in-phpmysql-and-ajax/">		
+    										
+    										<img width="65" height="65" src="./jq-single-page_files/datatable-demo-server-side-in-phpmysql-and-ajax-65x65.gif" class="attachment-wp_review_small size-wp_review_small wp-post-image" alt="" title="" srcset="https://coderexample.com/wp-content/uploads/2015/01/datatable-demo-server-side-in-phpmysql-and-ajax-65x65.gif 65w, https://coderexample.com/wp-content/uploads/2015/01/datatable-demo-server-side-in-phpmysql-and-ajax-150x150.gif 150w, https://coderexample.com/wp-content/uploads/2015/01/datatable-demo-server-side-in-phpmysql-and-ajax-60x60.gif 60w" sizes="(max-width: 65px) 100vw, 65px">		
+    									                                    </a>
+								</div>				
+												
+							<div class="entry-title"><a title="DataTable demo (Server side) in Php,Mysql and Ajax Part:1" href="https://coderexample.com/datatable-demo-server-side-in-phpmysql-and-ajax/">DataTable demo (Server side) in Php,Mysql and Ajax Part:1</a></div>		
+								
+								<div class="wpt-postmeta">						
+												
+										January 20, 2015		
+															
+														
+															
+								</div> <!--end .entry-meta--> 				
+							                            
+                            	
+                            						
+							<div class="clear"></div>			
+						</li>				
+						
+						<li>
+										
+								<div class="wpt_thumbnail wpt_thumb_small">	
+                                    <a title="RESTful API in Lumen, A Laravel Micro Framework" href="https://coderexample.com/restful-api-in-lumen-a-laravel-micro-framework/">		
+    										
+    										<img width="65" height="65" src="./jq-single-page_files/lumen-65x65.gif" class="attachment-wp_review_small size-wp_review_small wp-post-image" alt="" title="" srcset="https://coderexample.com/wp-content/uploads/2015/05/lumen-65x65.gif 65w, https://coderexample.com/wp-content/uploads/2015/05/lumen-150x150.gif 150w, https://coderexample.com/wp-content/uploads/2015/05/lumen-60x60.gif 60w" sizes="(max-width: 65px) 100vw, 65px">		
+    									                                    </a>
+								</div>				
+												
+							<div class="entry-title"><a title="RESTful API in Lumen, A Laravel Micro Framework" href="https://coderexample.com/restful-api-in-lumen-a-laravel-micro-framework/">RESTful API in Lumen, A Laravel Micro Framework</a></div>		
+								
+								<div class="wpt-postmeta">						
+												
+										May 21, 2015		
+															
+														
+															
+								</div> <!--end .entry-meta--> 				
+							                            
+                            	
+                            						
+							<div class="clear"></div>			
+						</li>				
+						
+						<li>
+										
+								<div class="wpt_thumbnail wpt_thumb_small">	
+                                    <a title="DataTable (Server side) Custom Column Search Part:2" href="https://coderexample.com/datatable-custom-column-search/">		
+    										
+    										<img width="65" height="65" src="./jq-single-page_files/dataTable-custom-column-search-65x65.gif" class="attachment-wp_review_small size-wp_review_small wp-post-image" alt="datatable custom column search" title="" srcset="https://coderexample.com/wp-content/uploads/2015/01/dataTable-custom-column-search-65x65.gif 65w, https://coderexample.com/wp-content/uploads/2015/01/dataTable-custom-column-search-150x150.gif 150w, https://coderexample.com/wp-content/uploads/2015/01/dataTable-custom-column-search-60x60.gif 60w" sizes="(max-width: 65px) 100vw, 65px">		
+    									                                    </a>
+								</div>				
+												
+							<div class="entry-title"><a title="DataTable (Server side) Custom Column Search Part:2" href="https://coderexample.com/datatable-custom-column-search/">DataTable (Server side) Custom Column Search Part:2</a></div>		
+								
+								<div class="wpt-postmeta">						
+												
+										January 25, 2015		
+															
+														
+															
+								</div> <!--end .entry-meta--> 				
+							                            
+                            	
+                            						
+							<div class="clear"></div>			
+						</li>				
+						
+						<li>
+										
+								<div class="wpt_thumbnail wpt_thumb_small">	
+                                    <a title="DataTable Search By Datepicker (Server side) Part:9" href="https://coderexample.com/datatable-search-by-datepicker/">		
+    										
+    										<img width="65" height="65" src="./jq-single-page_files/datatable-search-by-datepicker-65x65.gif" class="attachment-wp_review_small size-wp_review_small wp-post-image" alt="" title="" srcset="https://coderexample.com/wp-content/uploads/2015/03/datatable-search-by-datepicker-65x65.gif 65w, https://coderexample.com/wp-content/uploads/2015/03/datatable-search-by-datepicker-150x150.gif 150w, https://coderexample.com/wp-content/uploads/2015/03/datatable-search-by-datepicker-60x60.gif 60w" sizes="(max-width: 65px) 100vw, 65px">		
+    									                                    </a>
+								</div>				
+												
+							<div class="entry-title"><a title="DataTable Search By Datepicker (Server side) Part:9" href="https://coderexample.com/datatable-search-by-datepicker/">DataTable Search By Datepicker (Server side) Part:9</a></div>		
+								
+								<div class="wpt-postmeta">						
+												
+										March 27, 2015		
+															
+														
+															
+								</div> <!--end .entry-meta--> 				
+							                            
+                            	
+                            						
+							<div class="clear"></div>			
+						</li>				
+						
+						<li>
+										
+								<div class="wpt_thumbnail wpt_thumb_small">	
+                                    <a title="Datatable Scroller (Server Side) Part:3" href="https://coderexample.com/datatable-scroller-server-side/">		
+    										
+    										<img width="65" height="65" src="./jq-single-page_files/datatable-scroller-65x65.gif" class="attachment-wp_review_small size-wp_review_small wp-post-image" alt="datatable scroller" title="" srcset="https://coderexample.com/wp-content/uploads/2015/01/datatable-scroller-65x65.gif 65w, https://coderexample.com/wp-content/uploads/2015/01/datatable-scroller-150x150.gif 150w, https://coderexample.com/wp-content/uploads/2015/01/datatable-scroller-60x60.gif 60w" sizes="(max-width: 65px) 100vw, 65px">		
+    									                                    </a>
+								</div>				
+												
+							<div class="entry-title"><a title="Datatable Scroller (Server Side) Part:3" href="https://coderexample.com/datatable-scroller-server-side/">Datatable Scroller (Server Side) Part:3</a></div>		
+								
+								<div class="wpt-postmeta">						
+												
+										January 28, 2015		
+															
+														
+															
+								</div> <!--end .entry-meta--> 				
+							                            
+                            	
+                            						
+							<div class="clear"></div>			
+						</li>				
+							
+				</ul>
+                <div class="clear"></div>
+				         
+					   
+		<div class="wpt-pagination">     
+			        
+			     
+				<a href="https://coderexample.com/single-page-apps-jquery-routing/#" class="next"><span>Next »</span></a>      
+			          
+		</div>                   
+		<div class="clear"></div>
+		<input type="hidden" class="page_num" name="page_num" value="1">    
+		      
+				                      
+				</div> <!--end #popular-tab-content-->       
+				       
+				                     
+				      
+					<div id="comments-tab-content" class="tab-content" style="display: none;"> 	
+						<ul>                    		
+						</ul>		
+					</div> <!--end #comments-tab-content-->     
+				            
+				       
+					<div id="tags-tab-content" class="tab-content" style="display: none;"> 	
+						<ul>                    	
+						</ul>			 
+					</div> <!--end #tags-tab-content-->  
+					
+				<div class="clear" style="display: none;"></div>	
+			</div> <!--end .inside -->	
+			<div class="clear"></div>
+		</div><!--end #tabber -->    
+		  
+		<script type="text/javascript">  
+			jQuery(function($) {    
+				$('#wpt_widget-3_content').data('args', {"allow_pagination":"1","post_num":"5","title_length":"15","comment_num":"5","show_thumb":"1","thumb_size":"small","show_date":"1","show_excerpt":null,"excerpt_length":"15","show_comment_num":null,"show_avatar":"1"});  
+			});  
+		</script>  
+		</aside>		<aside id="text-7" class="widget widget_text">			<div class="textwidget"><script async="" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- sidebar_down_300_250 -->
+<ins class="adsbygoogle" style="display:inline-block;width:300px;height:250px" data-ad-client="ca-pub-9909650163450537" data-ad-slot="5314278203"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script></div>
+		</aside><aside id="text-2" class="widget widget_text">			<div class="textwidget"><div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<div class="fb-page fb_iframe_widget" data-href="https://www.facebook.com/coderexample" data-hide-cover="false" data-show-facepile="true" data-show-posts="true" fb-xfbml-state="rendered" fb-iframe-plugin-query="app_id=496223437090509&amp;container_width=328&amp;hide_cover=false&amp;href=https%3A%2F%2Fwww.facebook.com%2Fcoderexample&amp;locale=en_US&amp;sdk=joey&amp;show_facepile=true&amp;show_posts=true"><span style="vertical-align: bottom; width: 0px; height: 0px;"><iframe name="f782bd9d9539a" width="1000px" height="1000px" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" title="fb:page Facebook Social Plugin" src="./jq-single-page_files/page.html" style="border: none; visibility: visible; width: 0px; height: 0px;" class=""></iframe></span></div></div>
+		</aside>		</div>
+	</div><!-- #secondary -->
+			</div><!-- close .*-inner (main-content or sidebar, depending if sidebar is used) -->
+		</div><!-- close .row -->
+	</div><!-- close .container -->
+</div><!-- close .site-content -->
+
+	<div id="footer-area">
+		<div class="container footer-inner">
+			<div class="row">
+				
+				</div>
+		</div>
+
+		<footer id="colophon" class="site-footer" role="contentinfo">
+			<div class="site-info container">
+				<div class="row">
+					<div class="social-icons"><a href="https://fb.com/coderexample" title="Follow us on Facebook" class="facebook" target="_blank"><i class="social_icon fa fa-facebook"></i></a><a href="https://twitter.com/coderexample" title="Follow us on Twitter" class="twitter" target="_blank"><i class="social_icon fa fa-twitter"></i></a><a href="https://github.com/coderexample" title="Follow us on GitHub" class="github" target="_blank"><i class="social_icon fa fa-github"></i></a></div>					<nav role="navigation" class="col-md-9">
+						<ul id="menu-footer_menu" class="nav footer-nav clearfix"><li id="menu-item-110" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-110"><a href="https://coderexample.com/">Home</a></li>
+<li id="menu-item-175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-175"><a href="https://coderexample.com/about/">About</a></li>
+<li id="menu-item-168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-168"><a href="https://coderexample.com/privacy-policy/">Privacy Policy</a></li>
+<li id="menu-item-172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-172"><a href="https://coderexample.com/terms-conditions/">Terms &amp; Conditions</a></li>
+<li id="menu-item-178" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-178"><a href="https://coderexample.com/contact/">Contact</a></li>
+</ul>					</nav>
+					<div class="copyright col-md-3">
+                                               Made with ♡ in India ©2017 <a href="https://coderexample.com/" title="CoderExample"> CoderExample</a>												</div>
+				</div>
+			</div><!-- .site-info -->
+			<div class="scroll-to-top" style="display: block;"><i class="fa fa-angle-up"></i></div><!-- .scroll-to-top -->
+		</footer><!-- #colophon -->
+	</div>
+<!-- #page -->
+
+<div id="BPyGqOEgcnTL" class="mSaccUnoFFQB" style="background:#dddddd;max-width:720px;z-index:9999999; "></div>   <script type="text/javascript">/* <![CDATA[ */var anOptions ={"anOptionChoice":"2","anOptionStats":"1","anOptionAdsSelectors":"","anOptionCookie":"1","anOptionCookieLife":"5","anPageRedirect":"","anPermalink":"undefined","anOptionModalEffect":"fadeAndPop","anOptionModalspeed":"350","anOptionModalclose":false,"anOptionModalOverlay":"rgba( 244,100,95,0.95 )","anAlternativeActivation":false,"anAlternativeElement":"","anAlternativeText":"<p>We've detected that you are using AdBlock Plus ore some other adblocking software which is preventing the page from fully loading.<\/p>\n<p>We don't have any Flash, obnoxious sound, or popup ad. We do not implement these annoying types of ads! <\/p>\n<p><strong>We need money to operate the site (Hosting, SSL, Domain), and almost all of it comes from our online advertising.<\/strong><\/p>\n<p><strong>Please add <a title=\"Coder Example\" href=\"https:\/\/coderexample.com\" target=\"_blank\">coderexample.com<\/a> to your ad blocking whitelist or disable your adblocking software.<strong><\/p>\n","anAlternativeClone":"2","anAlternativeProperties":"","anOptionModalShowAfter":0,"anPageMD5":"","anSiteID":0,"modalHTML":"<div class=\"mSaccUnoFFQB-default\">\n\t<h1 style=\"\">Adblocker detected! Please consider reading this notice.<\/h1>\n\t<p>Yes! we also hate Ads.<\/p>\n<p>But, we don't have any Flash, obnoxious sound, or popup ad. We do not implement these annoying types of ads! <\/p>\n<p><strong>We need money to operate the site (Hosting, SSL, Domain), and almost all of it comes from our online advertising.<\/strong><\/p>\n<p><strong>Please add <a title=\"Coder Example\" href=\"https:\/\/coderexample.com\" target=\"_blank\">coderexample.com<\/a> to your ad blocking whitelist or disable your adblocking software and refresh the page again<strong><\/p>\n<\/div>\n"}/* ]]> */</script><div id="adsense" class="an-sponsored" style="position:absolute; z-index:-1; height:1px; width:1px; visibility: hidden; top: -1px; left: 0;"><img class="an-advert-banner" alt="sponsored" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></div><script type="text/javascript" src="./jq-single-page_files/shCore.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/shBrushJScript.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/shBrushXml.js"></script>
+<script type="text/javascript">
+	(function(){
+		var corecss = document.createElement('link');
+		var themecss = document.createElement('link');
+		var corecssurl = "https://coderexample.com/wp-content/plugins/syntaxhighlighter/syntaxhighlighter3/styles/shCore.css?ver=3.0.9b";
+		if ( corecss.setAttribute ) {
+				corecss.setAttribute( "rel", "stylesheet" );
+				corecss.setAttribute( "type", "text/css" );
+				corecss.setAttribute( "href", corecssurl );
+		} else {
+				corecss.rel = "stylesheet";
+				corecss.href = corecssurl;
+		}
+		document.getElementsByTagName("head")[0].insertBefore( corecss, document.getElementById("syntaxhighlighteranchor") );
+		var themecssurl = "https://coderexample.com/wp-content/plugins/syntaxhighlighter/syntaxhighlighter3/styles/shThemeDefault.css?ver=3.0.9b";
+		if ( themecss.setAttribute ) {
+				themecss.setAttribute( "rel", "stylesheet" );
+				themecss.setAttribute( "type", "text/css" );
+				themecss.setAttribute( "href", themecssurl );
+		} else {
+				themecss.rel = "stylesheet";
+				themecss.href = themecssurl;
+		}
+		//document.getElementById("syntaxhighlighteranchor").appendChild(themecss);
+		document.getElementsByTagName("head")[0].insertBefore( themecss, document.getElementById("syntaxhighlighteranchor") );
+	})();
+	SyntaxHighlighter.config.strings.expandSource = '+ expand source';
+	SyntaxHighlighter.config.strings.help = '?';
+	SyntaxHighlighter.config.strings.alert = 'SyntaxHighlighter\n\n';
+	SyntaxHighlighter.config.strings.noBrush = 'Can\'t find brush for: ';
+	SyntaxHighlighter.config.strings.brushNotHtmlScript = 'Brush wasn\'t configured for html-script option: ';
+	SyntaxHighlighter.defaults['pad-line-numbers'] = true;
+	SyntaxHighlighter.defaults['toolbar'] = false;
+	SyntaxHighlighter.all();
+</script>
+<link rel="stylesheet" id="wpt_widget-css" href="./jq-single-page_files/wp-tab-widget.css" type="text/css" media="all">
+<script type="text/javascript" src="./jq-single-page_files/jquery.cresta-social-effect.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/skip-link-focus-fix.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/comment-reply.min.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var ajax_object = {"ajaxurl":"https:\/\/coderexample.com\/wp-admin\/admin-ajax.php"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="./jq-single-page_files/FXIwNJlLjFny.js"></script>
+<script type="text/javascript" src="./jq-single-page_files/wp-embed.min.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var embedVars = {"disqusConfig":{"platform":"wordpress@4.7.5","language":""},"disqusIdentifier":"524 https:\/\/coderexample.com\/?p=524","disqusShortname":"coderexample","disqusTitle":"Single Page Apps with jQuery Routing","disqusUrl":"https:\/\/coderexample.com\/single-page-apps-jquery-routing\/","options":{"manualSync":false},"postId":"524"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="./jq-single-page_files/disqus.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var wpt = {"ajax_url":"https:\/\/coderexample.com\/wp-admin\/admin-ajax.php"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="./jq-single-page_files/wp-tab-widget.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var countVars = {"disqusShortname":"coderexample"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="./jq-single-page_files/count(1).js"></script>
+<script>
+console.log('%c<CODER></EXAMPLE>', 'color: #f4645f; background-color: #333; font-size: 48px;');
+</script>
+
+
+<!-- Performance optimized by W3 Total Cache. Learn more: https://www.w3-edge.com/products/
+
+Database Caching 4/44 queries in 0.017 seconds using disk
+
+ Served from: coderexample.com @ 2017-07-20 01:05:52 by W3 Total Cache --><iframe style="display: none;" src="./jq-single-page_files/saved_resource(1).html"></iframe><iframe id="rufous-sandbox" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true" style="position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: none;" title="Twitter analytics iframe" src="./jq-single-page_files/saved_resource(2).html"></iframe></body></html>

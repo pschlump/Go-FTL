@@ -1,0 +1,129 @@
+https://coderexample.com/single-page-apps-jquery-routing/
+
+1. Do not have to have a 1 page app w/ jQuery
+	1. Store critical info in local storage (JWT key)
+	2. Links just take you to the next page
+		Config
+		Live Monitor
+		Tracer (Socket.IO)
+	3. Each page is independent - pulls in Local Storage on paint
+	4.:pwd
+
+
+
+
+
+
+
+https://gonzalo123.com/2014/12/01/enclosing-socket-io-websocket-connection-inside-a-html5-sharedworker/
+
+https://dbwriteups.wordpress.com/2015/11/16/service-workers-part-3-communication-between-sw-and-pages/
+
+
+
+
+
+
+
+
+
+
+
+
+//// Warn if overriding existing method
+//if(Array.prototype.equals)
+//    console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
+//// attach the .equals method to Array's prototype to call it on any array
+//Array.prototype.equals = function (array) {
+//    // if the other array is a falsy value, return
+//    if (!array)
+//        return false;
+//
+//    // compare lengths - can save a lot of time 
+//    if (this.length != array.length)
+//        return false;
+//
+//    for (var i = 0, l=this.length; i < l; i++) {
+//        // Check if we have nested arrays
+//        if (this[i] instanceof Array && array[i] instanceof Array) {
+//            // recurse into the nested arrays
+//            if (!this[i].equals(array[i]))
+//                return false;       
+//        }           
+//		else if ( typeof( this[i] ) === "object" && typeof ( array[i] ) === "object" ) {
+//			console.log ( "objects compare");
+//			return ( this[i].equals(array[i]) );
+//		}
+//        else if (this[i] != array[i]) { 
+//            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+//			console.log ( "diff becasue objects/elements are not equal");
+//            return false;   
+//        }           
+//    }       
+//    return true;
+//}
+//
+//Object.prototype.equals = function(x)
+//{
+//    for(p in this)
+//    {
+//        switch(typeof(this[p]))
+//        {
+//            case 'object':
+//                if (!this[p].equals(x[p])) { return false }; break;
+//            case 'function':
+//                if (typeof(x[p])=='undefined' || (p != 'equals' && this[p].toString() != x[p].toString())) { return false; }; break;
+//            default:
+//                if (this[p] != x[p]) { return false; }
+//        }
+//    }
+//
+//    for(p in x)
+//    {
+//        if(typeof(this[p])=='undefined') {return false;}
+//    }
+//
+//    return true;
+//}
+//
+//
+	// console.log ( "[][][][] Attach to resize" );
+
+	function setHeight() {
+		var windowHeight = $(window).height();
+		if ( windowHeight > 900 ) {
+			var nbHeight = $("#nav-bar").height();
+			var tbHeight = $("#top-bar").height();
+			var ftrHeight = $("#main-footer").height();
+			console.log ( "[][][][] init/h=", windowHeight, nbHeight, ftrHeight );
+			var asideHeight = windowHeight - nbHeight ;
+			var bodHeight = windowHeight - ( nbHeight + tbHeight + ftrHeight );
+			$("#side-menu").css({"height":asideHeight+"px"});
+			$("#main-body").css({"height":bodHeight+"px"});
+			$("#main-inner").css({"height":bodHeight+"px"});
+		}
+	}
+
+	if ( false ) {
+
+		setHeight();
+		
+
+		$(window).on('resize', function() {
+			setHeight();
+		});
+
+		$('#navbar-search').click(function (e) {
+			console.log ( "navbar-search clicked" );
+			 e.stopPropagation();
+		});
+
+	} 
+
+	var prev_data = [];
+		//if ( data.equals(prev_data) === true) {
+		//	console.log ( "Data not changed, early exit" );
+		//	return
+		//}
+		//console.log ( "Data has changed" );
+		prev_data = data;

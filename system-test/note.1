@@ -1,0 +1,88 @@
+func main() {
+    resp, err := http.Get("http://metadata.ftp-master.debian.org/changelogs/main/d/docker.io/unstable_changelog")
+    if err != nil {
+        panic(err)
+    }
+    allEntries, err := changelog.Parse(resp.Body)
+    if err != nil {
+        panic(err)
+    }
+    for _, entry := range allEntries {
+        fmt.Printf("Version %s was uploaded on %s\n", entry.Version, entry.When)
+    }
+}
+
+package main
+
+import (
+    "crypto/tls"
+    "fmt"
+    "io/ioutil"
+    "net/http"
+)
+
+func main() {
+
+    link := "http://xkcd.com/55"
+
+    tr := &http.Transport{
+        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+    }
+    client := &http.Client{Transport: tr}
+    response, err := client.Get(link)
+    if err != nil {
+        fmt.Println(err)
+    }
+    defer response.Body.Close()
+
+    //block forever at the next line
+    content, _ := ioutil.ReadAll(response.Body)
+
+    fmt.Println(string(content))
+
+}
+
+tr := &http.Transport{
+    TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+    DisableKeepAlives: true,
+}
+
+http://stackoverflow.com/questions/23967638/ioutil-readallresponse-body-blocks-forever-golang
+	-- shows how to limit amout read in a read all - to X bytes in a buffer --
+
+Additionally, avoid read response Body in ReadAll without memory/buffer limits control, example:
+
+googleResponse := GoogleResponse{}
+err = json.NewDecoder(io.LimitReader(resp.Body, MAX_MEMORY)).Decode(&googleResponse)
+if err != nil {
+    return nil, err
+}
+Read more about it in good blog posts:
+Crossing Streams: a Love Letter to io.Reader by Jason Moiron ----  http://jmoiron.net/blog/crossing-streams-a-love-letter-to-ioreader/ -- crossing-streams.html
+ioutil.ReadAll(httpResponse.Body) memory consumption ----  https://www.reddit.com/r/golang/comments/2bmnoq/ioutilreadallhttpresponsebody_memory_consumption/
+Golang Slices And The Case Of The Missing Memory ----  http://openmymind.net/Go-Slices-And-The-Case-Of-The-Missing-Memory/ -- slice-alloc.html
+
+When you know the size of the data, like in the above case with a ContentLength, you should use the io.ReadFull:
+
+------------------------------------------------------------------------------
+body := make([]byte, 0, resp.ContentLength)
+_, err := io.ReadFull(res.Body, body)
+
+
+
+------------------------------------------------------------------------------
+//ioutil.ReadAll starts at a very small 512
+//it really should let you specify an initial size
+buffer := bytes.NewBuffer(make([]byte, 0, 65536))
+io.Copy(buffer, r.Body)
+temp := buffer.Bytes()
+length := len(temp)
+var body []byte
+//are we wasting more than 10% space?
+if cap(temp) > (length + length / 10) {
+  body = make([]byte, length)
+  copy(body, temp)
+} else {
+  body = temp
+}
+

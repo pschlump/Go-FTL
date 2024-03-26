@@ -1,0 +1,10 @@
+{
+	 "Name":	"Go-FTL"
+	,"Code3":	"FTL"
+	,"Version":	"0.5.8"
+	,"BuildNo":	"089"
+	,"Files":[
+		 { "FileName":"main.go", "FileID":"0001" }
+		,{ "FileName":"inc.go", "FileID":"0002" }
+	]
+}

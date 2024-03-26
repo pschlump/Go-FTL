@@ -1,0 +1,9 @@
+<script>
+// import Counter from './wasm/counter'  
+import Counter from './counter'  
+const wasmHelloWorld = () => {  
+    const counter = new Counter();
+    console.log("count function result is : " + counter.exports._count());
+}
+window.onload = wasmHelloWorld  
+</script>

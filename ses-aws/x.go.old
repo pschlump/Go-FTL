@@ -1,0 +1,279 @@
+package xyzzy
+
+import (
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
+	em "github.com/pschlump/emailbuilder"
+	"github.com/pschlump/filelib"
+	"github.com/pschlump/jsonp"
+	"github.com/zerobfd/mailbuilder"
+)
+
+// ===============================================================================================================================================
+// Send an email
+func handleSend(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+	params := req.URL.Query()
+	fmt.Println("GET params:", params)
+
+	LogIt()
+	ip, _, _ := net.SplitHostPort(req.RemoteAddr)
+	// when the user acccess the web server via a proxy or load balancer.
+	// The above IP address will be the IP address of the proxy or load balancer and not the user's machine.
+
+	// let's get the request HTTP header "X-Forwarded-For (XFF)"
+	// if the value returned is not null, then this is the real IP address of the user.
+	ipF := req.Header.Get("X-FORWARDED-FOR")
+	if ipF != "" {
+		ip = ipF
+	}
+
+	LogItS(fmt.Sprintf("IP Address:%s ", ip))
+	auth_token := params.Get("auth_token")
+	LogItS(fmt.Sprintf("auth_token from URL:%s Cfg.Auth:%s ", auth_token, Cfg.Auth))
+	if auth_token == Cfg.Auth || (Cfg.Auth == "per-ip" && CheckIpAuth(ip, auth_token)) {
+
+		LogItS("AuthToken Good")
+		dTo := params.Get("to")
+		dToName := params.Get("toname")
+		dFrom := params.Get("from")
+		dFromName := params.Get("fromname")
+		dSubject := params.Get("subject")
+		dBodyHtml := params.Get("bodyhtml")
+		dBodyText := params.Get("bodytext")
+		dApp := params.Get("app")
+		dTmpl := params.Get("tmpl")
+		dP0 := params.Get("p0")
+		dP1 := params.Get("p1")
+		dP2 := params.Get("p2")
+		dP3 := params.Get("p3")
+		dP4 := params.Get("p4")
+		dP5 := params.Get("p5")
+		dP6 := params.Get("p6")
+		dP7 := params.Get("p7")
+		dP8 := params.Get("p8")
+		dP9 := params.Get("p9")
+
+		LogItS("Got Params")
+		if dTmpl != "" {
+			LogItS("Template Specified")
+
+			if _, ok := Cfg.ApprovedApps[dApp]; dApp == "" || !ok {
+				LogItS("Error: Not an approved application")
+				Errs++
+				t := time.Now()
+				ts := t.Format(time.RFC3339)
+				fmt.Fprintf(FoLogFile, "Error: InvalidApp: %s %q %s\n", ip, dApp, ts)
+				io.WriteString(res, jsonp.JsonP(`{"status":"error","msg":"missing invalid app error"}`+"\n", res, req))
+				return
+			}
+
+			TemplateFn := filepath.Clean(Cfg.TmplPath + filepath.Clean("/"+dApp+"/"+dTmpl))
+
+			if !filelib.Exists(TemplateFn) {
+				LogItS(fmt.Sprintf("Error: File did not exist for template, TemplateFileName:%s", TemplateFn))
+				Errs++
+				t := time.Now()
+				ts := t.Format(time.RFC3339)
+				fmt.Fprintf(FoLogFile, "Error: MissingTemplate: %s %q %s\n", ip, TemplateFn, ts)
+				io.WriteString(res, jsonp.JsonP(`{"status":"error","msg":"missing email template error"}`+"\n", res, req))
+				if db_send_to_me {
+					TemplateFn = "./debug.tmpl"
+				} else {
+					return
+				}
+			}
+			LogItS("Ok: Run Template Now")
+
+			g_data = make(map[string]interface{})
+			oneRow := make(map[string]interface{})
+			oneRow["templateFn"] = TemplateFn
+			oneRow["app"] = dApp
+			oneRow["tmpl"] = dTmpl
+			oneRow["to"] = dTo
+			for _, vv := range Cfg.MapToEmailAddr {
+				if strings.HasSuffix(dTo, vv) {
+					LogIt()
+					if Cfg.MapDestAddr != "" {
+						dTo = Cfg.MapDestAddr
+					} else {
+						dTo = "pschlump@yahoo.com"
+					}
+				}
+			}
+			if db_send_to_me {
+				dTo = Cfg.DebugEmailAddr
+			}
+			oneRow["toname"] = dToName
+			oneRow["from"] = dFrom
+			oneRow["fromname"] = dFromName
+			oneRow["subject"] = dSubject
+			oneRow["bodyhtml"] = dBodyHtml
+			oneRow["bodytext"] = dBodyText
+			oneRow["p0"] = dP0
+			oneRow["p1"] = dP1
+			oneRow["p2"] = dP2
+			oneRow["p3"] = dP3
+			oneRow["p4"] = dP4
+			oneRow["p5"] = dP5
+			oneRow["p6"] = dP6
+			oneRow["p7"] = dP7
+			oneRow["p8"] = dP8
+			oneRow["p9"] = dP9
+
+			if DbDumpMsg {
+				fmt.Fprintf(FoLogFile, "oneRow, %s: %+v\n", tr.LF(), oneRow)
+				fmt.Fprintf(FoLogX, "oneRow, %s: %+v\n", tr.LF(), oneRow)
+			}
+
+			dSubject = RunTemplate(TemplateFn, "subject", oneRow)
+			dBodyHtml = RunTemplate(TemplateFn, "body_html", oneRow)
+			dBodyText = RunTemplate(TemplateFn, "body_text", oneRow)
+			LogItS("Setup Complete")
+			LogItSS("dSubject", dSubject)
+			LogItSS("dBodyHtml", dBodyHtml)
+
+		} else {
+			LogIt()
+
+			if dToName == "" {
+				dToName = dTo
+			}
+			if dFromName == "" {
+				dFromName = dFrom
+			}
+			if dBodyHtml == "" {
+				dBodyHtml = dBodyText
+			}
+			if dSubject == "" {
+				dSubject = "No Subject"
+			}
+
+			for _, vv := range Cfg.MapToEmailAddr {
+				if strings.HasSuffix(dTo, vv) {
+					LogIt()
+					if Cfg.MapDestAddr != "" {
+						dTo = Cfg.MapDestAddr
+					} else {
+						dTo = "pschlump@yahoo.com"
+					}
+				}
+			}
+			if db_send_to_me {
+				dTo = Cfg.DebugEmailAddr
+			}
+
+			if dBodyText == "" || dTo == "" || dFrom == "" {
+				LogIt()
+				Errs++
+				t := time.Now()
+				ts := t.Format(time.RFC3339)
+				fmt.Fprintf(FoLogFile, "Error: MissingParam: %s %q %s\n", ip, dTo, ts)
+				io.WriteString(res, jsonp.JsonP(`{"status":"error","msg":"missing parameter error"}`+"\n", res, req))
+				return
+			}
+		}
+
+		if Cfg.FromEmailAddr != "" {
+			dFrom = Cfg.FromEmailAddr
+		}
+
+		var Email *em.EM
+
+		Email = em.NewEmFile(opts.EmailCfgFN, true) // setup email system
+		if Email.Err != nil {
+			LogItS("Error: email send - failed to configure email sender")
+			fmt.Printf("Fatal: Email is not properly configured, failed to load config file (%s). %s\n", opts.EmailCfgFN, Email.Err)
+			return
+		}
+
+		LogItS(fmt.Sprintf("To: %s From %s Body %s, line:%s", dTo, dFrom, dBodyHtml, tr.LF()))
+		err := Email.To(dTo, dToName).From(dFrom, dFromName).Subject(dSubject).TextBody(dBodyText).HtmlBody(dBodyHtml).SendIt()
+
+		if err != nil {
+			LogItS("Error: Got error on email send")
+			Errs++
+			t := time.Now()
+			ts := t.Format(time.RFC3339)
+			fmt.Fprintf(FoLogFile, "Error: EmailError: %s %q %s\n", ip, err, ts)
+			io.WriteString(res, jsonp.JsonP(fmt.Sprintf(`{"status":"error","msg":"email error","err":%q, "message":{ "to":%q, "toname":%q, "from":%q, "fromname":%q, "subject":%q, "bodyhtml":%q, "bodytext":%q, "app":%q, "tmpl":%q, "p0":%q, "p1":%q, "p2":%q, "p3":%q, "p4":%q, "p5":%q, "p6":%q, "p7":%q, "p8":%q, "p9":%q }}`+"\n", err, dTo, dToName, dFrom, dFromName, dSubject, dBodyHtml, dBodyText, dApp, dTmpl, dP0, dP1, dP2, dP3, dP4, dP5, dP6, dP7, dP8, dP9), res, req))
+			return
+		} else if Cfg.LogSuccessfulSend == "y" {
+			fmt.Fprintf(FoLogFile, `{"status":"success","msg":"email error","err":%q, "message":{ "to":%q, "toname":%q, "from":%q, "fromname":%q, "subject":%q, "bodyhtml":%q, "bodytext":%q, "app":%q, "tmpl":%q, "p0":%q, "p1":%q, "p2":%q, "p3":%q, "p4":%q, "p5":%q, "p6":%q, "p7":%q, "p8":%q, "p9":%q }}`+"\n", err, dTo, dToName, dFrom, dFromName, dSubject, dBodyHtml, dBodyText, dApp, dTmpl, dP0, dP1, dP2, dP3, dP4, dP5, dP6, dP7, dP8, dP9)
+		}
+
+		// Email = em.NewEmFile(opts.EmailCfgFN, false) // no new setup of email system
+		Email.Message = mailbuilder.NewMessage()
+		Email.Message.SetBodyEmpty()
+
+	} else {
+		LogItS("Error: Not Authorized")
+		Errs++
+		t := time.Now()
+		ts := t.Format(time.RFC3339)
+		fmt.Fprintf(FoLogFile, "Error: NotAuthorized: %s %q %s\n", ip, auth_token, ts)
+		io.WriteString(res, jsonp.JsonP(`{"status":"error","msg":"Invalid authorization(1)"}`+"\n", res, req))
+		return
+	}
+	Msgs_Sent++
+	io.WriteString(res, jsonp.JsonP(`{"status":"success"}`+"\n", res, req))
+
+}
+
+// =======================================================================================================================================================================
+// Templating Section
+// =======================================================================================================================================================================
+
+// ------------------------------------------------------------------------------------------------------------------
+// Globals for Templates (oooh Ick!)
+//		{{g "name"}}  Access a global and return its value from an "interface" of string
+//		{{set "name=Value"}} Set a value to constant Value
+//		{{ bla | set "name"}} Set a value to Value of pipe
+// ------------------------------------------------------------------------------------------------------------------
+//var global_data	map[string]string
+//func global_init () {
+//	global_data = make(map[string]string)
+//}
+var g_data map[string]interface{}
+
+func init() {
+	g_data = make(map[string]interface{})
+}
+
+func global_g(b string) string {
+	// fmt.Printf ( "XYZZY Inside 'g' -[%s]-\n", g_data[b].(string) )
+	return g_data[b].(string)
+}
+
+func global_set(args ...string) string {
+	if len(args) == 1 {
+		b := args[0]
+		var re = regexp.MustCompile("([a-zA-Z_][a-zA-Z_0-9]*)=(.*)")
+		x := re.FindAllStringSubmatch(b, -1)
+		if len(x) == 0 {
+			name := x[0][1]
+			value := ""
+			g_data[name] = value
+		} else {
+			name := x[0][1]
+			value := x[0][2]
+			g_data[name] = value
+		}
+	} else if len(args) == 2 {
+		name := args[0]
+		value := args[1]
+		g_data[name] = value
+	} else {
+		name := args[0]
+		value := strings.Join(args[1:], "")
+		g_data[name] = value
+	}
+	return ""
+}
